@@ -5,7 +5,6 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useVoiceTrigger } from '../../context/VoiceTriggerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { DiscreetQuickExit } from '../common/DiscreetQuickExit';
-import { PWAInstallButton } from '../common/PWAInstallButton';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { SupportedLanguage } from '../../types';
 
@@ -118,9 +117,6 @@ export const Header: React.FC = () => {
               <MicOff className={`w-3.5 h-3.5 stroke-[1.8] ${isCream ? 'text-black' : 'text-[#FDFBD4]'}`} />
             )}
           </button>
-
-          {/* Minimalist PWA Install Icon */}
-          <PWAInstallButton variant="header" />
 
           {/* Minimalist Dark / Cream Theme Switcher */}
           <ThemeToggle />

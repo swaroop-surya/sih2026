@@ -46,15 +46,15 @@ html[data-theme="cream"],
   --cream-element: #f2eeb4;
   --cream-element-hover: #e5e09d;
   --cream-border: #cfcb86;
-  --cream-text-black: #000000;
-  --cream-text-body: #1c1c1c;
-  --cream-text-muted: #4a4a36;
+  --cream-text-black: #0D0D0D;
+  --cream-text-body: #242424;
+  --cream-text-muted: #242424;
 }
 
 /* Outer Desktop Background & Base Body */
 html[data-theme="cream"] body {
   background-color: var(--cream-outer);
-  color: var(--cream-text-black);
+  color: #0D0D0D;
 }
 
 html[data-theme="cream"] .bg-black {
@@ -126,26 +126,34 @@ html[data-theme="cream"] .border-slate-700 {
   border-color: var(--cream-border) !important;
 }
 
-/* Typography in Cream Mode: Crisp Bold Black */
+/* Typography in Cream Mode:
+   Main headings: #0D0D0D (black)
+   Sub text: #242424 (a little light) */
+html[data-theme="cream"] h1,
+html[data-theme="cream"] h2,
+html[data-theme="cream"] h3,
+html[data-theme="cream"] h4,
+html[data-theme="cream"] h5,
+html[data-theme="cream"] h6,
+html[data-theme="cream"] .heading-main,
 html[data-theme="cream"] .text-white,
 html[data-theme="cream"] .text-slate-100 {
-  color: #000000 !important;
+  color: #0D0D0D !important;
 }
 
+html[data-theme="cream"] p,
+html[data-theme="cream"] .sub-text,
 html[data-theme="cream"] .text-slate-200,
-html[data-theme="cream"] .text-slate-300 {
-  color: #171717 !important;
-}
-
+html[data-theme="cream"] .text-slate-300,
 html[data-theme="cream"] .text-slate-400,
 html[data-theme="cream"] .text-slate-500 {
-  color: #4b4b36 !important;
+  color: #242424 !important;
 }
 
-/* Accents in Cream Mode: Deep Bold Black */
+/* Accents in Cream Mode: Deep Bold #0D0D0D */
 html[data-theme="cream"] .text-sky-400,
 html[data-theme="cream"] .text-sky-300 {
-  color: #000000 !important;
+  color: #0D0D0D !important;
   font-weight: 700;
 }
 
@@ -181,12 +189,12 @@ html[data-theme="cream"] input:not([type="checkbox"]):not([type="radio"]),
 html[data-theme="cream"] textarea,
 html[data-theme="cream"] select {
   background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #000000 !important;
+  color: #0D0D0D !important;
+  border-color: #0D0D0D !important;
 }
 html[data-theme="cream"] input::placeholder,
 html[data-theme="cream"] textarea::placeholder {
-  color: #8c8868 !important;
+  color: #666660 !important;
 }
 
 /* ==========================================================================
@@ -270,3 +278,41 @@ html[data-theme="dark"] .bg-sky-950\/30 {
   background-color: rgba(253, 251, 212, 0.08) !important;
   border-color: rgba(253, 251, 212, 0.3) !important;
 }
+
+/* Leaflet Map Customizations */
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 1rem !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: inherit !important;
+}
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+.leaflet-container {
+  font-family: inherit !important;
+  z-index: 10 !important;
+}
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background-color: #181814 !important;
+  color: #FDFBD4 !important;
+  border: 1px solid #282824 !important;
+}
+html[data-theme="cream"] .leaflet-control-zoom-in,
+html[data-theme="cream"] .leaflet-control-zoom-out {
+  background-color: #ffffff !important;
+  color: #0D0D0D !important;
+  border: 1px solid #0D0D0D !important;
+}
+

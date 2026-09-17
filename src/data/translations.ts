@@ -22,8 +22,10 @@ export interface Translations {
   holdToActivate: string;
   navHome: string;
   navSafety: string;
+  navSOS: string;
   navIncidents: string;
   navResources: string;
+  navAI: string;
   navProfile: string;
   evidenceVault: string;
   recruitmentChecker: string;
@@ -59,8 +61,10 @@ export const translations: Record<SupportedLanguage, Translations> = {
     holdToActivate: 'Hold for 1.5s to trigger SOS',
     navHome: 'Home',
     navSafety: 'Safety',
+    navSOS: 'SOS',
     navIncidents: 'Incidents',
     navResources: 'Resources',
+    navAI: 'AI',
     navProfile: 'Profile',
     evidenceVault: 'Evidence Vault',
     recruitmentChecker: 'Recruitment Risk Checker',
@@ -94,8 +98,10 @@ export const translations: Record<SupportedLanguage, Translations> = {
     holdToActivate: 'एसओएस शुरू करने के लिए 1.5 सेकंड दबाकर रखें',
     navHome: 'होम',
     navSafety: 'सुरक्षा',
+    navSOS: 'SOS',
     navIncidents: 'घटनाएं',
     navResources: 'संसाधन',
+    navAI: 'AI',
     navProfile: 'प्रोफ़ाइल',
     evidenceVault: 'सुरक्षित साक्ष्य वॉल्ट',
     recruitmentChecker: 'नौकरी / भर्ती जोखिम जांच',
@@ -129,8 +135,10 @@ export const translations: Record<SupportedLanguage, Translations> = {
     holdToActivate: 'SOS కోసం 1.5 సెకన్లు నొక్కి ఉంచండి',
     navHome: 'హోమ్',
     navSafety: 'భద్రత',
+    navSOS: 'SOS',
     navIncidents: 'సంఘటనలు',
     navResources: 'వనరులు',
+    navAI: 'AI',
     navProfile: 'ప్రొఫైల్',
     evidenceVault: 'సాక్ష్యాల వాల్ట్',
     recruitmentChecker: 'ఉద్యోగ రిక్రూట్‌మెంట్ రిస్క్ చెకర్',
@@ -164,8 +172,10 @@ export const translations: Record<SupportedLanguage, Translations> = {
     holdToActivate: 'SOSக்கு 1.5 வினாடிகள் அழுத்திப் பிடிக்கவும்',
     navHome: 'முகப்பு',
     navSafety: 'பாதுகாப்பு',
+    navSOS: 'SOS',
     navIncidents: 'சம்பவங்கள்',
     navResources: 'உதவி எண்கள்',
+    navAI: 'AI',
     navProfile: 'சுயவிவரம்',
     evidenceVault: 'சான்று பெட்டகம்',
     recruitmentChecker: 'வேலை வாய்ப்பு இடர் சோதனையாளர்',

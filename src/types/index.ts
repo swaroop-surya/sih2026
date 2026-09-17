@@ -53,6 +53,9 @@ export interface IncidentRecord {
   category: IncidentCategory;
   severity: 1 | 2 | 3 | 4 | 5;
   location: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
   description: string;
   peopleInvolved?: string | string[];
   witnesses?: string | string[];

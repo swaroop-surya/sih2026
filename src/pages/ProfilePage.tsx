@@ -24,12 +24,10 @@ import {
   Mic,
   MicOff,
   Settings,
-  Volume2,
-  Palette
+  Volume2
 } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 import { PWAInstallButton } from '../components/common/PWAInstallButton';
-import { ThemeToggle } from '../components/common/ThemeToggle';
 import { useVoiceTrigger } from '../context/VoiceTriggerContext';
 
 export const ProfilePage: React.FC = () => {
@@ -179,22 +177,6 @@ export const ProfilePage: React.FC = () => {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Theme Appearance: Dark Mode & Light Cream Mode */}
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-3 text-xs">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-white flex items-center gap-1.5">
-              <Palette className="w-4 h-4 text-amber-500" />
-              Display Theme & Appearance
-            </h3>
-            <p className="text-[11px] text-slate-400">
-              Choose between Dark Mode or the soothing Cream Light Mode.
-            </p>
-          </div>
-        </div>
-        <ThemeToggle variant="selector" />
       </div>
 
       {/* Trusted Contacts Management */}

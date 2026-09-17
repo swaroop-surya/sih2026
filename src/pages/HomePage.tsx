@@ -20,7 +20,6 @@ import {
   Bot
 } from 'lucide-react';
 import { formatDate } from '../lib/utils';
-import { PWAInstallButton } from '../components/common/PWAInstallButton';
 
 export const HomePage: React.FC = () => {
   const { isCream } = useTheme();
@@ -88,13 +87,13 @@ export const HomePage: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <h2
               className={`text-base font-bold tracking-tight ${
-                isCream ? 'text-black' : 'text-[#FDFBD4]'
+                isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'
               }`}
             >
               Hello, {profile.name || 'Protected User'}
             </h2>
           </div>
-          <p className={`text-xs mt-0.5 ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+          <p className={`text-xs mt-0.5 ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
             Safety Shield:{' '}
             <span className={isCream ? 'text-emerald-700 font-bold' : 'text-emerald-400 font-medium'}>
               Active & Monitoring
@@ -116,9 +115,6 @@ export const HomePage: React.FC = () => {
           <span>AI Advisor</span>
         </button>
       </div>
-
-      {/* Download Aegis to Mobile Banner */}
-      <PWAInstallButton variant="banner" />
 
       {/* Main 4 Action Cards */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -167,12 +163,12 @@ export const HomePage: React.FC = () => {
           <div>
             <span
               className={`text-xs font-bold tracking-wide block uppercase ${
-                isCream ? 'text-black' : 'text-[#FDFBD4]'
+                isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'
               }`}
             >
               {t.checkMyRisk}
             </span>
-            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               Evaluate early warning signs & coercion
             </span>
           </div>
@@ -233,7 +229,7 @@ export const HomePage: React.FC = () => {
             </span>
             <span
               className={`text-[11px] mt-0.5 block leading-tight font-medium ${
-                isCream ? 'text-[#333333]' : 'text-rose-300/80'
+                isCream ? 'text-[#242424]' : 'text-rose-300/80'
               }`}
             >
               {isHoldingEmergency ? 'Keep holding...' : 'Press and hold to trigger SOS'}
@@ -274,12 +270,12 @@ export const HomePage: React.FC = () => {
           <div>
             <span
               className={`text-xs font-bold tracking-wide block uppercase ${
-                isCream ? 'text-black' : 'text-[#FDFBD4]'
+                isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'
               }`}
             >
               {t.recordIncident}
             </span>
-            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               Journal & hash timestamped evidence
             </span>
           </div>
@@ -330,12 +326,12 @@ export const HomePage: React.FC = () => {
           <div>
             <span
               className={`text-xs font-bold tracking-wide block uppercase ${
-                isCream ? 'text-black' : 'text-[#FDFBD4]'
+                isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'
               }`}
             >
               {t.safetyCheckin}
             </span>
-            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <span className={`text-[11px] mt-0.5 block leading-tight ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               {activeCheckin ? 'Check-in currently active' : 'Commute & meeting timers'}
             </span>
           </div>
@@ -429,10 +425,10 @@ export const HomePage: React.FC = () => {
           >
             Exploitation Prevention
           </span>
-          <h3 className={`text-xs font-bold ${isCream ? 'text-black' : 'text-white'}`}>
+          <h3 className={`text-xs font-bold ${isCream ? 'text-[#0D0D0D]' : 'text-white'}`}>
             Trafficking & Recruitment Risk Checker
           </h3>
-          <p className={`text-[11px] ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+          <p className={`text-[11px] ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
             Paste job ads or travel offers to screen for red flags
           </p>
         </div>
@@ -469,10 +465,10 @@ export const HomePage: React.FC = () => {
           }`}
         >
           <div>
-            <div className={`text-xs font-bold ${isCream ? 'text-black' : 'text-[#FDFBD4]'}`}>
+            <div className={`text-xs font-bold ${isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'}`}>
               Preparedness Status: {completedPlanCount} of {safetyPlan.length} Complete
             </div>
-            <p className={`text-[11px] mt-0.5 ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <p className={`text-[11px] mt-0.5 ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               Documents backup, safe routes, emergency fund & secret exit bag
             </p>
           </div>
@@ -590,7 +586,7 @@ export const HomePage: React.FC = () => {
                     {formatDate(inc.timestamp)}
                   </span>
                 </div>
-                <p className={`text-[11px] line-clamp-2 leading-relaxed ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+                <p className={`text-[11px] line-clamp-2 leading-relaxed ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
                   {inc.description}
                 </p>
                 <div className={`flex items-center gap-2 pt-1 text-[10px] ${isCream ? 'text-[#444444]' : 'text-slate-400'}`}>
@@ -624,10 +620,10 @@ export const HomePage: React.FC = () => {
                 : 'bg-[#0a0a0a] border border-[#FDFBD4]/30 text-white hover:border-[#FDFBD4]'
             }`}
           >
-            <span className={`font-bold block ${isCream ? 'text-black' : 'text-[#FDFBD4]'}`}>
+            <span className={`font-bold block ${isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'}`}>
               Cyber Blackmail
             </span>
-            <p className={`text-[10px] leading-tight ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <p className={`text-[10px] leading-tight ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               Steps to preserve digital headers & StopNCII hash protocol
             </p>
           </div>
@@ -640,10 +636,10 @@ export const HomePage: React.FC = () => {
                 : 'bg-[#0a0a0a] border border-[#FDFBD4]/30 text-white hover:border-[#FDFBD4]'
             }`}
           >
-            <span className={`font-bold block ${isCream ? 'text-black' : 'text-[#FDFBD4]'}`}>
+            <span className={`font-bold block ${isCream ? 'text-[#0D0D0D]' : 'text-[#FDFBD4]'}`}>
               Safe Havens
             </span>
-            <p className={`text-[10px] leading-tight ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
+            <p className={`text-[10px] leading-tight ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
               One Stop Sakhi Centres & 24/7 verified police desks
             </p>
           </div>

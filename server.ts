@@ -41,11 +41,38 @@ app.get('/api/health', (req, res) => {
 });
 
 // Helper for timeout-guarded async operations
-function withTimeout<T>(promise: Promise<T>, ms: number = 6000): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, ms: number = 7000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error('AI request timeout')), ms))
   ]);
+}
+
+// Candidate models with preference for high availability & speed
+const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+
+async function generateWithFallback(
+  ai: GoogleGenAI,
+  prompt: string,
+  timeoutMs: number = 7000
+): Promise<string | null> {
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model,
+          contents: prompt,
+        }),
+        timeoutMs
+      );
+      if (response?.text) {
+        return response.text;
+      }
+    } catch {
+      // Continue to next candidate model
+    }
+  }
+  return null;
 }
 
 // Helper for trauma-informed rule-based safety responses
@@ -77,8 +104,7 @@ app.post('/api/ai/chat', async (req, res) => {
     let isFallback = false;
 
     if (ai) {
-      try {
-        const systemInstruction = `You are Aegis AI Safety Assistant, an empathetic, trauma-informed safety advisor built for women's protection.
+      const systemInstruction = `You are Aegis AI Safety Assistant, an empathetic, trauma-informed safety advisor built for women's protection.
 CORE MANDATES:
 1. Emphasize immediate physical safety first. If in imminent danger, urge using the 112 Emergency helpline or Aegis SOS.
 2. NEVER engage in victim blaming, judgment, or dismissive remarks.
@@ -89,18 +115,11 @@ CORE MANDATES:
 7. Respond in ${language === 'te' ? 'Telugu' : language === 'hi' ? 'Hindi' : language === 'ta' ? 'Tamil' : 'English'}, or provide clear, accessible explanations.
 8. Keep your response calm, grounded, objective, and concise.`;
 
-        const prompt = `${systemInstruction}\n\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
-        const response = await withTimeout(
-          ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: prompt,
-          }),
-          5000
-        );
-
-        reply = response.text || '';
-      } catch (geminiError: any) {
-        console.warn('Gemini API call returned an error, using safety fallback:', geminiError?.message);
+      const prompt = `${systemInstruction}\n\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
+      const generated = await generateWithFallback(ai, prompt, 7000);
+      if (generated) {
+        reply = generated;
+      } else {
         reply = getRuleBasedSafetyReply(message);
         isFallback = true;
       }
@@ -181,21 +200,13 @@ app.post('/api/ai/analyze-recruitment', async (req, res) => {
 
     let aiExplanation = '';
     if (ai) {
-      try {
-        const aiPrompt = `Analyze the following job/travel offer for human trafficking, exploitation, debt bondage, or fraud indicators.
+      const aiPrompt = `Analyze the following job/travel offer for human trafficking, exploitation, debt bondage, or fraud indicators.
 Content: "${contentToAnalyze.slice(0, 1500)}"
 Provide a 2-3 sentence objective assessment of potential risks and 2 safety verification steps.
 Do not make a definitive accusation; frame as indicators to inspect.`;
-        const aiRes = await withTimeout(
-          ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: aiPrompt
-          }),
-          5000
-        );
-        aiExplanation = aiRes.text || '';
-      } catch (err) {
-        console.warn('AI analysis fallback:', err);
+      const generated = await generateWithFallback(ai, aiPrompt, 7000);
+      if (generated) {
+        aiExplanation = generated;
       }
     }
 
