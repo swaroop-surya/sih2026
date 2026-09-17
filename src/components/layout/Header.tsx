@@ -3,12 +3,14 @@ import { Shield, Sparkles, AlertTriangle, RotateCcw, Mic, MicOff } from 'lucide-
 import { useAegis } from '../../hooks/useAegisState';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useVoiceTrigger } from '../../context/VoiceTriggerContext';
+import { useTheme } from '../../context/ThemeContext';
 import { DiscreetQuickExit } from '../common/DiscreetQuickExit';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { SupportedLanguage } from '../../types';
 
 export const Header: React.FC = () => {
+  const { isCream } = useTheme();
   const {
     activeDemoScenarioId,
     activeSOS,
@@ -24,32 +26,56 @@ export const Header: React.FC = () => {
   const activeCheckin = checkins.find(c => c.status === 'ACTIVE');
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md px-3.5 py-2.5">
+    <header
+      className={`sticky top-0 z-40 backdrop-blur-md px-3.5 py-2.5 transition-colors ${
+        isCream
+          ? 'border-b-2 border-black bg-[#FDFBD4]/95 shadow-sm'
+          : 'border-b border-[#FDFBD4]/20 bg-black/95 shadow-md'
+      }`}
+    >
       <div className="flex items-center justify-between gap-2">
         {/* Brand identity */}
         <div className="flex items-center gap-2">
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500/20 to-slate-800 border border-sky-500/40 text-sky-400 shadow-inner">
-            <Shield className="h-4 w-4" />
+          <div
+            className={`relative flex h-8 w-8 items-center justify-center rounded-full transition ${
+              isCream
+                ? 'bg-white border border-black/20 text-black shadow-sm'
+                : 'bg-[#181814] border border-[#FDFBD4]/30 text-[#FDFBD4]'
+            }`}
+          >
+            <Shield className="h-4 w-4 stroke-[1.8]" />
             <span className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ${
-              activeSOS ? 'bg-rose-500 animate-ping' : 'bg-emerald-400 ring-2 ring-slate-950'
+              activeSOS ? 'bg-rose-500 animate-ping' : 'bg-emerald-500 ring-2 ring-white'
             }`} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-sm font-bold tracking-tight text-white">{t.appName}</h1>
+              <h1
+                className={`text-sm font-black tracking-tight leading-none ${
+                  isCream ? 'text-black' : 'text-[#FDFBD4]'
+                }`}
+              >
+                {t.appName}
+              </h1>
               {activeDemoScenarioId && (
-                <span className="flex items-center gap-1 rounded bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.2 text-[10px] font-semibold text-amber-300">
+                <span
+                  className={`flex items-center gap-1 rounded-full border px-1.5 py-0.2 text-[9px] font-bold ${
+                    isCream
+                      ? 'bg-black text-[#FDFBD4] border-black'
+                      : 'bg-[#FDFBD4]/10 border-[#FDFBD4]/40 text-[#FDFBD4]'
+                  }`}
+                >
                   <Sparkles className="w-2.5 h-2.5" /> DEMO
                 </span>
               )}
             </div>
-            <p className="text-[10px] font-medium text-slate-400 leading-none">
+            <p className="text-[10px] font-semibold leading-none mt-1">
               {activeSOS ? (
-                <span className="text-rose-400 font-semibold animate-pulse">● SOS ACTIVE</span>
+                <span className="text-rose-600 font-bold animate-pulse">● SOS ACTIVE</span>
               ) : activeCheckin ? (
-                <span className="text-amber-400">● Check-in Active</span>
+                <span className={isCream ? 'text-amber-800' : 'text-amber-300'}>● Check-in Active</span>
               ) : (
-                <span className="text-emerald-400">● {t.statusSafe}</span>
+                <span className={isCream ? 'text-emerald-800' : 'text-emerald-400'}>● {t.statusSafe}</span>
               )}
             </p>
           </div>
@@ -60,11 +86,15 @@ export const Header: React.FC = () => {
           {activeDemoScenarioId && (
             <button
               onClick={resetToDefaultData}
-              className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 text-[10px] font-medium text-slate-400 hover:text-slate-200"
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 ${
+                isCream
+                  ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15'
+                  : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20'
+              }`}
               title="Reset Demo Data"
+              aria-label="Reset Demo Data"
             >
-              <RotateCcw className="w-2.5 h-2.5" />
-              <span>Reset</span>
+              <RotateCcw className="w-3.5 h-3.5 stroke-[1.8]" />
             </button>
           )}
 
@@ -72,45 +102,48 @@ export const Header: React.FC = () => {
           <button
             id="btn-header-voice-guard"
             onClick={() => setIsModalOpen(true)}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition active:scale-95 border ${
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 ${
               isListening
-                ? 'bg-rose-950/80 border-rose-500/80 text-rose-300 shadow-sm animate-pulse'
-                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
+                ? 'bg-rose-600 text-white animate-pulse shadow-sm'
+                : isCream
+                ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15'
+                : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20'
             }`}
-            title="Discreet Voice Trigger Guard (Speech API)"
+            title={isListening ? "Voice Guard Armed (Listening)" : "Voice Trigger Guard"}
+            aria-label="Voice Trigger Guard"
           >
             {isListening ? (
-              <>
-                <Mic className="w-3.5 h-3.5 text-rose-400" />
-                <span className="text-[10px] hidden sm:inline">Voice Armed</span>
-              </>
+              <Mic className="w-3.5 h-3.5 stroke-[1.8] text-white" />
             ) : (
-              <>
-                <MicOff className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-[10px] hidden sm:inline">Voice Guard</span>
-              </>
+              <MicOff className={`w-3.5 h-3.5 stroke-[1.8] ${isCream ? 'text-black' : 'text-[#FDFBD4]'}`} />
             )}
           </button>
 
-          <PWAInstallButton />
+          {/* Minimalist PWA Install Icon */}
+          <PWAInstallButton variant="header" />
 
-          {/* Dark / Cream Theme Switcher */}
+          {/* Minimalist Dark / Cream Theme Switcher */}
           <ThemeToggle />
 
-          {/* Discreet language switcher */}
+          {/* Discreet Minimalist Language Switcher */}
           <select
             value={currentLang}
             onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-            className="rounded-lg border border-slate-800 bg-slate-900/80 px-1.5 py-1 text-[11px] font-medium text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            className={`h-8 px-2 rounded-full text-[10px] font-bold tracking-wider uppercase transition-all appearance-none cursor-pointer text-center shrink-0 ${
+              isCream
+                ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15 focus:border-black'
+                : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20 focus:border-[#FDFBD4]'
+            }`}
             aria-label="Language"
+            title="Language"
           >
-            <option value="en">EN</option>
-            <option value="hi">हिन्दी</option>
-            <option value="te">తెలుగు</option>
-            <option value="ta">தமிழ்</option>
+            <option value="en" className={isCream ? 'bg-[#FDFBD4] text-black' : 'bg-black text-[#FDFBD4]'}>EN</option>
+            <option value="hi" className={isCream ? 'bg-[#FDFBD4] text-black' : 'bg-black text-[#FDFBD4]'}>HI</option>
+            <option value="te" className={isCream ? 'bg-[#FDFBD4] text-black' : 'bg-black text-[#FDFBD4]'}>TE</option>
+            <option value="ta" className={isCream ? 'bg-[#FDFBD4] text-black' : 'bg-black text-[#FDFBD4]'}>TA</option>
           </select>
 
-          {/* Panic Quick Exit */}
+          {/* Minimalist Panic Quick Exit */}
           <DiscreetQuickExit onTriggerDisguise={() => setIsDisguised(true)} />
         </div>
       </div>

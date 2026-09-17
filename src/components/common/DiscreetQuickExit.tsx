@@ -25,12 +25,11 @@ export const DiscreetQuickExit: React.FC<DiscreetQuickExitProps> = ({
     <button
       id="btn-quick-exit"
       onClick={onTriggerDisguise}
-      className={`group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/60 text-rose-300 text-xs font-semibold transition active:scale-95 shadow-sm ${className}`}
-      title="Immediately hides this application (Shortcut: ESC)"
-      aria-label="Discreet Quick Exit"
+      className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 transition-colors ${className}`}
+      title="Discreet Quick Disguise (Shortcut: ESC)"
+      aria-label="Discreet Quick Disguise"
     >
-      <EyeOff className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
-      <span>Quick Exit</span>
+      <EyeOff className="w-3.5 h-3.5 stroke-[1.8]" />
     </button>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { Download, Smartphone, Check } from 'lucide-react';
 import { MobileDownloadModal } from './MobileDownloadModal';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PWAInstallButtonProps {
   variant?: 'header' | 'card' | 'banner';
@@ -10,6 +11,7 @@ interface PWAInstallButtonProps {
 export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'header' }) => {
   const { isInstalled, isInstallable, install } = usePWAInstall();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const { isCream } = useTheme();
 
   // If already running in standalone mode (installed as PWA)
   if (isInstalled) {
@@ -47,34 +49,66 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
         <button
           id="btn-pwa-download-header"
           onClick={handleClick}
-          className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 active:scale-95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition"
-          title="Download & Install Aegis on your mobile device"
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 ${
+            isCream
+              ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15'
+              : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20'
+          }`}
+          title="Install Aegis on your device"
+          aria-label="Install Aegis"
         >
-          <Smartphone className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Get on Mobile</span>
-          <span className="sm:hidden">Install</span>
+          <Download className="w-3.5 h-3.5 stroke-[1.8]" />
         </button>
       ) : variant === 'banner' ? (
         <div
+          id="banner-pwa-mobile"
           onClick={() => setShowDownloadModal(true)}
-          className="cursor-pointer rounded-2xl bg-gradient-to-r from-sky-900/60 via-slate-900 to-indigo-950/60 border border-sky-500/30 hover:border-sky-400/60 p-3.5 flex items-center justify-between shadow-lg transition group active:scale-[0.99]"
+          className={`cursor-pointer rounded-2xl p-3.5 flex items-center justify-between transition group active:scale-[0.99] ${
+            isCream
+              ? 'bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+              : 'bg-[#0c0c0c] border border-[#FDFBD4]/40 hover:border-[#FDFBD4] shadow-md'
+          }`}
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-400 group-hover:scale-105 transition">
-              <Smartphone className="w-5 h-5" />
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl border group-hover:scale-105 transition shrink-0 ${
+                isCream
+                  ? 'bg-[#FDFBD4] border-black text-black'
+                  : 'bg-[#181814] border-[#FDFBD4]/30 text-[#FDFBD4]'
+              }`}
+            >
+              <Smartphone className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white flex items-center gap-1.5">
+              <p
+                className={`text-xs font-bold flex items-center gap-1.5 ${
+                  isCream ? 'text-black' : 'text-[#FDFBD4]'
+                }`}
+              >
                 Download Aegis to Your Phone
-                <span className="bg-sky-500/30 text-sky-300 text-[10px] px-1.5 py-0.2 rounded-full font-medium">Free</span>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold leading-none ${
+                    isCream
+                      ? 'bg-black text-[#FDFBD4]'
+                      : 'bg-[#FDFBD4] text-black'
+                  }`}
+                >
+                  Free
+                </span>
               </p>
-              <p className="text-[11px] text-slate-300">
+              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
                 Scan QR or tap to install for 1-tap SOS, offline protection & home screen icon
               </p>
             </div>
           </div>
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-600 text-white shadow group-hover:bg-sky-500 transition">
-            <Download className="w-4 h-4" />
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-xl shadow transition shrink-0 ml-2 ${
+              isCream
+                ? 'bg-black text-[#FDFBD4] group-hover:bg-[#222]'
+                : 'bg-[#FDFBD4] text-black group-hover:bg-white'
+            }`}
+          >
+            <Download className="w-4 h-4 stroke-[2.2]" />
           </div>
         </div>
       ) : (

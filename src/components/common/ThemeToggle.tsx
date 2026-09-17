@@ -95,18 +95,18 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'icon', clas
     <button
       id="btn-theme-toggle"
       onClick={toggleTheme}
-      className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-all active:scale-95 ${
+      className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 ${
         isCream
-          ? 'bg-[#FDFBD4] border-[#000000] text-[#000000] hover:bg-[#F5F2BD]'
-          : 'bg-[#000000] border-[#FDFBD4]/50 text-[#FDFBD4] hover:border-[#FDFBD4] hover:bg-[#141414]'
+          ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15'
+          : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20'
       } ${className}`}
-      title={isCream ? 'Switch to Dark Mode (Black & #FDFBD4)' : 'Switch to White / Cream Mode (#FDFBD4 & Black)'}
+      title={isCream ? 'Switch to Dark Mode (Black & #FDFBD4)' : 'Switch to Cream Mode (#FDFBD4 & Black)'}
       aria-label="Toggle theme"
     >
       {isCream ? (
-        <Sun className="w-4 h-4 text-[#000000] animate-fade-in" />
+        <Sun className="w-3.5 h-3.5 stroke-[1.8] text-black" />
       ) : (
-        <Moon className="w-4 h-4 text-[#FDFBD4] animate-fade-in" />
+        <Moon className="w-3.5 h-3.5 stroke-[1.8] text-[#FDFBD4]" />
       )}
     </button>
   );

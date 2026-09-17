@@ -18,7 +18,14 @@ app.use(express.json({ limit: '10mb' }));
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI | null {
   if (!aiClient && process.env.GEMINI_API_KEY) {
-    aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    aiClient = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
   }
   return aiClient;
 }
@@ -33,6 +40,30 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Helper for timeout-guarded async operations
+function withTimeout<T>(promise: Promise<T>, ms: number = 6000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('AI request timeout')), ms))
+  ]);
+}
+
+// Helper for trauma-informed rule-based safety responses
+function getRuleBasedSafetyReply(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes('passport') || lower.includes('document') || lower.includes('contract') || lower.includes('leave')) {
+    return "Restricting identity documents (such as withholding your passport or Aadhaar) or preventing someone from leaving is a serious warning indicator associated with coercive control and exploitation. In India, you can reach the National Emergency Service at 112 or the Women Helpline at 181 for guidance. If you are in immediate physical danger, please activate Emergency SOS.";
+  } else if (lower.includes('money') || lower.includes('debt') || lower.includes('salary') || lower.includes('pay')) {
+    return "Financial coercion—such as demanding repayment of unexplained recruitment fees, withholding earned wages, or controlling personal finances—is a significant risk indicator. Document dates and communication without confronting the person directly if it is unsafe.";
+  } else if (lower.includes('photo') || lower.includes('blackmail') || lower.includes('video') || lower.includes('leak')) {
+    return "Digital blackmail or threats to circulate private media is a cyber offense. Do not delete screenshots or chat logs, as they serve as vital evidence. In India, you can report cyber harassment anonymously to the National Cyber Crime Reporting Portal at cybercrime.gov.in or call 1930.";
+  } else if (lower.includes('follow') || lower.includes('stalk') || lower.includes('tracking')) {
+    return "Being followed physically or tracked digitally is unacceptable. Try to reach a populated, well-lit safe space (such as a metro station, store, or police station), share your live check-in with a trusted contact, and call 112 or 181 if you feel threatened.";
+  } else {
+    return "I understand you're sharing a sensitive situation. Aegis is here to help you identify safety indicators and connect with verified resources. Notice whether there are patterns of isolation, threats, or movement restrictions. You can log this in your Incident Journal with timestamps to establish a chronological record. In any emergency, dial 112 or 181 immediately.";
+  }
+}
+
 // AI Safety Assistant Endpoint
 app.post('/api/ai/chat', async (req, res) => {
   try {
@@ -42,31 +73,12 @@ app.post('/api/ai/chat', async (req, res) => {
     }
 
     const ai = getAI();
-    if (!ai) {
-      // Fallback rule-based responses if API key is not configured
-      const lower = message.toLowerCase();
-      let reply = "I understand you're sharing a sensitive situation. Aegis is here to help you identify safety indicators and connect with verified resources.";
-      
-      if (lower.includes('passport') || lower.includes('document') || lower.includes('contract') || lower.includes('leave')) {
-        reply = "Restricting identity documents (such as withholding your passport or Aadhaar) or preventing someone from leaving is a serious warning indicator associated with coercive control and exploitation. In India, you can reach the National Emergency Service at 112 or the Women Helpline at 181 for guidance. If you are in immediate physical danger, please activate Emergency SOS.";
-      } else if (lower.includes('money') || lower.includes('debt') || lower.includes('salary') || lower.includes('pay')) {
-        reply = "Financial coercion—such as demanding repayment of unexplained recruitment fees, withholding earned wages, or controlling personal finances—is a significant risk indicator. Document dates and communication without confronting the person directly if it is unsafe.";
-      } else if (lower.includes('photo') || lower.includes('blackmail') || lower.includes('video') || lower.includes('leak')) {
-        reply = "Digital blackmail or threats to circulate private media is a cyber offense. Do not delete screenshots or chat logs, as they serve as vital evidence. In India, you can report cyber harassment anonymously to the National Cyber Crime Reporting Portal at cybercrime.gov.in or call 1930.";
-      } else if (lower.includes('follow') || lower.includes('stalk') || lower.includes('tracking')) {
-        reply = "Being followed physically or tracked digitally is unacceptable. Try to reach a populated, well-lit safe space (such as a metro station, store, or police station), share your live check-in with a trusted contact, and call 112 or 181 if you feel threatened.";
-      } else {
-        reply = "Thank you for documenting this. Notice whether there are patterns of isolation, threats, or movement restrictions. You can log this in your Incident Journal with timestamps to establish a chronological record. How else can I assist your safety right now?";
-      }
+    let reply = '';
+    let isFallback = false;
 
-      return res.json({
-        reply,
-        isFallback: true,
-        disclaimer: "AI indicators are observational safety aids, not definitive legal or medical diagnoses. Call 112 in immediate danger."
-      });
-    }
-
-    const systemInstruction = `You are Aegis AI Safety Assistant, an empathetic, trauma-informed safety advisor built for women's protection.
+    if (ai) {
+      try {
+        const systemInstruction = `You are Aegis AI Safety Assistant, an empathetic, trauma-informed safety advisor built for women's protection.
 CORE MANDATES:
 1. Emphasize immediate physical safety first. If in imminent danger, urge using the 112 Emergency helpline or Aegis SOS.
 2. NEVER engage in victim blaming, judgment, or dismissive remarks.
@@ -77,24 +89,42 @@ CORE MANDATES:
 7. Respond in ${language === 'te' ? 'Telugu' : language === 'hi' ? 'Hindi' : language === 'ta' ? 'Tamil' : 'English'}, or provide clear, accessible explanations.
 8. Keep your response calm, grounded, objective, and concise.`;
 
-    const prompt = `${systemInstruction}\n\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+        const prompt = `${systemInstruction}\n\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
+        const response = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: prompt,
+          }),
+          5000
+        );
 
-    const reply = response.text || "I am here with you. If you feel unsafe, please reach out to trusted contacts or dial 112 immediately.";
+        reply = response.text || '';
+      } catch (geminiError: any) {
+        console.warn('Gemini API call returned an error, using safety fallback:', geminiError?.message);
+        reply = getRuleBasedSafetyReply(message);
+        isFallback = true;
+      }
+    } else {
+      reply = getRuleBasedSafetyReply(message);
+      isFallback = true;
+    }
+
+    if (!reply) {
+      reply = getRuleBasedSafetyReply(message);
+      isFallback = true;
+    }
 
     return res.json({
       reply,
-      isFallback: false,
+      isFallback,
       disclaimer: "Informational safety tool. Not a substitute for emergency services."
     });
   } catch (error: any) {
     console.error('Error in /api/ai/chat:', error);
-    return res.status(500).json({
-      error: 'Failed to process AI safety response',
-      message: error?.message || 'Unknown error'
+    return res.json({
+      reply: getRuleBasedSafetyReply(req.body?.message || ''),
+      isFallback: true,
+      disclaimer: "Informational safety tool. Not a substitute for emergency services."
     });
   }
 });
@@ -156,10 +186,13 @@ app.post('/api/ai/analyze-recruitment', async (req, res) => {
 Content: "${contentToAnalyze.slice(0, 1500)}"
 Provide a 2-3 sentence objective assessment of potential risks and 2 safety verification steps.
 Do not make a definitive accusation; frame as indicators to inspect.`;
-        const aiRes = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: aiPrompt
-        });
+        const aiRes = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: aiPrompt
+          }),
+          5000
+        );
         aiExplanation = aiRes.text || '';
       } catch (err) {
         console.warn('AI analysis fallback:', err);

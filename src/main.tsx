@@ -4,8 +4,22 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
-// Register Service Worker for offline PWA functionality
-registerSW({ immediate: true });
+// Safely register Service Worker for offline PWA functionality
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  try {
+    registerSW({
+      immediate: true,
+      onRegisterError(error) {
+        // Benign in sandboxed dev preview iframes
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('PWA ServiceWorker note (preview environment):', error);
+        }
+      },
+    });
+  } catch (err) {
+    // Non-blocking in sandboxed environments
+  }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
