@@ -37,6 +37,7 @@ export interface TrustedContact {
 export type IncidentCategory =
   | 'harassment'
   | 'stalking'
+  | 'unsafe_path'
   | 'domestic_violence'
   | 'sexual_harassment'
   | 'cyber_abuse'
