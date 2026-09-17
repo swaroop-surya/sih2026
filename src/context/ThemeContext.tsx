@@ -18,7 +18,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return saved;
       }
     }
-    return 'dark';
+    return 'cream';
   });
 
   const applyTheme = (newTheme: AppTheme) => {
@@ -37,7 +37,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Update PWA / mobile browser theme-color meta tag
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', newTheme === 'cream' ? '#faf6ee' : '#020617');
+      metaThemeColor.setAttribute('content', newTheme === 'cream' ? '#FDFBD4' : '#000000');
     }
   };
 

@@ -32,36 +32,36 @@
 }
 
 /* ==========================================================================
-   CREAM THEME (LIGHT MODE) SPECIFICATION
-   Warm, eye-soothing, glare-free cream palette with robust WCAG contrast
+   THEME 1: WHITE / CREAM MODE (#FDFBD4 AND BLACK)
+   Signature Canvas: #FDFBD4 with high-contrast Black typography and borders
    ========================================================================== */
 
 html[data-theme="cream"],
 .theme-cream {
   color-scheme: light;
-  --cream-outer: #f1ebd0;
-  --cream-canvas: #faf6ee;
+  --cream-canvas: #fdfbd4;
+  --cream-outer: #ede9b7;
   --cream-card: #ffffff;
-  --cream-card-subtle: #f5efe4;
-  --cream-element: #ede5d8;
-  --cream-element-hover: #e2d9c9;
-  --cream-border: #e3dbcd;
-  --cream-border-subtle: #ede7dc;
-  --cream-text-main: #1c1917;
-  --cream-text-body: #44403c;
-  --cream-text-muted: #78716c;
+  --cream-card-subtle: #f8f6cc;
+  --cream-element: #f2eeb4;
+  --cream-element-hover: #e5e09d;
+  --cream-border: #cfcb86;
+  --cream-text-black: #000000;
+  --cream-text-body: #1c1c1c;
+  --cream-text-muted: #4a4a36;
 }
 
-/* Base Body & Shell in Cream Mode */
+/* Outer Desktop Background & Base Body */
 html[data-theme="cream"] body {
   background-color: var(--cream-outer);
-  color: var(--cream-text-main);
+  color: var(--cream-text-black);
 }
 
 html[data-theme="cream"] .bg-black {
-  background-color: #eee7dc !important;
+  background-color: #ede9b7 !important;
 }
 
+/* Main Mobile Shell Viewport */
 html[data-theme="cream"] .bg-slate-950 {
   background-color: var(--cream-canvas) !important;
 }
@@ -71,13 +71,14 @@ html[data-theme="cream"] .bg-slate-950\/90,
 html[data-theme="cream"] .bg-slate-950\/80,
 html[data-theme="cream"] .bg-slate-950\/70,
 html[data-theme="cream"] .bg-slate-950\/60 {
-  background-color: rgba(250, 246, 238, 0.95) !important;
+  background-color: rgba(253, 251, 212, 0.96) !important;
+  backdrop-filter: blur(12px);
 }
 
-/* Cards & Surfaces */
+/* Cards & Surfaces in Cream Mode */
 html[data-theme="cream"] .bg-slate-900 {
   background-color: var(--cream-card) !important;
-  box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 html[data-theme="cream"] .bg-slate-900\/95,
@@ -87,7 +88,7 @@ html[data-theme="cream"] .bg-slate-900\/70,
 html[data-theme="cream"] .bg-slate-900\/60,
 html[data-theme="cream"] .bg-slate-900\/50,
 html[data-theme="cream"] .bg-slate-900\/40 {
-  background-color: rgba(255, 255, 255, 0.96) !important;
+  background-color: rgba(255, 255, 255, 0.97) !important;
 }
 
 html[data-theme="cream"] .bg-slate-800 {
@@ -99,7 +100,7 @@ html[data-theme="cream"] .bg-slate-800\/80,
 html[data-theme="cream"] .bg-slate-800\/60,
 html[data-theme="cream"] .bg-slate-800\/50,
 html[data-theme="cream"] .bg-slate-800\/40 {
-  background-color: rgba(237, 229, 216, 0.85) !important;
+  background-color: rgba(242, 238, 180, 0.88) !important;
 }
 
 html[data-theme="cream"] .hover\:bg-slate-800:hover {
@@ -107,7 +108,7 @@ html[data-theme="cream"] .hover\:bg-slate-800:hover {
 }
 
 html[data-theme="cream"] .hover\:bg-slate-700:hover {
-  background-color: #dcd2bf !important;
+  background-color: #ded995 !important;
 }
 
 /* Borders in Cream Mode */
@@ -125,123 +126,54 @@ html[data-theme="cream"] .border-slate-700 {
   border-color: var(--cream-border) !important;
 }
 
-/* Typography in Cream Mode */
+/* Typography in Cream Mode: Crisp Bold Black */
 html[data-theme="cream"] .text-white,
 html[data-theme="cream"] .text-slate-100 {
-  color: var(--cream-text-main) !important;
+  color: #000000 !important;
 }
 
 html[data-theme="cream"] .text-slate-200,
 html[data-theme="cream"] .text-slate-300 {
-  color: var(--cream-text-body) !important;
+  color: #171717 !important;
 }
 
 html[data-theme="cream"] .text-slate-400,
 html[data-theme="cream"] .text-slate-500 {
-  color: var(--cream-text-muted) !important;
+  color: #4b4b36 !important;
 }
 
-/* CRITICAL: Ensure solid action buttons preserve crisp white contrast */
-html[data-theme="cream"] .bg-rose-600,
-html[data-theme="cream"] .bg-rose-600 .text-white,
-html[data-theme="cream"] .bg-rose-600 *,
-html[data-theme="cream"] .bg-sky-600,
-html[data-theme="cream"] .bg-sky-600 .text-white,
-html[data-theme="cream"] .bg-sky-600 *,
-html[data-theme="cream"] .bg-emerald-600,
-html[data-theme="cream"] .bg-emerald-600 .text-white,
-html[data-theme="cream"] .bg-emerald-600 *,
-html[data-theme="cream"] .bg-amber-600,
-html[data-theme="cream"] .bg-amber-600 *,
-html[data-theme="cream"] .bg-rose-500,
-html[data-theme="cream"] .bg-rose-500 * {
-  color: #ffffff !important;
+/* Accents in Cream Mode: Deep Bold Black */
+html[data-theme="cream"] .text-sky-400,
+html[data-theme="cream"] .text-sky-300 {
+  color: #000000 !important;
+  font-weight: 700;
 }
 
-/* Cream Gradients */
-html[data-theme="cream"] .from-slate-900 {
-  --tw-gradient-from: #ffffff !important;
-}
-html[data-theme="cream"] .to-slate-900\/60,
-html[data-theme="cream"] .to-slate-900\/80,
-html[data-theme="cream"] .to-slate-950 {
-  --tw-gradient-to: #f7f1e6 !important;
+html[data-theme="cream"] .border-sky-500,
+html[data-theme="cream"] .border-sky-400,
+html[data-theme="cream"] .border-sky-800\/50,
+html[data-theme="cream"] .border-sky-800\/40,
+html[data-theme="cream"] .border-sky-800\/30 {
+  border-color: #000000 !important;
 }
 
-/* Accented card backgrounds in cream mode (Sky) */
 html[data-theme="cream"] .bg-sky-950,
 html[data-theme="cream"] .bg-sky-950\/60,
 html[data-theme="cream"] .bg-sky-950\/50,
 html[data-theme="cream"] .bg-sky-950\/40,
 html[data-theme="cream"] .bg-sky-950\/30 {
-  background-color: #f0f8ff !important;
-}
-html[data-theme="cream"] .border-sky-900\/40,
-html[data-theme="cream"] .border-sky-800\/50,
-html[data-theme="cream"] .border-sky-800\/40,
-html[data-theme="cream"] .border-sky-800\/30 {
-  border-color: #bae6fd !important;
-}
-html[data-theme="cream"] .text-sky-400,
-html[data-theme="cream"] .text-sky-300 {
-  color: #0284c7 !important;
+  background-color: #fcf9c5 !important;
+  border-color: #000000 !important;
 }
 
-/* Rose / Emergency alerts in cream mode */
-html[data-theme="cream"] .bg-rose-950,
-html[data-theme="cream"] .bg-rose-950\/60,
-html[data-theme="cream"] .bg-rose-950\/50,
-html[data-theme="cream"] .bg-rose-950\/40,
-html[data-theme="cream"] .bg-rose-950\/30 {
-  background-color: #fef2f2 !important;
-}
-html[data-theme="cream"] .border-rose-900,
-html[data-theme="cream"] .border-rose-800,
-html[data-theme="cream"] .border-rose-800\/60,
-html[data-theme="cream"] .border-rose-800\/50,
-html[data-theme="cream"] .border-rose-700 {
-  border-color: #fecaca !important;
-}
-html[data-theme="cream"] .text-rose-400,
-html[data-theme="cream"] .text-rose-300 {
-  color: #dc2626 !important;
-}
-
-/* Amber / Warning items in cream mode */
-html[data-theme="cream"] .bg-amber-950,
-html[data-theme="cream"] .bg-amber-950\/80,
-html[data-theme="cream"] .bg-amber-950\/60,
-html[data-theme="cream"] .bg-amber-950\/50,
-html[data-theme="cream"] .bg-amber-950\/40,
-html[data-theme="cream"] .bg-amber-950\/30 {
-  background-color: #fffbeb !important;
-}
-html[data-theme="cream"] .border-amber-800,
-html[data-theme="cream"] .border-amber-800\/60,
-html[data-theme="cream"] .border-amber-800\/50,
-html[data-theme="cream"] .border-amber-800\/40 {
-  border-color: #fde68a !important;
-}
-html[data-theme="cream"] .text-amber-400,
-html[data-theme="cream"] .text-amber-300 {
-  color: #b45309 !important;
-}
-
-/* Emerald / Safe items in cream mode */
-html[data-theme="cream"] .bg-emerald-950,
-html[data-theme="cream"] .bg-emerald-950\/60,
-html[data-theme="cream"] .bg-emerald-950\/50,
-html[data-theme="cream"] .bg-emerald-950\/40 {
-  background-color: #f0fdf4 !important;
-}
-html[data-theme="cream"] .border-emerald-800,
-html[data-theme="cream"] .border-emerald-800\/60,
-html[data-theme="cream"] .border-emerald-800\/50 {
-  border-color: #bbf7d0 !important;
-}
-html[data-theme="cream"] .text-emerald-400,
-html[data-theme="cream"] .text-emerald-300 {
-  color: #16a34a !important;
+/* Emergency Action Buttons in Cream Mode */
+html[data-theme="cream"] .bg-rose-600,
+html[data-theme="cream"] .bg-rose-600 *,
+html[data-theme="cream"] .bg-rose-500,
+html[data-theme="cream"] .bg-rose-500 *,
+html[data-theme="cream"] .bg-emerald-600,
+html[data-theme="cream"] .bg-emerald-600 * {
+  color: #ffffff !important;
 }
 
 /* Form Inputs in Cream Mode */
@@ -249,10 +181,92 @@ html[data-theme="cream"] input:not([type="checkbox"]):not([type="radio"]),
 html[data-theme="cream"] textarea,
 html[data-theme="cream"] select {
   background-color: #ffffff !important;
-  color: #1c1917 !important;
-  border-color: var(--cream-border) !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 html[data-theme="cream"] input::placeholder,
 html[data-theme="cream"] textarea::placeholder {
-  color: #a8a29e !important;
+  color: #8c8868 !important;
+}
+
+/* ==========================================================================
+   THEME 2: DARK MODE (BLACK AND #FDFBD4)
+   Deep pitch-black canvas with striking #FDFBD4 cream highlights
+   ========================================================================== */
+
+html[data-theme="dark"],
+.theme-dark {
+  color-scheme: dark;
+  --dark-canvas: #050505;
+  --dark-outer: #000000;
+  --dark-card: #0d0d0d;
+  --dark-card-subtle: #141414;
+  --dark-element: #1a1a17;
+  --dark-element-hover: #262622;
+  --dark-border: #282824;
+  --dark-highlight: #fdfbd4;
+}
+
+html[data-theme="dark"] body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .bg-black {
+  background-color: #000000 !important;
+}
+
+html[data-theme="dark"] .bg-slate-950 {
+  background-color: #050505 !important;
+}
+
+html[data-theme="dark"] .bg-slate-950\/95,
+html[data-theme="dark"] .bg-slate-950\/90,
+html[data-theme="dark"] .bg-slate-950\/80 {
+  background-color: rgba(5, 5, 5, 0.96) !important;
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme="dark"] .bg-slate-900 {
+  background-color: #0e0e0e !important;
+  border-color: #242420 !important;
+}
+
+html[data-theme="dark"] .bg-slate-900\/90,
+html[data-theme="dark"] .bg-slate-900\/80,
+html[data-theme="dark"] .bg-slate-900\/70,
+html[data-theme="dark"] .bg-slate-900\/60,
+html[data-theme="dark"] .bg-slate-900\/50 {
+  background-color: rgba(14, 14, 14, 0.95) !important;
+  border-color: #242420 !important;
+}
+
+html[data-theme="dark"] .bg-slate-800 {
+  background-color: #1a1a18 !important;
+}
+
+html[data-theme="dark"] .border-slate-800,
+html[data-theme="dark"] .border-slate-900,
+html[data-theme="dark"] .border-slate-700 {
+  border-color: #282824 !important;
+}
+
+/* In Dark Mode: Highlights and primary accents use #FDFBD4 */
+html[data-theme="dark"] .text-sky-400,
+html[data-theme="dark"] .text-sky-300 {
+  color: #fdfbd4 !important;
+}
+
+html[data-theme="dark"] .border-sky-500,
+html[data-theme="dark"] .border-sky-400 {
+  border-color: #fdfbd4 !important;
+}
+
+html[data-theme="dark"] .bg-sky-950,
+html[data-theme="dark"] .bg-sky-950\/60,
+html[data-theme="dark"] .bg-sky-950\/50,
+html[data-theme="dark"] .bg-sky-950\/40,
+html[data-theme="dark"] .bg-sky-950\/30 {
+  background-color: rgba(253, 251, 212, 0.08) !important;
+  border-color: rgba(253, 251, 212, 0.3) !important;
 }
