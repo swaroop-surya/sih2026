@@ -1,0 +1,12 @@
+{
+  "name": "Aegis",
+  "description": "Mobile-first women safety, prevention, early risk detection, and discreet emergency response platform.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
