@@ -1,109 +1,101 @@
 import React from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import {
-  BarChart3,
-  PieChart,
-  ShieldCheck,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-  FileCheck,
   Lock
 } from 'lucide-react';
 
 export const AnalyticsDashboardPage: React.FC = () => {
   const { incidents, checkins, evidence, latestRiskResult } = useAegis();
 
-  // Compute stats
-  const totalIncidents = incidents.length;
-  const completedCheckins = checkins.filter(c => c.status === 'SAFE').length;
-  const totalCheckins = checkins.length;
+  // Compute stats safely
+  const safeIncidents = incidents || [];
+  const safeCheckins = checkins || [];
+  const safeEvidence = evidence || [];
+  const totalIncidents = safeIncidents.length;
+  const completedCheckins = safeCheckins.filter(c => c.status === 'SAFE').length;
+  const totalCheckins = safeCheckins.length;
   const checkinSuccessRate = totalCheckins > 0 ? Math.round((completedCheckins / totalCheckins) * 100) : 100;
 
   const categoryCounts: Record<string, number> = {};
-  incidents.forEach(inc => {
+  safeIncidents.forEach(inc => {
     categoryCounts[inc.category] = (categoryCounts[inc.category] || 0) + 1;
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pb-8">
       {/* Header */}
-      <div className="border-b border-slate-800 pb-3">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-sky-400" />
-          Safety Trends & Prevention Analytics
-        </h2>
-        <p className="text-xs text-slate-400">
-          De-identified, aggregate situational insights and pattern telemetry.
+      <div>
+        <h1 className="page-title">Safety Analytics</h1>
+        <p className="text-caption text-[14px] mt-1">
+          De-identified situational insights and pattern telemetry.
         </p>
       </div>
 
       {/* Privacy Box */}
-      <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-2 text-xs text-slate-400">
-        <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
-        <span>Strict Zero-PII Policy: All aggregated charts are stripped of names, locations, and personal keys.</span>
+      <div className="p-3.5 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] flex items-center gap-2 text-[12px] text-[var(--text)]">
+        <Lock className="w-4 h-4 text-[var(--safe)] shrink-0 stroke-[1.75]" />
+        <span>Strict Zero-PII Policy: Aggregated charts are stripped of names and personal keys.</span>
       </div>
 
       {/* Key Metric Blocks */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+          <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider block">
             Documented Incidents
           </span>
-          <div className="text-2xl font-bold text-white">{totalIncidents}</div>
-          <span className="text-[10px] text-slate-500">Indexed in chronological journal</span>
+          <div className="text-[28px] font-heading font-semibold text-[var(--text)]">{totalIncidents}</div>
+          <span className="text-caption text-[11px]">Indexed in chronological log</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+          <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider block">
             Check-In Success Rate
           </span>
-          <div className="text-2xl font-bold text-emerald-400">{checkinSuccessRate}%</div>
-          <span className="text-[10px] text-slate-500">{completedCheckins} of {totalCheckins} safely concluded</span>
+          <div className="text-[28px] font-heading font-semibold text-[var(--safe)]">{checkinSuccessRate}%</div>
+          <span className="text-caption text-[11px]">{completedCheckins} of {totalCheckins} safely concluded</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Sealed Evidence Vault
+        <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+          <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider block">
+            Evidence Vault
           </span>
-          <div className="text-2xl font-bold text-sky-400">{evidence.length}</div>
-          <span className="text-[10px] text-slate-500">Cryptographically hashed items</span>
+          <div className="text-[28px] font-heading font-semibold text-[var(--primary)]">{safeEvidence.length}</div>
+          <span className="text-caption text-[11px]">Digitally fingerprinted items</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+          <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider block">
             Current Risk Score
           </span>
-          <div className={`text-2xl font-bold ${
-            latestRiskResult?.level === 'CRITICAL' ? 'text-rose-400' :
-            latestRiskResult?.level === 'HIGH' ? 'text-orange-400' :
-            latestRiskResult?.level === 'MODERATE' ? 'text-amber-400' : 'text-emerald-400'
+          <div className={`text-[28px] font-heading font-semibold ${
+            latestRiskResult?.level === 'CRITICAL' ? 'text-[var(--sos)]' :
+            latestRiskResult?.level === 'HIGH' ? 'text-[var(--accent)]' :
+            latestRiskResult?.level === 'MODERATE' ? 'text-[var(--accent)]' : 'text-[var(--safe)]'
           }`}>
-            {latestRiskResult ? `${latestRiskResult.score}/100` : 'Baseline'}
+            {latestRiskResult ? `${latestRiskResult.score}/100` : '0/100'}
           </div>
-          <span className="text-[10px] text-slate-500">{latestRiskResult?.level || 'LOW'} evaluated level</span>
+          <span className="text-caption text-[11px]">{latestRiskResult?.level || 'LOW'} evaluated level</span>
         </div>
       </div>
 
       {/* Incident Category Distribution Bar Chart */}
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-3 text-xs">
-        <h3 className="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-          <PieChart className="w-3.5 h-3.5 text-sky-400" />
-          Pattern Category Breakdown
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-3 text-[13px]">
+        <h3 className="section-title text-[15px]">
+          Pattern breakdown
         </h3>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {Object.entries(categoryCounts).map(([cat, count]) => {
             const pct = Math.round((count / (totalIncidents || 1)) * 100);
             return (
               <div key={cat} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="capitalize text-slate-300">{cat.replace('_', ' ')}</span>
-                  <span className="font-semibold text-slate-200">{count} ({pct}%)</span>
+                <div className="flex justify-between text-[12px]">
+                  <span className="capitalize text-[var(--text)]">{cat.replace('_', ' ')}</span>
+                  <span className="font-medium text-[var(--muted)]">{count} ({pct}%)</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-[var(--surface-2)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-sky-500 rounded-full"
+                    className="h-full bg-[var(--primary)] rounded-full"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -114,23 +106,22 @@ export const AnalyticsDashboardPage: React.FC = () => {
       </div>
 
       {/* Prevention Insights */}
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2.5 text-xs text-slate-300">
-        <h3 className="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-          Prevention & Early Detection Insights
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-2 text-[13px]">
+        <h3 className="section-title text-[15px]">
+          Prevention notes
         </h3>
-        <ul className="space-y-1.5 text-[11px] text-slate-400 leading-relaxed">
+        <ul className="space-y-2 text-caption text-[12px] leading-relaxed">
           <li className="flex items-start gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 mt-1 shrink-0" />
-            <span>Frequent recurring safety check-ins reduce delay in loved ones identifying missed arrivals by up to 85%.</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" />
+            <span>Recurring safety check-ins reduce delay in loved ones identifying missed arrivals.</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 mt-1 shrink-0" />
-            <span>Documenting chronological dates immediately strengthens 65B evidence certificates before memory fades or messages are deleted.</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" />
+            <span>Documenting dates immediately strengthens evidence records before memory fades or messages are deleted.</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 mt-1 shrink-0" />
-            <span>Never paying blackmail demands prevents cyber perpetrators from selling contact details to secondary extortion rings.</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" />
+            <span>Never paying blackmail demands prevents perpetrators from escalating extortion attempts.</span>
           </li>
         </ul>
       </div>

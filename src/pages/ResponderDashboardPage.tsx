@@ -1,16 +1,8 @@
 import React, { useState } from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import {
-  ShieldAlert,
-  AlertOctagon,
-  Clock,
-  CheckCircle,
   MapPin,
-  PhoneCall,
-  UserCheck,
-  Filter,
-  Users,
-  MessageSquare
+  UserCheck
 } from 'lucide-react';
 
 interface MockCase {
@@ -88,15 +80,12 @@ export const ResponderDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pb-8">
       {/* Header with Role Switcher */}
-      <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-indigo-400" />
-            Responder & Caseworker Dashboard
-          </h2>
-          <p className="text-xs text-slate-400">
+          <h1 className="page-title">Responder Console</h1>
+          <p className="text-caption text-[14px] mt-1">
             Authorized triage console for Sakhi One Stop staff and verified responders.
           </p>
         </div>
@@ -105,69 +94,71 @@ export const ResponderDashboardPage: React.FC = () => {
         <select
           value={profile.role}
           onChange={(e) => setUserRole(e.target.value as any)}
-          className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-indigo-300 font-semibold focus:outline-none"
+          className="soft-input text-[12px] h-8 px-2 py-0 cursor-pointer"
         >
-          <option value="USER">User View</option>
-          <option value="RESPONDER">Responder View</option>
-          <option value="ADMIN">Admin View</option>
+          <option value="USER">User</option>
+          <option value="RESPONDER">Responder</option>
+          <option value="ADMIN">Admin</option>
         </select>
       </div>
 
       {/* Cases Queue */}
       <div className="space-y-2">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider block">
           Live Triage Queue ({cases.length} Active)
         </span>
 
-        {cases.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => setSelectedCaseId(item.id)}
-            className={`cursor-pointer p-3.5 rounded-2xl border transition text-xs space-y-2 select-none ${
-              selectedCaseId === item.id
-                ? 'bg-slate-900 border-indigo-500 shadow-md'
-                : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                  item.priority === 'P1_IMMEDIATE'
-                    ? 'bg-rose-950 text-rose-300 border-rose-800 animate-pulse'
-                    : item.priority === 'P2_URGENT'
-                    ? 'bg-amber-950 text-amber-300 border-amber-800'
-                    : 'bg-sky-950 text-sky-300 border-sky-800'
-                }`}>
-                  {item.priority.replace('_', ' ')}
-                </span>
-                <span className="font-bold text-white">{item.victimAlias}</span>
+        <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+          {cases.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => setSelectedCaseId(item.id)}
+              className={`py-3.5 px-1 cursor-pointer transition select-none ${
+                selectedCaseId === item.id
+                  ? 'bg-[var(--surface-2)]/60'
+                  : 'hover:bg-[var(--surface-2)]/30'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    item.priority === 'P1_IMMEDIATE'
+                      ? 'bg-[var(--sos)] text-white'
+                      : item.priority === 'P2_URGENT'
+                      ? 'bg-[var(--accent)] text-[#1A1F45]'
+                      : 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]'
+                  }`}>
+                    {item.priority.replace('_', ' ')}
+                  </span>
+                  <span className="font-medium text-[13px] text-[var(--text)]">{item.victimAlias}</span>
+                </div>
+                <span className="text-[11px] text-[var(--muted)] font-mono">{item.timeReceived}</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono">{item.timeReceived}</span>
-            </div>
 
-            <div className="text-slate-300 font-medium">{item.category}</div>
-            <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-              <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
-              <span>{item.location}</span>
+              <div className="text-[13px] text-[var(--text)] font-medium mt-1">{item.category}</div>
+              <div className="flex items-center gap-1.5 text-caption text-[11px] mt-0.5">
+                <MapPin className="w-3 h-3 text-[var(--muted)] shrink-0 stroke-[1.75]" />
+                <span>{item.location}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Selected Case Triage Card */}
       {activeCase && (
-        <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-3 text-xs">
+        <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-3 text-[13px]">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-white text-sm">{activeCase.id} Details</span>
-            <div className="flex gap-1.5">
+            <span className="font-medium text-[14px] text-[var(--text)]">{activeCase.id} Details</span>
+            <div className="flex gap-1">
               {(['NEW', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => updateCaseStatus(activeCase.id, st)}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition cursor-pointer ${
                     activeCase.status === st
-                      ? 'bg-indigo-600 text-white border-indigo-500'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                      ? 'bg-[var(--primary)] text-[var(--on-primary)] border-[var(--primary)]'
+                      : 'bg-[var(--surface-2)] text-[var(--muted)] border-[var(--line)]'
                   }`}
                 >
                   {st.replace('_', ' ')}
@@ -176,10 +167,10 @@ export const ResponderDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-            <div><strong>Assigned Worker:</strong> {activeCase.assignedWorker}</div>
-            <div><strong>Dispatch Log:</strong></div>
-            <p className="text-slate-300 whitespace-pre-line text-[11px] font-mono leading-relaxed">
+          <div className="space-y-1 bg-[var(--surface-2)] p-3 rounded-[8px] text-[12px]">
+            <div><strong>Assigned worker:</strong> {activeCase.assignedWorker}</div>
+            <div><strong>Dispatch log:</strong></div>
+            <p className="text-caption whitespace-pre-line text-[11px] font-mono leading-relaxed mt-1">
               {activeCase.notes}
             </p>
           </div>
@@ -190,14 +181,14 @@ export const ResponderDashboardPage: React.FC = () => {
               type="text"
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Add responder triage update note..."
-              className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Add responder note..."
+              className="soft-input flex-1 text-[12px]"
             />
             <button
               onClick={addCaseNote}
-              className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
+              className="soft-btn soft-btn-primary text-[12px] px-3 h-8"
             >
-              Add Note
+              Add note
             </button>
           </div>
         </div>

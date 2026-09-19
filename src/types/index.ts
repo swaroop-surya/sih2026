@@ -4,7 +4,7 @@ export type UserRole = 'USER' | 'RESPONDER' | 'ADMIN';
 
 export type SupportedLanguage = 'en' | 'te' | 'hi' | 'ta';
 
-export type AppTheme = 'dark' | 'cream';
+export type AppTheme = 'light' | 'dark' | 'system';
 
 export interface UserProfile {
   id: string;
@@ -17,6 +17,7 @@ export interface UserProfile {
   neutralTerminology: boolean;
   language: SupportedLanguage;
   theme?: AppTheme;
+  showDemoTools?: boolean;
   continuousLocationSharing: boolean;
   pinProtectedVault: boolean;
   autoDeleteEvidenceDays: number;
@@ -88,7 +89,8 @@ export interface SafetyCheckin {
   durationMinutes: number;
   startedAt: string;
   expiresAt: string;
-  contactId: string;
+  contactId?: string;
+  notifyContactIds?: string[];
   status: 'ACTIVE' | 'SAFE' | 'EXPIRED' | 'HELP_REQUESTED';
   isRecurring: boolean;
 }

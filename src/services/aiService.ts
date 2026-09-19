@@ -28,14 +28,14 @@ export async function askAIAssistant(
     console.warn('Backend AI route unavailable, using local client safety engine:', err);
     // Offline / fallback intelligent safety engine
     const lower = message.toLowerCase();
-    let reply = "Aegis safety intelligence is active. If you feel at risk, prioritize moving to a populated area and notify your trusted circle.";
+    let reply = "Abhaya safety guidance is active. If you feel at risk, prioritize moving to a populated area and notify your trusted circle.";
     
     if (lower.includes('passport') || lower.includes('document') || lower.includes('contract')) {
       reply = "Withholding your original passport, Aadhaar, or education certificates is a hallmark indicator of coercive control and forced labor. Under Indian law, no employer or agency has the legal right to seize your identity papers. You can seek free legal aid via NALSA (15100) or report directly to 181.";
     } else if (lower.includes('photo') || lower.includes('blackmail') || lower.includes('leak') || lower.includes('money')) {
       reply = "Extortion using private photographs is a severe cybercrime under Section 66E and 67 of the IT Act. Do not delete the chat logs or pay any extortion demand. Save screenshots, compute their cryptographic hashes in your Evidence Vault, and register an official complaint on cybercrime.gov.in or call 1930.";
     } else if (lower.includes('follow') || lower.includes('stalk') || lower.includes('watcher')) {
-      reply = "Physical stalking requires immediate situational awareness. Avoid isolated short-cuts, enter a well-lit store or cafe, activate an Aegis Safety Check-In, and dial 112 if the individual approaches you.";
+      reply = "Physical stalking requires immediate situational awareness. Avoid isolated short-cuts, enter a well-lit store or cafe, activate an Abhaya Safety Check-In, and dial 112 if the individual approaches you.";
     }
 
     return {

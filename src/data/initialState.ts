@@ -28,7 +28,7 @@ export const initialUserProfile: UserProfile = {
 export const initialTrustedContacts: TrustedContact[] = [
   {
     id: 'tc_1',
-    name: 'Pooja (Sister)',
+    name: 'Pooja',
     relationship: 'Sister',
     phone: '+91 98111 22334',
     email: 'pooja.s@example.com',
@@ -38,7 +38,7 @@ export const initialTrustedContacts: TrustedContact[] = [
   },
   {
     id: 'tc_2',
-    name: 'Meera Deshmukh (Close Friend)',
+    name: 'Meera Deshmukh',
     relationship: 'Friend',
     phone: '+91 98222 33445',
     email: 'meera.d@example.com',
@@ -48,7 +48,7 @@ export const initialTrustedContacts: TrustedContact[] = [
   },
   {
     id: 'tc_3',
-    name: 'Adv. Ritu Sen (Legal Support)',
+    name: 'Adv. Ritu Sen',
     relationship: 'Legal Advocate',
     phone: '+91 98333 44556',
     email: 'adv.ritu@legalcircle.in',
@@ -120,7 +120,7 @@ export const initialSafetyPlan: SafetyPlanItem[] = [
     id: 'sp_contact_1',
     category: 'CONTACTS',
     title: 'Designate primary emergency contact',
-    detail: 'Confirmed Sister (Pooja) has emergency key to apartment and Aegis automated alerts',
+    detail: 'Confirmed Sister (Pooja) has emergency key to apartment and Abhaya automated alerts',
     isCompleted: true
   },
   {
@@ -277,6 +277,7 @@ export const initialCheckins: SafetyCheckin[] = [
     startedAt: '2026-09-13T19:45:00.000Z',
     expiresAt: new Date(Date.now() + 25 * 60 * 1000).toISOString(),
     contactId: 'tc_1',
+    notifyContactIds: ['tc_1', 'tc_2'],
     status: 'ACTIVE',
     isRecurring: false
   }

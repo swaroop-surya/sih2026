@@ -230,9 +230,12 @@ export function useDiscreetVoiceTrigger({
 
       recognition.onresult = (event: any) => {
         let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          currentTranscript += transcript;
+        if (event?.results) {
+          const startIndex = typeof event.resultIndex === 'number' ? event.resultIndex : 0;
+          for (let i = startIndex; i < event.results.length; i++) {
+            const transcript = event.results[i]?.[0]?.transcript || '';
+            currentTranscript += transcript;
+          }
         }
 
         setLastHeardText(currentTranscript);

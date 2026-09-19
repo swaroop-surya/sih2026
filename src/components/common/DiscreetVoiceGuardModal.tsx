@@ -195,7 +195,7 @@ export const DiscreetVoiceGuardModal: React.FC = () => {
                 Your Secret Trigger Safe Word / Phrase:
               </h4>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                When you say this phrase aloud, Aegis triggers a silent emergency alert to your trusted contacts without making any noise.
+                When you say this phrase aloud, Abhaya triggers a silent emergency alert to your trusted contacts without making any noise.
               </p>
             </div>
 

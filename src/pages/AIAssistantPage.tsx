@@ -1,23 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAegis } from '../hooks/useAegisState';
-import { useTheme } from '../context/ThemeContext';
 import { askAIAssistant, AIChatMessage } from '../services/aiService';
+import { useTranslation } from '../hooks/useTranslation';
 import {
-  Bot,
+  ArrowLeft,
+  Trash2,
   Send,
-  Shield,
-  AlertTriangle,
-  FileText,
-  LifeBuoy,
-  Sparkles,
-  RefreshCw,
-  PhoneCall
+  Info,
+  MessageSquare
 } from 'lucide-react';
 import { generateId } from '../lib/utils';
+import { AbhayaLogo } from '../components/common/AbhayaLogo';
 
 export const AIAssistantPage: React.FC = () => {
-  const { profile } = useAegis();
-  const { isCream } = useTheme();
+  const { profile, setCurrentPage } = useAegis();
+  const { t } = useTranslation();
 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +22,7 @@ export const AIAssistantPage: React.FC = () => {
     {
       id: 'welcome',
       sender: 'assistant',
-      text: `Hello ${profile.name || 'friend'}. I am your Aegis AI Safety Advisor. You can describe an incident in your own words, check warning signs, or ask for guidance on Indian legal protections and safety planning.\n\nPlease remember: In an immediate physical emergency, dial 112 directly.`,
+      text: `Hello ${profile.name ? profile.name.split(' ')[0] : 'there'}. I am your Abhaya advisor. You can describe what is happening in your own words, ask about safety steps, or get guidance on Indian legal protections.\n\nIn danger, call 112.`,
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -65,79 +62,87 @@ export const AIAssistantPage: React.FC = () => {
     }
   };
 
-  const samplePrompts = [
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: 'welcome',
+        sender: 'assistant',
+        text: 'Chat cleared. Tell us what is happening.',
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+  };
+
+  const starterChips = [
     'My partner checks my phone and demands my location constantly',
-    'A recruiter is asking for my original passport for a hospitality job',
-    'Someone is threatening to leak private photos unless I pay money',
-    'How do I file a Zero FIR at a police station?'
+    'A recruiter is asking for my original passport for a job abroad',
+    'Someone is threatening to leak private photos unless I pay',
+    'How do I file a Zero FIR at any police station in India?'
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] space-y-3">
-      {/* Header */}
-      <div className={`pb-2 flex items-center justify-between border-b ${isCream ? 'border-black/20' : 'border-slate-800'}`}>
+    <div className="flex flex-col h-[calc(100vh-130px)] space-y-3 pb-2">
+      {/* Header: Back button + Title + Clear chat trash icon */}
+      <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
         <div className="flex items-center gap-2">
-          <div
-            className={`h-8 w-8 rounded-xl flex items-center justify-center border ${
-              isCream
-                ? 'bg-white border-black text-[#0D0D0D] shadow-[1px_1px_0px_0px_#000]'
-                : 'bg-sky-500/10 border-sky-500/30 text-sky-400'
-            }`}
+          <button
+            onClick={() => setCurrentPage('home')}
+            className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center hover:bg-[var(--surface)] transition cursor-pointer"
+            aria-label="Back to home"
           >
-            <Bot className="w-4 h-4" />
-          </div>
+            <ArrowLeft className="w-4 h-4 stroke-[1.75]" />
+          </button>
           <div>
-            <h2 className={`text-sm font-bold ${isCream ? 'text-[#0D0D0D]' : 'text-white'}`}>
-              AI Safety Advisor
-            </h2>
-            <p className={`text-[10px] ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
-              Trauma-informed, confidential guidance
-            </p>
+            <h1 className="font-heading font-semibold text-[18px] text-[var(--text)]">
+              {t.askAegis || 'Ask Abhaya'}
+            </h1>
+            <p className="text-caption text-[12px]">Private safety guidance</p>
           </div>
         </div>
 
-        <a
-          href="tel:112"
-          className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
-            isCream
-              ? 'text-rose-700 bg-rose-50 border-rose-600 shadow-[1px_1px_0px_0px_#b91c1c]'
-              : 'text-rose-400 bg-rose-950/60 border-rose-800'
-          }`}
+        <button
+          onClick={handleClearChat}
+          className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--sos)] flex items-center justify-center transition cursor-pointer"
+          aria-label={t.clearChat || 'Clear chat'}
+          title="Clear chat"
         >
-          <PhoneCall className="w-2.5 h-2.5" />
-          <span>Emergency: 112</span>
-        </a>
+          <Trash2 className="w-4 h-4 stroke-[1.75]" />
+        </button>
+      </div>
+
+      {/* Plain Language Disclaimer at top */}
+      <div className="p-3 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] flex items-start gap-2.5 text-[13px] text-[var(--text)]">
+        <Info className="w-4 h-4 text-[var(--muted)] shrink-0 mt-0.5 stroke-[1.75]" />
+        <p className="text-caption text-[12px] leading-relaxed">
+          {t.aiDisclaimerText || 'Abhaya provides general safety guidance, not legal or police advice. In danger, call 112.'}
+        </p>
       </div>
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        {messages.map((msg) => {
-          const isUser = msg.sender === 'user';
+        {messages.map((m) => {
+          const isUser = m.sender === 'user';
           return (
             <div
-              key={msg.id}
-              className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+              key={m.id}
+              className={`flex items-start gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
             >
+              {!isUser && (
+                <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
+                  <AbhayaLogo className="w-5 h-5" strokeWidth={2.4} />
+                </div>
+              )}
+
               <div
-                className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
+                className={`max-w-[84%] p-3.5 rounded-[16px] text-[14px] leading-relaxed ${
                   isUser
-                    ? isCream
-                      ? 'bg-[#0D0D0D] text-white rounded-br-none shadow-[2px_2px_0px_0px_rgba(0,0,0,0.15)]'
-                      : 'bg-sky-600 text-white rounded-br-none'
-                    : isCream
-                    ? 'bg-white border-2 border-black text-[#0D0D0D] rounded-bl-none shadow-[2px_2px_0px_0px_#000]'
-                    : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow-sm'
+                    ? 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]'
+                    : 'bg-[var(--surface)] text-[var(--text)] border border-[var(--line)]'
                 }`}
               >
-                <p className="whitespace-pre-line">{msg.text}</p>
-                <span
-                  className={`block text-[9px] mt-1.5 ${
-                    isUser
-                      ? isCream ? 'text-slate-300 text-right' : 'text-sky-200 text-right'
-                      : isCream ? 'text-[#242424]/70' : 'text-slate-500'
-                  }`}
-                >
-                  {msg.timestamp}
+                <div className="whitespace-pre-line">{m.text}</div>
+                <span className="block text-[11px] text-[var(--muted)] text-right mt-1.5 font-mono">
+                  {m.timestamp}
                 </span>
               </div>
             </div>
@@ -145,76 +150,58 @@ export const AIAssistantPage: React.FC = () => {
         })}
 
         {loading && (
-          <div
-            className={`flex items-center gap-2 text-xs p-3 rounded-2xl max-w-[70%] border ${
-              isCream
-                ? 'bg-white border-2 border-black text-[#242424] shadow-[2px_2px_0px_0px_#000]'
-                : 'text-slate-400 bg-slate-900 border-slate-800'
-            }`}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 animate-spin ${isCream ? 'text-[#0D0D0D]' : 'text-sky-400'}`} />
-            <span>Consulting safety protocols...</span>
+          <div className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
+            <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 stroke-[1.75]" />
+            </div>
+            <span className="p-3 rounded-[12px] bg-[var(--surface)] border border-[var(--line)]">
+              Thinking...
+            </span>
           </div>
         )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Sample Quick Questions */}
-      {messages.length <= 2 && (
-        <div className="space-y-1">
-          <span className={`text-[10px] font-semibold uppercase tracking-wider block ${isCream ? 'text-[#242424]' : 'text-slate-400'}`}>
-            Suggested Safety Topics:
-          </span>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {samplePrompts.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => handleSend(p)}
-                className={`text-[11px] px-2.5 py-1.5 rounded-xl whitespace-nowrap text-left transition ${
-                  isCream
-                    ? 'bg-white border border-black/40 text-[#242424] hover:bg-black/5 hover:text-[#0D0D0D]'
-                    : 'bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+      {/* 4 Starter Chips as horizontal scroll */}
+      <div className="overflow-x-auto pb-1 -mx-2 px-2 scrollbar-none">
+        <div className="flex items-center gap-2">
+          {starterChips.map((chip, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSend(chip)}
+              className="h-8 px-3 rounded-full bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface)] border border-[var(--line)] text-[12px] font-medium whitespace-nowrap shrink-0 transition cursor-pointer"
+            >
+              {chip}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Input Box */}
-      <div
-        className={`rounded-2xl p-2 flex items-center gap-2 transition ${
-          isCream
-            ? 'bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
-            : 'bg-slate-900/90 border border-slate-800'
-        }`}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="flex items-center gap-2 pt-1"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Describe what happened or ask a question..."
-          className={`flex-1 bg-transparent px-2 text-xs focus:outline-none ${
-            isCream
-              ? 'text-[#0D0D0D] placeholder:text-[#242424]/50'
-              : 'text-white placeholder:text-slate-500'
-          }`}
+          placeholder="Ask a question or describe what happened..."
+          className="soft-input flex-1 h-11 text-[14px] px-4"
         />
         <button
-          onClick={() => handleSend()}
+          type="submit"
           disabled={!input.trim() || loading}
-          className={`h-8 w-8 rounded-xl disabled:opacity-40 flex items-center justify-center transition active:scale-95 shrink-0 ${
-            isCream
-              ? 'bg-[#0D0D0D] hover:bg-black text-[#FDFBD4]'
-              : 'bg-sky-600 hover:bg-sky-500 text-white'
-          }`}
+          className="w-11 h-11 rounded-full bg-[var(--primary)] text-[var(--on-primary)] flex items-center justify-center shrink-0 disabled:opacity-40 transition cursor-pointer"
+          aria-label="Send message"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-4 h-4 stroke-[1.75]" />
         </button>
-      </div>
+      </form>
     </div>
   );
 };

@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Globe,
   ShieldAlert,
   Lock,
   ExternalLink,
-  CheckCircle,
-  AlertTriangle,
-  FileCheck,
   Smartphone,
-  Eye,
-  PhoneCall,
   Search
 } from 'lucide-react';
 
@@ -39,7 +33,7 @@ export const CyberSafetyPage: React.FC = () => {
     ) {
       setUrlResult({
         isSafe: false,
-        note: 'High-risk warning: Shortened links or unofficial APK downloads are frequently used to deploy spyware or phishing forms. Do not enter credentials.'
+        note: 'High-risk pattern: Shortened links or unofficial APK downloads are frequently used for phishing. Do not enter credentials.'
       });
     } else {
       setUrlResult({
@@ -54,58 +48,54 @@ export const CyberSafetyPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pb-8">
       {/* Header */}
-      <div className="border-b border-slate-800 pb-3">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Lock className="w-5 h-5 text-sky-400" />
-          Cyber Safety & Anti-Blackmail
-        </h2>
-        <p className="text-xs text-slate-400">
+      <div>
+        <h1 className="page-title">Cyber Safety & Defense</h1>
+        <p className="text-caption text-[14px] mt-1">
           Digital security screening, intimate image defense, and device privacy audits.
         </p>
       </div>
 
       {/* Emergency Cyber Extortion Box */}
-      <div className="rounded-2xl bg-rose-950/40 border border-rose-800/60 p-4 space-y-2.5 text-xs text-rose-200">
-        <div className="flex items-center gap-2 font-bold text-white text-sm">
-          <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0" />
-          <span>If You Are Facing Blackmail / Extortion:</span>
+      <div className="rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] p-4 space-y-2 text-[13px]">
+        <div className="flex items-center gap-2 font-medium text-[var(--text)] text-[14px]">
+          <ShieldAlert className="w-4 h-4 text-[var(--sos)] shrink-0 stroke-[1.75]" />
+          <span>If facing blackmail or extortion:</span>
         </div>
-        <div className="space-y-1.5 text-rose-200/90 text-[11px] leading-relaxed">
-          <p><strong>1. DO NOT PAY:</strong> Paying money never stops extortion; it only invites higher demands.</p>
-          <p><strong>2. DO NOT DELETE CHATS:</strong> Preserve complete WhatsApp/Instagram chat history, phone numbers, and profile URLs for the police cyber cell.</p>
-          <p><strong>3. STOPNCII.ORG HASHING:</strong> You can create secure non-reversible hashes of intimate photos directly on StopNCII.org to prevent them from being uploaded across Meta, Instagram, and Reddit.</p>
-          <p><strong>4. OFFICIAL PORTAL:</strong> File an immediate grievance on <strong>cybercrime.gov.in</strong> or call <strong>1930</strong> (Cyber Helpline).</p>
+        <div className="space-y-1.5 text-caption text-[12px] leading-relaxed">
+          <p><strong>1. Do not pay:</strong> Paying money rarely stops extortion; it usually invites higher demands.</p>
+          <p><strong>2. Do not delete chats:</strong> Preserve complete WhatsApp/Instagram chat history and profile links.</p>
+          <p><strong>3. StopNCII.org hashing:</strong> Create non-reversible digital hashes of private photos on StopNCII.org to prevent their upload across Meta, Instagram, and Reddit.</p>
+          <p><strong>4. Official helpline:</strong> Call <strong>1930</strong> (National Cyber Crime) or file on <strong>cybercrime.gov.in</strong>.</p>
         </div>
-        <div className="pt-1 flex gap-2">
+        <div className="pt-2 flex flex-wrap gap-2">
           <a
             href="https://stopncii.org"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs font-semibold hover:bg-slate-800 transition"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--surface)] border border-[var(--line)] text-[var(--text)] text-[12px] font-medium hover:bg-[var(--surface-2)] transition"
           >
-            <span>StopNCII.org Platform</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
+            <span>StopNCII.org</span>
+            <ExternalLink className="w-3 h-3 stroke-[1.75]" />
           </a>
 
           <a
             href="https://cybercrime.gov.in"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-800 hover:bg-rose-700 text-white text-xs font-semibold transition"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--primary)] text-[var(--on-primary)] text-[12px] font-medium transition"
           >
             <span>Portal (1930)</span>
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3 h-3 stroke-[1.75]" />
           </a>
         </div>
       </div>
 
       {/* Suspicious URL Scanner */}
-      <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
-        <h3 className="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-          <Search className="w-3.5 h-3.5 text-sky-400" />
-          Suspicious URL / Phishing Checker
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-3 text-[13px]">
+        <h3 className="section-title text-[15px]">
+          Suspicious link scanner
         </h3>
 
         <div className="flex gap-2">
@@ -114,55 +104,54 @@ export const CyberSafetyPage: React.FC = () => {
             value={urlToCheck}
             onChange={(e) => setUrlToCheck(e.target.value)}
             placeholder="Paste suspicious website, shortened link, or form URL..."
-            className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            className="soft-input flex-1 text-[13px]"
           />
           <button
             onClick={checkUrl}
-            className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold"
+            className="soft-btn soft-btn-primary text-[13px] px-4"
           >
             Scan
           </button>
         </div>
 
         {urlResult && (
-          <div className={`p-3 rounded-xl border text-xs ${
+          <div className={`p-3 rounded-[8px] text-[12px] border ${
             urlResult.isSafe
-              ? 'bg-emerald-950/40 border-emerald-800 text-emerald-200'
-              : 'bg-rose-950/50 border-rose-800 text-rose-200'
+              ? 'bg-[var(--surface-2)] border-[var(--safe)] text-[var(--text)]'
+              : 'bg-[var(--surface-2)] border-[var(--sos)] text-[var(--text)]'
           }`}>
-            <p className="font-semibold">{urlResult.isSafe ? 'Low Risk Flag' : 'Potential Phishing Threat'}</p>
-            <p className="text-[11px] mt-0.5 opacity-90">{urlResult.note}</p>
+            <p className="font-medium">{urlResult.isSafe ? 'Low Risk Flag' : 'Potential Phishing Threat'}</p>
+            <p className="text-caption text-[11px] mt-0.5">{urlResult.note}</p>
           </div>
         )}
       </div>
 
       {/* Device Privacy Checklist */}
-      <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
-        <h3 className="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-          <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
-          Personal Device Privacy Audit
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-3 text-[13px]">
+        <h3 className="section-title text-[15px]">
+          Device privacy checklist
         </h3>
 
         <div className="space-y-2">
           {[
             { key: 'twoFactor' as const, label: 'Two-Factor Authentication (2FA) enabled on WhatsApp & Gmail via Authenticator app' },
-            { key: 'socialPrivate' as const, label: 'Instagram and Facebook accounts set to private with tagged photo approvals enabled' },
-            { key: 'locationPermissions' as const, label: 'Revoke background location permissions from unused third-party ride or food apps' },
-            { key: 'unknownDevices' as const, label: 'Check WhatsApp Web & Telegram linked devices list and log out of all unknown sessions' },
-            { key: 'googleActivityReview' as const, label: 'Review Google Account Timeline / Location Sharing to ensure no unauthorized sharing' },
+            { key: 'socialPrivate' as const, label: 'Social media accounts set to private with tagged photo approvals enabled' },
+            { key: 'locationPermissions' as const, label: 'Revoke background location permissions from unused third-party apps' },
+            { key: 'unknownDevices' as const, label: 'Check WhatsApp Web & Telegram linked devices and log out unknown sessions' },
+            { key: 'googleActivityReview' as const, label: 'Review account location sharing to ensure no unauthorized continuous sharing' },
           ].map((item) => (
             <div
               key={item.key}
               onClick={() => toggleCheck(item.key)}
-              className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer select-none hover:border-slate-700"
+              className="flex items-start gap-2.5 p-2.5 rounded-[8px] bg-[var(--surface-2)] cursor-pointer select-none"
             >
               <input
                 type="checkbox"
                 checked={checklist[item.key]}
                 onChange={() => {}}
-                className="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-0"
+                className="mt-0.5 rounded border-[var(--line)]"
               />
-              <span className={`text-xs ${checklist[item.key] ? 'text-slate-200 font-medium' : 'text-slate-400'}`}>
+              <span className={`text-[12px] ${checklist[item.key] ? 'text-[var(--text)]' : 'text-[var(--muted)]'}`}>
                 {item.label}
               </span>
             </div>

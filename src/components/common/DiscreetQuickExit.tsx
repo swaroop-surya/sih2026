@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { ShieldAlert, ExternalLink, EyeOff } from 'lucide-react';
+import { EyeOff } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface DiscreetQuickExitProps {
   onTriggerDisguise: () => void;
@@ -10,9 +11,10 @@ export const DiscreetQuickExit: React.FC<DiscreetQuickExitProps> = ({
   onTriggerDisguise,
   className = ''
 }) => {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape key or double Backquote activates quick exit immediately
       if (e.key === 'Escape') {
         onTriggerDisguise();
       }
@@ -25,11 +27,11 @@ export const DiscreetQuickExit: React.FC<DiscreetQuickExitProps> = ({
     <button
       id="btn-quick-exit"
       onClick={onTriggerDisguise}
-      className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 transition-colors ${className}`}
-      title="Discreet Quick Disguise (Shortcut: ESC)"
-      aria-label="Discreet Quick Disguise"
+      className={`flex items-center justify-center rounded-full transition-all active:scale-95 bg-[var(--surface-2)] hover:bg-[var(--sos)]/10 border border-[var(--line)] hover:border-[var(--sos)]/30 text-[var(--muted)] hover:text-[var(--sos)] cursor-pointer select-none ${className}`}
+      title={`${t.quickExit || 'Quick hide'} (Esc)`}
+      aria-label={t.quickExit || 'Quick hide'}
     >
-      <EyeOff className="w-3.5 h-3.5 stroke-[1.8]" />
+      <EyeOff className="w-4 h-4 stroke-[2]" />
     </button>
   );
 };

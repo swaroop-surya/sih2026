@@ -2,15 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import {
   Clock,
-  MapPin,
-  Users,
   CheckCircle,
-  AlertTriangle,
-  Play,
-  RotateCcw,
-  ShieldCheck,
   AlertOctagon,
-  Calendar
+  Play
 } from 'lucide-react';
 import { formatTimeRemaining } from '../lib/utils';
 
@@ -24,8 +18,8 @@ export const SafetyCheckinPage: React.FC = () => {
   } = useAegis();
 
   // New checkin form
-  const [purpose, setPurpose] = useState('Late night cab commute');
-  const [destination, setDestination] = useState('Home (Indiranagar)');
+  const [purpose, setPurpose] = useState('Late night commute');
+  const [destination, setDestination] = useState('Home');
   const [durationMinutes, setDurationMinutes] = useState(20);
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>(() =>
@@ -39,17 +33,19 @@ export const SafetyCheckinPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const activeCheckin = checkins.find(c => c.status === 'ACTIVE');
-  const pastCheckins = checkins.filter(c => c.status !== 'ACTIVE');
+  const activeCheckin = (checkins || []).find(c => c.status === 'ACTIVE');
+  const pastCheckins = (checkins || []).filter(c => c.status !== 'ACTIVE');
 
   const handleStartCheckin = () => {
     if (!purpose.trim() || !destination.trim()) return;
+    const safeContacts = contacts || [];
     createCheckin({
       purpose,
       destination,
       durationMinutes,
       isRecurring,
-      notifyContactIds: selectedContactIds.length ? selectedContactIds : contacts.map(c => c.id)
+      contactId: selectedContactIds[0] || safeContacts[0]?.id || 'tc_1',
+      notifyContactIds: selectedContactIds.length ? selectedContactIds : safeContacts.map(c => c.id)
     });
   };
 
@@ -60,52 +56,51 @@ export const SafetyCheckinPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="border-b border-slate-800 pb-3">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Clock className="w-5 h-5 text-amber-400" />
-          Safety Check-Ins
-        </h2>
-        <p className="text-xs text-slate-400">
-          Automated countdown timers for commutes, late travel, or meetings with unfamiliar people.
+      <div>
+        <h1 className="page-title">Safety Check-ins</h1>
+        <p className="text-caption text-[14px] mt-1">
+          Automated countdown timers for commutes, travel, or meetings with new people.
         </p>
       </div>
 
       {/* ACTIVE CHECKIN CARD */}
       {activeCheckin ? (
-        <div className="rounded-2xl bg-gradient-to-br from-amber-950/70 to-slate-900 border-2 border-amber-600/70 p-5 space-y-4 shadow-xl">
+        <div className="p-5 rounded-[16px] bg-[var(--surface)] border border-[var(--line)] space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
-              Active Check-In In Progress
+            <span className="text-[12px] font-medium text-[var(--accent)] flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[var(--accent)] animate-ping" />
+              Active check-in running
             </span>
-            <span className="text-xs font-mono font-bold bg-amber-900/50 text-amber-200 px-2 py-0.5 rounded border border-amber-700">
-              {activeCheckin.isRecurring ? 'Recurring' : 'Single Trip'}
+            <span className="text-[11px] font-medium bg-[var(--surface-2)] text-[var(--muted)] px-2.5 py-0.5 rounded-full border border-[var(--line)]">
+              {activeCheckin.isRecurring ? 'Daily' : 'Single trip'}
             </span>
           </div>
 
           <div className="text-center py-2 space-y-1">
-            <div className="text-4xl font-extrabold text-white font-mono tracking-tight">
+            <div className="text-[36px] font-heading font-semibold text-[var(--text)] font-mono tracking-tight">
               {formatTimeRemaining(activeCheckin.expiresAt)}
             </div>
-            <p className="text-xs text-slate-300">
-              Time remaining before alert is dispatched
+            <p className="text-caption text-[12px]">
+              Time remaining before an alert is dispatched
             </p>
           </div>
 
-          <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+          <div className="p-3 rounded-[12px] bg-[var(--surface-2)] space-y-1.5 text-[13px]">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Purpose:</span>
-              <span className="font-semibold text-white">{activeCheckin.purpose}</span>
+              <span className="text-[var(--muted)]">Purpose:</span>
+              <span className="font-medium text-[var(--text)]">{activeCheckin.purpose}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Destination:</span>
-              <span className="font-semibold text-white">{activeCheckin.destination}</span>
+              <span className="text-[var(--muted)]">Destination:</span>
+              <span className="font-medium text-[var(--text)]">{activeCheckin.destination}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Contacts on Watch:</span>
-              <span className="font-semibold text-emerald-400">{activeCheckin.notifyContactIds.length} Trusted</span>
+              <span className="text-[var(--muted)]">Watching:</span>
+              <span className="font-medium text-[var(--safe)]">
+                {(activeCheckin.notifyContactIds?.length ?? (activeCheckin.contactId ? 1 : 0))} Contacts
+              </span>
             </div>
           </div>
 
@@ -114,61 +109,60 @@ export const SafetyCheckinPage: React.FC = () => {
             <button
               id="btn-checkin-safe"
               onClick={() => resolveCheckinSafe(activeCheckin.id)}
-              className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+              className="soft-btn soft-btn-primary text-[13px] h-10"
             >
-              <CheckCircle className="w-4 h-4" />
-              <span>I'M SAFE (Complete)</span>
+              <CheckCircle className="w-4 h-4 mr-1.5 stroke-[1.75]" />
+              <span>I am safe</span>
             </button>
 
             <button
               id="btn-checkin-danger"
               onClick={() => triggerCheckinHelp(activeCheckin.id)}
-              className="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+              className="soft-btn soft-btn-sos text-[13px] h-10"
             >
-              <AlertOctagon className="w-4 h-4" />
-              <span>I NEED HELP (SOS)</span>
+              <AlertOctagon className="w-4 h-4 mr-1.5 stroke-[1.75]" />
+              <span>I need help</span>
             </button>
           </div>
         </div>
       ) : (
         /* CREATE NEW CHECKIN FORM */
-        <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3.5 shadow-sm">
-          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <Play className="w-3.5 h-3.5 text-amber-400" />
-            Start a New Safety Timer
+        <div className="p-5 rounded-[16px] bg-[var(--surface)] border border-[var(--line)] space-y-4">
+          <h3 className="section-title text-[16px]">
+            Start a new timer
           </h3>
 
-          <div className="space-y-3 text-xs">
+          <div className="space-y-3 text-[13px]">
             <div>
-              <label className="block font-medium text-slate-300 mb-1">
+              <label className="block font-medium text-[var(--text)] mb-1">
                 Where are you going / Activity
               </label>
               <input
                 type="text"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                placeholder="e.g. Cab ride from office, meeting with client, evening run"
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                placeholder="e.g. Cab ride from office, meeting, evening walk"
+                className="soft-input w-full text-[13px]"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-slate-300 mb-1">
+              <label className="block font-medium text-[var(--text)] mb-1">
                 Destination / Safe Endpoint
               </label>
               <input
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g. Indiranagar home, hostel room 204"
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                placeholder="e.g. Home, hostel, metro station"
+                className="soft-input w-full text-[13px]"
               />
             </div>
 
             {/* Duration presets */}
             <div>
-              <label className="block font-medium text-slate-300 mb-1">
-                Expected Travel / Duration
+              <label className="block font-medium text-[var(--text)] mb-1">
+                Expected Travel Time
               </label>
               <div className="grid grid-cols-4 gap-1.5">
                 {[15, 30, 45, 60].map((mins) => (
@@ -176,10 +170,10 @@ export const SafetyCheckinPage: React.FC = () => {
                     key={mins}
                     type="button"
                     onClick={() => setDurationMinutes(mins)}
-                    className={`py-2 rounded-xl text-xs font-semibold border transition ${
+                    className={`h-9 rounded-full text-[12px] font-medium border transition cursor-pointer ${
                       durationMinutes === mins
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-200'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                        ? 'bg-[var(--primary)] text-[var(--on-primary)] border-[var(--primary)]'
+                        : 'bg-[var(--surface-2)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]'
                     }`}
                   >
                     {mins}m
@@ -189,22 +183,22 @@ export const SafetyCheckinPage: React.FC = () => {
             </div>
 
             {/* Recurring toggle */}
-            <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer">
+            <label className="flex items-center gap-2.5 p-3 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] cursor-pointer">
               <input
                 type="checkbox"
                 checked={isRecurring}
                 onChange={(e) => setIsRecurring(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
+                className="rounded border-[var(--line)] bg-[var(--surface)] text-[var(--primary)]"
               />
-              <div className="text-xs">
-                <span className="font-semibold text-slate-200 block">Daily Commute Schedule</span>
-                <span className="text-[11px] text-slate-400">Automatically prompt check-in for daily return journey</span>
+              <div className="text-[12px]">
+                <span className="font-medium text-[var(--text)] block">Daily commute schedule</span>
+                <span className="text-caption text-[11px]">Prompt automatically for this return journey daily</span>
               </div>
             </label>
 
             {/* Contacts selection */}
             <div>
-              <label className="block font-medium text-slate-300 mb-1">
+              <label className="block font-medium text-[var(--text)] mb-1">
                 Contacts to alert if overdue ({selectedContactIds.length} selected)
               </label>
               <div className="space-y-1.5">
@@ -214,10 +208,10 @@ export const SafetyCheckinPage: React.FC = () => {
                     <div
                       key={c.id}
                       onClick={() => toggleContact(c.id)}
-                      className={`cursor-pointer p-2 rounded-xl border text-xs flex items-center justify-between transition ${
+                      className={`cursor-pointer p-2.5 rounded-[12px] border text-[13px] flex items-center justify-between transition ${
                         isChecked
-                          ? 'bg-amber-950/30 border-amber-700/60 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--surface-2)] border-[var(--primary)] text-[var(--text)]'
+                          : 'bg-[var(--surface)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]'
                       }`}
                     >
                       <span>{c.name} ({c.relationship})</span>
@@ -225,7 +219,7 @@ export const SafetyCheckinPage: React.FC = () => {
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => {}}
-                        className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
+                        className="rounded border-[var(--line)]"
                       />
                     </div>
                   );
@@ -236,10 +230,10 @@ export const SafetyCheckinPage: React.FC = () => {
             <button
               id="btn-start-checkin"
               onClick={handleStartCheckin}
-              className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+              className="soft-btn soft-btn-primary w-full text-[14px] h-10"
             >
-              <Clock className="w-4 h-4" />
-              <span>Start Active Safety Timer</span>
+              <Clock className="w-4 h-4 mr-1.5 stroke-[1.75]" />
+              <span>Start safety timer</span>
             </button>
           </div>
         </div>
@@ -247,35 +241,34 @@ export const SafetyCheckinPage: React.FC = () => {
 
       {/* PAST CHECK-IN HISTORY */}
       <div className="space-y-2">
-        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-sky-400" />
-          Recent Check-in Records
+        <h3 className="section-title text-[16px]">
+          Recent check-in records
         </h3>
 
         {pastCheckins.length === 0 ? (
-          <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
+          <div className="p-5 rounded-[12px] bg-[var(--surface-2)] text-center text-caption text-[13px]">
             No past check-ins recorded.
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
             {pastCheckins.map(chk => (
               <div
                 key={chk.id}
-                className="p-3 rounded-xl bg-slate-900/70 border border-slate-800 flex items-start justify-between text-xs"
+                className="py-3 flex items-start justify-between text-[13px] px-1"
               >
                 <div>
-                  <div className="font-semibold text-white">{chk.purpose}</div>
-                  <div className="text-[11px] text-slate-400">Destination: {chk.destination}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">
+                  <div className="font-medium text-[var(--text)]">{chk.purpose}</div>
+                  <div className="text-caption text-[12px]">Destination: {chk.destination}</div>
+                  <div className="text-caption text-[11px] mt-0.5">
                     {new Date(chk.startedAt).toLocaleDateString('en-IN')} • Duration: {chk.durationMinutes} min
                   </div>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
                   chk.status === 'SAFE'
-                    ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                    ? 'bg-[var(--safe)]/15 text-[var(--safe)]'
                     : chk.status === 'EXPIRED'
-                    ? 'bg-rose-950 text-rose-300 border-rose-800'
-                    : 'bg-amber-950 text-amber-300 border-amber-800'
+                    ? 'bg-[var(--sos)] text-white'
+                    : 'bg-[var(--accent)] text-[#1A1F45]'
                 }`}>
                   {chk.status}
                 </span>

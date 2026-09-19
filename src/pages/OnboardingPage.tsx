@@ -7,10 +7,10 @@ import {
   MapPin,
   Bell,
   CheckCircle,
-  ArrowRight,
   AlertTriangle,
   ChevronRight
 } from 'lucide-react';
+import { AbhayaLogo } from '../components/common/AbhayaLogo';
 
 export const OnboardingPage: React.FC = () => {
   const { setCurrentPage, updateProfile, addContact, addSafePlace } = useAegis();
@@ -29,7 +29,7 @@ export const OnboardingPage: React.FC = () => {
 
   const handleFinish = () => {
     updateProfile({
-      name: name.trim() || 'Protected User',
+      name: name.trim() || 'User',
       isOnboarded: true
     });
 
@@ -50,7 +50,7 @@ export const OnboardingPage: React.FC = () => {
         name: safePlaceName.trim(),
         type: 'OTHER',
         address: safePlaceAddress.trim(),
-        notes: 'Added during onboarding'
+        notes: 'Added during setup'
       });
     }
 
@@ -63,21 +63,21 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-6 px-4">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between py-6 px-4">
       {/* Progress Bar */}
       <div className="w-full max-w-sm mx-auto mb-6">
-        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+        <div className="flex items-center justify-between text-[12px] text-[var(--muted)] mb-2">
           <span>Step {step} of {totalSteps}</span>
           <button
             onClick={handleSkip}
-            className="text-sky-400 hover:underline font-medium"
+            className="text-[var(--primary)] hover:underline font-medium cursor-pointer"
           >
             Skip for now
           </button>
         </div>
-        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-[var(--surface-2)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-sky-500 transition-all duration-300 rounded-full"
+            className="h-full bg-[var(--primary)] transition-all duration-300 rounded-full"
             style={{ width: `${(step / totalSteps) * 100}%` }}
           />
         </div>
@@ -87,40 +87,37 @@ export const OnboardingPage: React.FC = () => {
       <div className="w-full max-w-sm mx-auto flex-1 flex flex-col justify-center space-y-5">
         {step === 1 && (
           <div className="space-y-4 text-center">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-xl">
-              <Shield className="w-8 h-8" />
+            <div className="inline-flex items-center justify-center">
+              <AbhayaLogo size={56} />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Welcome to Aegis</h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              A serious, mobile-first personal safety infrastructure platform designed for women’s protection, risk prevention, and discreet response.
+            <h2 className="text-[26px] font-heading font-semibold text-[var(--text)]">Welcome to Abhaya</h2>
+            <p className="text-[14px] text-[var(--muted)] leading-relaxed">
+              You're not alone. Personal safety, early risk detection, and discreet emergency response.
             </p>
-            <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-left space-y-1.5">
-              <p className="font-semibold text-slate-200">What makes Aegis different:</p>
-              <p>• Focuses on early risk detection before an incident escalates.</p>
-              <p>• Coordinates with your trusted circle and connects to 112 emergency services.</p>
-              <p>• Respects autonomy: consensual adult decisions are never penalized.</p>
+            <div className="bg-[var(--surface)] p-4 rounded-[12px] border border-[var(--line)] text-[13px] text-[var(--muted)] text-left space-y-2">
+              <p className="font-medium text-[var(--text)]">Core principles:</p>
+              <p>• Focuses on early risk detection before situations escalate.</p>
+              <p>• Connects with your trusted contacts and official 112 emergency services.</p>
+              <p>• Full privacy: everything stays on your phone unless you trigger help.</p>
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">What Aegis Does</h2>
-            <div className="space-y-2.5 text-xs text-slate-300">
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                <span className="font-semibold text-sky-400">1. Early Risk Assessment</span>
-                <p className="text-slate-400">Structured questionnaire detecting indicators of coercive control, stalking, blackmail, or exploitation.</p>
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">What Abhaya Does</h2>
+            <div className="space-y-2.5 text-[13px]">
+              <div className="p-3.5 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+                <span className="font-medium text-[var(--text)] block">1. Early Risk Assessment</span>
+                <p className="text-caption text-[12px]">Check patterns of stalking, coercion, harassment, or unsafe routes.</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                <span className="font-semibold text-emerald-400">2. Safety Check-Ins & Circle</span>
-                <p className="text-slate-400">Automated countdown timers for commutes or meetings that notify your trusted circle if unconfirmed.</p>
+              <div className="p-3.5 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+                <span className="font-medium text-[var(--text)] block">2. Safety Check-Ins</span>
+                <p className="text-caption text-[12px]">Countdown timers for commutes that notify trusted contacts if unconfirmed.</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                <span className="font-semibold text-rose-400">3. Cryptographic Evidence Vault</span>
-                <p className="text-slate-400">Stores screenshots and logs with client-side SHA-256 hashes to preserve timestamped integrity.</p>
+              <div className="p-3.5 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-1">
+                <span className="font-medium text-[var(--text)] block">3. Your Private Record</span>
+                <p className="text-caption text-[12px]">Stores screenshots and notes with digital fingerprints so they cannot be altered.</p>
               </div>
             </div>
           </div>
@@ -128,25 +125,21 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 3 && (
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Privacy & Principles</h2>
-            <div className="space-y-3 text-xs text-slate-300 bg-slate-900 p-4 rounded-xl border border-slate-800 leading-relaxed">
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">Privacy & Principles</h2>
+            <div className="space-y-3 text-[13px] bg-[var(--surface)] p-4 rounded-[12px] border border-[var(--line)] leading-relaxed">
               <p>
-                <strong>No Continuous Surveillance:</strong> Aegis never tracks your live location without your explicit permission during an active check-in or SOS.
+                <strong>No Continuous Tracking:</strong> Abhaya never tracks your live location in the background. GPS is queried only when you actively trigger SOS or a check-in.
               </p>
-              <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/40 text-amber-200">
-                <p className="font-semibold flex items-center gap-1.5 mb-1">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  Important Legal & Medical Disclaimer
+              <div className="p-2.5 rounded-[8px] bg-[var(--surface-2)] text-[12px] text-[var(--muted)]">
+                <p className="font-medium text-[var(--text)] mb-0.5">
+                  Observational Safety Guidance
                 </p>
-                <p className="text-[11px] text-amber-300/90 leading-normal">
-                  Risk scores generated by Aegis are observational safety indicators, not legal verdicts or medical diagnoses. Aegis acts as a prevention layer and does not replace official emergency services like India's 112 or 181 Women Helpline.
+                <p>
+                  Assessments generated by Abhaya are observational safety indicators, not legal verdicts or medical advice. Abhaya does not replace official emergency services (112 / 181).
                 </p>
               </div>
-              <p>
-                <strong>Discreet Panic Protection:</strong> A one-tap Quick Exit instantly replaces this screen with a functional neutral weather app or note view if someone enters the room.
+              <p className="text-[12px] text-[var(--muted)]">
+                <strong>Discreet Quick Hide:</strong> Tap the lock or disguise icon to immediately replace this view with a neutral screen if someone walks into the room.
               </p>
             </div>
           </div>
@@ -154,23 +147,23 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Set Up Profile</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">Set Up Profile</h2>
+            <p className="text-caption text-[13px]">
               Provide a name. This name is included in alerts sent to your trusted circle.
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Your Name</label>
+                <label className="block text-[12px] font-medium text-[var(--text)] mb-1">Your Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ananya"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="soft-input w-full text-[13px]"
                 />
               </div>
-              <div className="rounded-xl bg-slate-900/60 p-3 border border-slate-800/80 text-[11px] text-slate-400">
-                🔒 Data is stored in your private local encrypted container. No credentials or evidence are made public.
+              <div className="rounded-[8px] bg-[var(--surface-2)] p-3 text-[12px] text-[var(--muted)]">
+                Data is stored locally on this phone. No personal details are public.
               </div>
             </div>
           </div>
@@ -178,31 +171,28 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 5 && (
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
-              <Users className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Add Trusted Contact</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">Add Trusted Contact</h2>
+            <p className="text-caption text-[13px]">
               Who should be notified if you trigger SOS or miss a safety check-in?
             </p>
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-[13px]">
               <div>
-                <label className="block font-medium text-slate-300 mb-1">Contact Name</label>
+                <label className="block font-medium text-[var(--text)] mb-1">Contact Name</label>
                 <input
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                   placeholder="e.g. Pooja (Sister)"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="soft-input w-full text-[13px]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-medium text-slate-300 mb-1">Relationship</label>
+                  <label className="block font-medium text-[var(--text)] mb-1">Relationship</label>
                   <select
                     value={contactRelation}
                     onChange={(e) => setContactRelation(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    className="soft-input w-full text-[13px] cursor-pointer"
                   >
                     <option value="Sister">Sister</option>
                     <option value="Mother">Mother</option>
@@ -213,13 +203,13 @@ export const OnboardingPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-300 mb-1">Mobile Phone</label>
+                  <label className="block font-medium text-[var(--text)] mb-1">Mobile Phone</label>
                   <input
                     type="tel"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder="+91 98..."
-                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    className="soft-input w-full text-[13px]"
                   />
                 </div>
               </div>
@@ -229,32 +219,29 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 6 && (
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-              <MapPin className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Safe Places (Optional)</h2>
-            <p className="text-xs text-slate-400">
-              Define a sanctuary place (home, hostel, or workplace) where you can take safe shelter.
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">Safe Places (Optional)</h2>
+            <p className="text-caption text-[13px]">
+              Add a trusted place (home, hostel, or office) where you can take shelter.
             </p>
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-[13px]">
               <div>
-                <label className="block font-medium text-slate-300 mb-1">Place Name</label>
+                <label className="block font-medium text-[var(--text)] mb-1">Place Name</label>
                 <input
                   type="text"
                   value={safePlaceName}
                   onChange={(e) => setSafePlaceName(e.target.value)}
-                  placeholder="e.g. University Hostel / Office RMZ"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  placeholder="e.g. University Hostel / Office"
+                  className="soft-input w-full text-[13px]"
                 />
               </div>
               <div>
-                <label className="block font-medium text-slate-300 mb-1">Address / Landmark</label>
+                <label className="block font-medium text-[var(--text)] mb-1">Address / Landmark</label>
                 <input
                   type="text"
                   value={safePlaceAddress}
                   onChange={(e) => setSafePlaceAddress(e.target.value)}
                   placeholder="e.g. Near Indiranagar Metro Station"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="soft-input w-full text-[13px]"
                 />
               </div>
             </div>
@@ -263,25 +250,22 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 7 && (
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-              <Bell className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Emergency Preferences</h2>
-            <div className="space-y-3 text-xs">
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+            <h2 className="text-[22px] font-heading font-semibold text-[var(--text)]">Emergency Preferences</h2>
+            <div className="space-y-3 text-[13px]">
+              <label className="flex items-start gap-3 p-3.5 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={notifyOnSOS}
                   onChange={(e) => setNotifyOnSOS(e.target.checked)}
-                  className="mt-0.5 rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0"
+                  className="mt-0.5 rounded"
                 />
                 <div>
-                  <span className="font-semibold text-slate-200 block">Instant Trusted Contact SMS</span>
-                  <span className="text-slate-400">Send simulated emergency coordinates to configured priority contacts upon SOS activation.</span>
+                  <span className="font-medium text-[var(--text)] block">Instant Trusted Contact SMS</span>
+                  <span className="text-caption text-[12px]">Send simulated emergency coordinates to configured priority contacts upon SOS activation.</span>
                 </div>
               </label>
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400">
-                You can change these preferences anytime from your Profile settings.
+              <div className="p-3 rounded-[8px] bg-[var(--surface-2)] text-[12px] text-[var(--muted)]">
+                You can change these preferences anytime from Profile settings.
               </div>
             </div>
           </div>
@@ -293,7 +277,7 @@ export const OnboardingPage: React.FC = () => {
         {step > 1 ? (
           <button
             onClick={() => setStep(prev => prev - 1)}
-            className="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+            className="soft-btn soft-btn-secondary text-[13px] px-4"
           >
             Back
           </button>
@@ -304,18 +288,18 @@ export const OnboardingPage: React.FC = () => {
         {step < totalSteps ? (
           <button
             onClick={() => setStep(prev => prev + 1)}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition shadow-sm"
+            className="soft-btn soft-btn-primary flex-1 text-[13px]"
           >
             <span>Continue</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 ml-1 stroke-[1.75]" />
           </button>
         ) : (
           <button
             onClick={handleFinish}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition shadow-sm"
+            className="soft-btn soft-btn-primary flex-1 text-[13px]"
           >
-            <span>Enter Aegis Shield</span>
-            <CheckCircle className="w-4 h-4" />
+            <span>Enter Abhaya</span>
+            <CheckCircle className="w-4 h-4 ml-1 stroke-[1.75]" />
           </button>
         )}
       </div>

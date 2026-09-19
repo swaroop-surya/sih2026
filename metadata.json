@@ -1,6 +1,6 @@
 {
-  "name": "Aegis",
-  "description": "Mobile-first women safety, prevention, early risk detection, and discreet emergency response platform.",
+  "name": "Abhaya",
+  "description": "You're not alone. Mobile-first women safety, prevention, early risk detection, and discreet emergency response.",
   "requestFramePermissions": [
     "geolocation",
     "camera",

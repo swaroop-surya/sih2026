@@ -4,27 +4,16 @@ import { SafetyPlanSection } from '../types';
 import {
   CheckSquare,
   Square,
-  Shield,
-  Plus,
-  Lock,
   EyeOff,
   Eye,
-  FileCheck,
-  MapPin,
-  Users,
-  Car,
-  HeartPulse,
-  AlertCircle
+  Plus
 } from 'lucide-react';
 
 export const SafetyPlanPage: React.FC = () => {
   const {
     safetyPlan,
     toggleSafetyPlanItem,
-    addSafetyPlanItem,
-    contacts,
-    safePlaces,
-    setCurrentPage
+    addSafetyPlanItem
   } = useAegis();
 
   const [isDiscreetView, setIsDiscreetView] = useState(false);
@@ -32,8 +21,9 @@ export const SafetyPlanPage: React.FC = () => {
   const [newItemText, setNewItemText] = useState('');
   const [newItemSection, setNewItemSection] = useState<SafetyPlanSection>('DOCUMENTS');
 
-  const completedCount = safetyPlan.filter(i => i.isCompleted).length;
-  const progressPercent = Math.round((completedCount / (safetyPlan.length || 1)) * 100);
+  const safePlan = safetyPlan || [];
+  const completedCount = safePlan.filter(i => i.isCompleted).length;
+  const progressPercent = Math.round((completedCount / (safePlan.length || 1)) * 100);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,108 +36,105 @@ export const SafetyPlanPage: React.FC = () => {
   };
 
   const filteredItems = selectedSection === 'ALL'
-    ? safetyPlan
-    : safetyPlan.filter(i => i.section === selectedSection);
+    ? safePlan
+    : safePlan.filter(i => i.section === selectedSection);
 
   const sectionsList: Array<{ key: SafetyPlanSection; label: string; discreetLabel: string }> = [
     { key: 'DOCUMENTS', label: 'Identity & Legal Papers', discreetLabel: 'Important Files' },
     { key: 'SAFE_PLACES', label: 'Emergency Shelters', discreetLabel: 'Saved Locations' },
-    { key: 'TRANSPORT', label: 'Escape Transportation', discreetLabel: 'Travel Itinerary' },
-    { key: 'MEDICAL', label: 'Critical Health & Prescriptions', discreetLabel: 'Wellness Notes' },
-    { key: 'CONTACTS', label: 'Trusted Distress Network', discreetLabel: 'Personal Directory' },
-    { key: 'EXIT_BAG', label: 'Secret Emergency Go-Bag', discreetLabel: 'Travel Kit' }
+    { key: 'TRANSPORT', label: 'Transportation', discreetLabel: 'Travel Itinerary' },
+    { key: 'MEDICAL', label: 'Health & Prescriptions', discreetLabel: 'Wellness Notes' },
+    { key: 'CONTACTS', label: 'Trusted Network', discreetLabel: 'Personal Directory' },
+    { key: 'EXIT_BAG', label: 'Emergency Bag', discreetLabel: 'Travel Kit' }
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-sky-400" />
-            {isDiscreetView ? 'Personal Organizer' : 'Personal Safety & Exit Plan'}
-          </h2>
-          <p className="text-xs text-slate-400">
-            {isDiscreetView ? 'Private checklists and travel items' : 'Step-by-step actionable exit readiness and documentation checklist.'}
+          <h1 className="page-title">
+            {isDiscreetView ? 'Personal Organizer' : 'Safety Plan'}
+          </h1>
+          <p className="text-caption text-[14px] mt-1">
+            {isDiscreetView ? 'Private checklists and travel items.' : 'Step-by-step readiness checklist.'}
           </p>
         </div>
 
         {/* Discreet view toggle */}
         <button
           onClick={() => setIsDiscreetView(!isDiscreetView)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 hover:text-white transition"
-          title="Mutes sensitive titles for safety"
+          className="h-8 px-3 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] text-[12px] font-medium hover:bg-[var(--surface)] transition cursor-pointer flex items-center gap-1.5 shrink-0"
+          title="Mutes sensitive titles for discretion"
         >
-          {isDiscreetView ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {isDiscreetView ? <Eye className="w-3.5 h-3.5 stroke-[1.75]" /> : <EyeOff className="w-3.5 h-3.5 stroke-[1.75]" />}
           <span>{isDiscreetView ? 'Standard' : 'Discreet'}</span>
         </button>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2">
-        <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="text-slate-300">Preparedness Completion</span>
-          <span className="text-emerald-400 font-bold">{progressPercent}% ({completedCount}/{safetyPlan.length})</span>
+      {/* Progress */}
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-2">
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="text-[var(--muted)]">Readiness progress</span>
+          <span className="font-medium text-[var(--safe)]">{progressPercent}% ({completedCount}/{safePlan.length})</span>
         </div>
-        <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+        <div className="h-1.5 w-full bg-[var(--surface-2)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+            className="h-full bg-[var(--safe)] rounded-full transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-        <button
-          onClick={() => setSelectedSection('ALL')}
-          className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition ${
-            selectedSection === 'ALL'
-              ? 'bg-sky-600 text-white'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          All Items ({safetyPlan.length})
-        </button>
-        {sectionsList.map(sec => (
+      <div className="overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 min-w-max">
           <button
-            key={sec.key}
-            onClick={() => setSelectedSection(sec.key)}
-            className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition ${
-              selectedSection === sec.key
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
+            onClick={() => setSelectedSection('ALL')}
+            className={`h-7 px-3 rounded-full text-[12px] font-medium transition cursor-pointer ${
+              selectedSection === 'ALL'
+                ? 'bg-[var(--primary)] text-[var(--on-primary)]'
+                : 'bg-[var(--surface-2)] border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            {isDiscreetView ? sec.discreetLabel : sec.label}
+            All ({safetyPlan.length})
           </button>
-        ))}
+          {sectionsList.map(sec => (
+            <button
+              key={sec.key}
+              onClick={() => setSelectedSection(sec.key)}
+              className={`h-7 px-3 rounded-full text-[12px] font-medium transition cursor-pointer ${
+                selectedSection === sec.key
+                  ? 'bg-[var(--primary)] text-[var(--on-primary)]'
+                  : 'bg-[var(--surface-2)] border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              {isDiscreetView ? sec.discreetLabel : sec.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Checklist items */}
-      <div className="space-y-2">
+      <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
         {filteredItems.map(item => (
           <div
             key={item.id}
             onClick={() => toggleSafetyPlanItem(item.id)}
-            className={`cursor-pointer p-3 rounded-xl border transition text-xs flex items-start gap-3 select-none ${
-              item.isCompleted
-                ? 'bg-emerald-950/20 border-emerald-800/40 text-slate-400'
-                : 'bg-slate-900 border-slate-800 text-slate-200 hover:border-slate-700'
-            }`}
+            className="py-3 flex items-start gap-3 cursor-pointer select-none px-1 hover:bg-[var(--surface-2)]/50 transition"
           >
             <div className="mt-0.5 shrink-0">
               {item.isCompleted ? (
-                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                <CheckSquare className="w-4 h-4 text-[var(--safe)] stroke-[1.75]" />
               ) : (
-                <Square className="w-4 h-4 text-slate-500" />
+                <Square className="w-4 h-4 text-[var(--muted)] stroke-[1.75]" />
               )}
             </div>
-            <div className="flex-1">
-              <span className={`font-medium block ${item.isCompleted ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+            <div className="flex-1 min-w-0">
+              <span className={`text-[13px] block ${item.isCompleted ? 'line-through text-[var(--muted)]' : 'text-[var(--text)]'}`}>
                 {item.title}
               </span>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block mt-0.5">
+              <span className="text-[11px] text-[var(--muted)] block mt-0.5">
                 {item.section.replace('_', ' ')}
               </span>
             </div>
@@ -156,35 +143,36 @@ export const SafetyPlanPage: React.FC = () => {
       </div>
 
       {/* Add Custom Item */}
-      <form onSubmit={handleAddItem} className="bg-slate-900/70 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs">
-        <span className="font-semibold text-slate-300 block">Add Custom Checklist Action</span>
+      <form onSubmit={handleAddItem} className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-2.5 text-[13px]">
+        <span className="font-medium text-[var(--text)] block">Add checklist action</span>
         <div className="grid grid-cols-3 gap-2">
           <select
             value={newItemSection}
             onChange={(e) => setNewItemSection(e.target.value as SafetyPlanSection)}
-            className="col-span-1 rounded-xl border border-slate-800 bg-slate-950 px-2 py-2 text-xs text-white focus:outline-none"
+            className="col-span-1 soft-input text-[12px] cursor-pointer"
           >
             <option value="DOCUMENTS">Documents</option>
             <option value="SAFE_PLACES">Safe Place</option>
             <option value="TRANSPORT">Transport</option>
             <option value="MEDICAL">Medical</option>
-            <option value="EXIT_BAG">Go-Bag</option>
+            <option value="EXIT_BAG">Bag</option>
           </select>
 
           <input
             type="text"
             value={newItemText}
             onChange={(e) => setNewItemText(e.target.value)}
-            placeholder="e.g. Spare key hidden at aunt's house"
-            className="col-span-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:outline-none"
+            placeholder="e.g. Spare key hidden safely"
+            className="col-span-2 soft-input text-[13px]"
           />
         </div>
         <button
           type="submit"
           disabled={!newItemText.trim()}
-          className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-semibold transition"
+          className="soft-btn soft-btn-primary w-full text-[13px] h-9"
         >
-          Add to Plan
+          <Plus className="w-3.5 h-3.5 mr-1 stroke-[1.75]" />
+          Add to plan
         </button>
       </form>
     </div>

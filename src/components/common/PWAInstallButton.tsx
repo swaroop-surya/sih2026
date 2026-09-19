@@ -1,44 +1,35 @@
 import React, { useState } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
-import { Download, Smartphone, Check } from 'lucide-react';
+import { Download, Smartphone } from 'lucide-react';
 import { MobileDownloadModal } from './MobileDownloadModal';
-import { useTheme } from '../../context/ThemeContext';
 
 interface PWAInstallButtonProps {
-  variant?: 'header' | 'card' | 'banner';
+  variant?: 'header' | 'banner' | 'card';
+  className?: string;
 }
 
-export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'header' }) => {
-  const { isInstalled, isInstallable, install } = usePWAInstall();
+export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
+  variant = 'header',
+  className = ''
+}) => {
+  const { isInstallable, isInstalled, install, isInIframe } = usePWAInstall();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const { isCream } = useTheme();
 
-  // If already running in standalone mode (installed as PWA)
+  // If already installed and running standalone, don't show the prompt
   if (isInstalled) {
-    if (variant === 'card') {
-      return (
-        <div className="flex items-center gap-2.5 rounded-2xl bg-emerald-950/50 border border-emerald-800/60 p-3.5 text-xs text-emerald-300 shadow-sm">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
-            <Check className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div>
-            <p className="font-bold text-white">App Downloaded & Active</p>
-            <p className="text-[11px] text-emerald-400/90">Running in standalone app mode with full offline vault capability</p>
-          </div>
-        </div>
-      );
-    }
     return null;
   }
 
   const handleClick = async () => {
-    // If native prompt is available right here, try triggering it first
-    if (isInstallable) {
-      const outcome = await install();
-      if (!outcome) {
-        setShowDownloadModal(true);
-      }
-    } else {
+    // If running in an iframe or on iOS/desktop without direct prompt, opening modal with QR & guides is best
+    if (isInIframe || !isInstallable) {
+      setShowDownloadModal(true);
+      return;
+    }
+
+    // Direct native browser prompt
+    const outcome = await install();
+    if (!outcome) {
       setShowDownloadModal(true);
     }
   };
@@ -49,87 +40,57 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
         <button
           id="btn-pwa-download-header"
           onClick={handleClick}
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 shrink-0 ${
-            isCream
-              ? 'bg-black/5 hover:bg-black/10 text-black border border-black/15'
-              : 'bg-white/5 hover:bg-white/10 text-[#FDFBD4] border border-[#FDFBD4]/20'
-          }`}
-          title="Install Aegis on your device"
-          aria-label="Install Aegis"
+          className={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] hover:bg-[var(--surface)] transition-all active:scale-95 shrink-0 ${className}`}
+          title="Install Abhaya on your phone"
+          aria-label="Install Abhaya"
         >
-          <Download className="w-3.5 h-3.5 stroke-[1.8]" />
+          <Download className="w-3.5 h-3.5 stroke-[1.75]" />
         </button>
       ) : variant === 'banner' ? (
         <div
           id="banner-pwa-mobile"
           onClick={() => setShowDownloadModal(true)}
-          className={`cursor-pointer rounded-2xl p-3.5 flex items-center justify-between transition group active:scale-[0.99] ${
-            isCream
-              ? 'bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
-              : 'bg-[#0c0c0c] border border-[#FDFBD4]/40 hover:border-[#FDFBD4] shadow-md'
-          }`}
+          className={`cursor-pointer rounded-[12px] p-3.5 flex items-center justify-between transition bg-[var(--surface)] border border-[var(--line)] hover:bg-[var(--surface-2)]/50 active:scale-[0.99] ${className}`}
         >
           <div className="flex items-center gap-3">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl border group-hover:scale-105 transition shrink-0 ${
-                isCream
-                  ? 'bg-[#FDFBD4] border-black text-black'
-                  : 'bg-[#181814] border-[#FDFBD4]/30 text-[#FDFBD4]'
-              }`}
-            >
-              <Smartphone className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] shrink-0">
+              <Smartphone className="w-4 h-4 stroke-[1.75]" />
             </div>
             <div>
-              <p
-                className={`text-xs font-bold flex items-center gap-1.5 ${
-                  isCream ? 'text-black' : 'text-[#FDFBD4]'
-                }`}
-              >
-                Download Aegis to Your Phone
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold leading-none ${
-                    isCream
-                      ? 'bg-black text-[#FDFBD4]'
-                      : 'bg-[#FDFBD4] text-black'
-                  }`}
-                >
+              <p className="text-[13px] font-medium text-[var(--text)] flex items-center gap-1.5">
+                Download Abhaya to phone
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]">
                   Free
                 </span>
               </p>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-[#333333]' : 'text-slate-400'}`}>
-                Scan QR or tap to install for 1-tap SOS, offline protection & home screen icon
+              <p className="text-caption text-[11px] mt-0.5">
+                Scan QR or tap to install for 1-tap SOS & offline vault
               </p>
             </div>
           </div>
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-xl shadow transition shrink-0 ml-2 ${
-              isCream
-                ? 'bg-black text-[#FDFBD4] group-hover:bg-[#222]'
-                : 'bg-[#FDFBD4] text-black group-hover:bg-white'
-            }`}
-          >
-            <Download className="w-4 h-4 stroke-[2.2]" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] shrink-0 ml-2">
+            <Download className="w-3.5 h-3.5 stroke-[1.75]" />
           </div>
         </div>
       ) : (
         <button
           id="btn-pwa-install-card"
           onClick={handleClick}
-          className="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 p-4 text-xs font-bold text-white shadow-xl transition active:scale-[0.98]"
+          className={`w-full flex items-center justify-between rounded-[12px] bg-[var(--surface)] border border-[var(--line)] hover:bg-[var(--surface-2)]/50 p-3.5 text-[13px] font-medium text-[var(--text)] transition active:scale-[0.98] ${className}`}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-white/10 text-white">
-              <Smartphone className="w-5 h-5" />
+            <div className="p-2 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]">
+              <Smartphone className="w-4 h-4 stroke-[1.75]" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-bold">Download Aegis to Mobile</p>
-              <p className="text-[11px] font-normal text-sky-100">
-                Scan QR code or install directly for 1-tap lockscreen SOS & offline safety
+              <p className="text-[14px] font-medium text-[var(--text)]">Download Abhaya to phone</p>
+              <p className="text-caption text-[11px]">
+                Scan QR or install for instant SOS access & offline protection
               </p>
             </div>
           </div>
-          <div className="p-2 rounded-xl bg-white/20">
-            <Download className="w-4 h-4 text-white" />
+          <div className="p-2 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]">
+            <Download className="w-3.5 h-3.5 stroke-[1.75]" />
           </div>
         </button>
       )}

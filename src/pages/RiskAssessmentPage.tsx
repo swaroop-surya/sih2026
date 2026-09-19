@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import { initialRiskQuestions } from '../data/initialState';
 import { RiskAssessmentResult, RiskCategory, RiskLevel } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
+import { ResourceNavigatorPage } from './ResourceNavigatorPage';
 import {
-  ShieldAlert,
-  CheckCircle,
-  AlertTriangle,
-  HelpCircle,
   ArrowRight,
   RotateCcw,
-  Sparkles,
+  Check,
+  FilePlus2,
   LifeBuoy,
-  FileEdit,
-  Info
+  Info,
+  Circle
 } from 'lucide-react';
 import { generateId } from '../lib/utils';
 
@@ -23,11 +22,28 @@ export const RiskAssessmentPage: React.FC = () => {
     setCurrentPage,
     addIncident
   } = useAegis();
+  const { t } = useTranslation();
 
-  // Selected answers: questionId -> true/false
+  // Top Segmented Control: "Something feels off?" | "Get help"
+  const [safetyTab, setSafetyTab] = useState<'risk' | 'resources'>('risk');
+
+  // Selected question answers
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [assessmentResult, setAssessmentResult] = useState<RiskAssessmentResult | null>(latestRiskResult);
+  const [showResultView, setShowResultView] = useState(false);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('ALL');
+  const [isDisclaimerExpanded, setIsDisclaimerExpanded] = useState(false);
+
+  const selectedCount = Object.values(answers).filter(Boolean).length;
+
+  const categories = [
+    { key: 'ALL', label: 'All' },
+    { key: 'stalking', label: 'Stalking' },
+    { key: 'harassment', label: 'Harassment' },
+    { key: 'domestic_abuse', label: 'Relationship' },
+    { key: 'trafficking', label: 'Travel & Job' },
+    { key: 'cyber_threat', label: 'Cyber' }
+  ];
 
   const filteredQuestions = selectedCategoryFilter === 'ALL'
     ? initialRiskQuestions
@@ -53,16 +69,13 @@ export const RiskAssessmentPage: React.FC = () => {
       }
     });
 
-    // Normalize to 0-100
     const normalizedScore = Math.min(100, totalScore);
 
     let level: RiskLevel = 'LOW';
-    if (normalizedScore >= 75) level = 'CRITICAL';
-    else if (normalizedScore >= 45) level = 'HIGH';
+    if (normalizedScore >= 50) level = 'HIGH';
     else if (normalizedScore >= 20) level = 'MODERATE';
 
-    // Find highest contributing category
-    let highestCat: RiskCategory = 'domestic_abuse';
+    let highestCat: RiskCategory = 'stalking';
     let maxCatScore = -1;
     Object.entries(categoryScores).forEach(([cat, score]) => {
       if (score > maxCatScore) {
@@ -71,235 +84,321 @@ export const RiskAssessmentPage: React.FC = () => {
       }
     });
 
+    // Plain language recommendations (max 4 steps)
     const recommendations: string[] = [];
-    if (level === 'CRITICAL' || level === 'HIGH') {
-      recommendations.push('Consider moving to a verified safe place or contacting 181 Women Helpline (24/7).');
-      recommendations.push('Do not alert the perpetrator that you are documenting incidents or preparing an exit.');
-      recommendations.push('Secure original identity cards (Aadhaar, Passport) in an emergency safety pack.');
+    if (level === 'HIGH') {
+      recommendations.push('Contact 181 Women Helpline or 112 if you feel in immediate danger.');
+      recommendations.push("Save screenshots to your private record so they cannot be altered later.");
+      recommendations.push('Do not confront the person alone or let them know you are documenting incidents.');
+      recommendations.push('Keep copies of key identity documents and emergency cash in a safe place.');
     } else if (level === 'MODERATE') {
-      recommendations.push('Establish a routine Safety Check-in with a trusted contact before entering vulnerable situations.');
-      recommendations.push('Keep detailed records in the Incident Journal with dates and screenshots.');
+      recommendations.push('Set a Safety check-in timer whenever traveling or meeting unfamiliar people.');
+      recommendations.push("Save screenshots to your private record so they cannot be altered later.");
+      recommendations.push('Log dates, locations, and messages in your incident log.');
+      recommendations.push('Share your live location with a trusted contact during vulnerable hours.');
     } else {
-      recommendations.push('Review cyber privacy settings and keep emergency contacts updated.');
+      recommendations.push('Keep active trusted contacts for one-tap emergency alerts.');
+      recommendations.push("Save screenshots to your private record so they cannot be altered later.");
+      recommendations.push('Check app settings and enable the voice safe word.');
+      recommendations.push('Write down any unusual patterns or harassment in your incident log.');
     }
 
-    const explanation = detectedIndicators.length > 0
-      ? `Identified ${detectedIndicators.length} documented behavioral indicator(s) suggesting patterns of ${highestCat.replace('_', ' ')}.`
-      : 'No high-severity risk patterns identified based on the answered items.';
-
     const result: RiskAssessmentResult = {
-      id: generateId('risk_res'),
+      id: generateId('risk'),
       completedAt: new Date().toISOString(),
       score: normalizedScore,
       level,
       primaryCategory: highestCat,
-      detectedIndicators,
-      explanation,
+      detectedIndicators: detectedIndicators.length > 0 ? detectedIndicators : ['No high-risk indicators currently reported'],
+      explanation: 'Evaluated risk profile based on reported behavioral and environmental indicators.',
       recommendedSteps: recommendations,
       recommendations
     };
 
     setAssessmentResult(result);
     saveRiskResult(result);
+    setShowResultView(true);
   };
 
-  const handleCreateIncidentDraft = () => {
+  const handleSaveToIncidents = () => {
     if (!assessmentResult) return;
     addIncident({
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       category: 'harassment',
-      severity: assessmentResult.level === 'CRITICAL' ? 5 : assessmentResult.level === 'HIGH' ? 4 : 2,
-      location: 'Logged via Risk Assessment',
-      description: `Risk Assessment Evaluation: Level ${assessmentResult.level} (${assessmentResult.score}/100). Indicators: ${assessmentResult.detectedIndicators.join('; ')}`,
+      severity: assessmentResult.level === 'HIGH' ? 4 : assessmentResult.level === 'MODERATE' ? 3 : 2,
+      location: 'Self-Assessed via Risk Check',
+      description: `Risk evaluation completed: ${assessmentResult.level} (${assessmentResult.score}/100). Indicators: ${assessmentResult.detectedIndicators.join('; ')}`,
       evidenceIds: [],
-      notes: 'Auto-drafted from questionnaire for timeline documentation.',
+      notes: 'Recorded from Check my risk questionnaire.',
       reportedToPolice: false
     });
     setCurrentPage('incidents');
   };
 
-  const categoriesList = [
-    { key: 'ALL', label: 'All Indicators' },
-    { key: 'domestic_abuse', label: 'Domestic Coercion' },
-    { key: 'stalking', label: 'Stalking' },
-    { key: 'cyber_harassment', label: 'Cyber Harassment' },
-    { key: 'trafficking_exploitation', label: 'Exploitation' },
-    { key: 'blackmail_extortion', label: 'Blackmail' }
-  ];
-
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="border-b border-slate-800 pb-3">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-sky-400" />
-          Early Risk Detection Engine
-        </h2>
-        <p className="text-xs text-slate-400">
-          Structured indicator screening for coercion, stalking, exploitation, and abuse.
-        </p>
+    <div className="space-y-4 pb-8">
+      {/* Top Segmented Control: "Something feels off?" | "Get help" */}
+      <div className="p-1 rounded-full bg-[var(--surface-2)] border border-[var(--line)] grid grid-cols-2 gap-1">
+        <button
+          onClick={() => setSafetyTab('risk')}
+          className={`h-9 rounded-full text-[13px] font-medium transition cursor-pointer ${
+            safetyTab === 'risk'
+              ? 'bg-[var(--surface)] text-[var(--text)]'
+              : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+        >
+          {t.pageTitleCheckMyRisk || 'Something feels off?'}
+        </button>
+        <button
+          onClick={() => setSafetyTab('resources')}
+          className={`h-9 rounded-full text-[13px] font-medium transition cursor-pointer ${
+            safetyTab === 'resources'
+              ? 'bg-[var(--surface)] text-[var(--text)]'
+              : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+        >
+          {t.pageTitleGetHelp || 'Get help'}
+        </button>
       </div>
 
-      {/* Mandatory Non-Diagnostic Disclaimer */}
-      <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300 leading-relaxed space-y-1">
-        <div className="font-semibold text-amber-400 flex items-center gap-1">
-          <AlertTriangle className="w-3.5 h-3.5" /> Informational Safety Observation
-        </div>
-        <p className="text-slate-400">
-          This questionnaire highlights behavioral risk patterns based on established safety protocols. It is not a legal verdict or medical diagnosis. Does not replace emergency services.
-        </p>
-      </div>
-
-      {/* Result Display if Computed */}
-      {assessmentResult && (
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3.5 shadow-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Assessment Results
-            </span>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-              assessmentResult.level === 'CRITICAL'
-                ? 'bg-rose-950 text-rose-300 border-rose-800'
-                : assessmentResult.level === 'HIGH'
-                ? 'bg-orange-950 text-orange-300 border-orange-800'
-                : assessmentResult.level === 'MODERATE'
-                ? 'bg-amber-950 text-amber-300 border-amber-800'
-                : 'bg-emerald-950 text-emerald-300 border-emerald-800'
-            }`}>
-              {assessmentResult.level} RISK ({assessmentResult.score}/100)
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="text-sm font-bold text-white">
-              Primary Focus: {assessmentResult.primaryCategory.replace('_', ' ').toUpperCase()}
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {assessmentResult.explanation}
+      {/* If "Get help" is active, render ResourceNavigatorPage embedded */}
+      {safetyTab === 'resources' ? (
+        <ResourceNavigatorPage embedded={true} />
+      ) : (
+        /* "Something feels off?" content */
+        <div className="space-y-4">
+          {/* Page Header */}
+          <div>
+            <h1 className="page-title">{t.pageTitleCheckMyRisk || 'Something feels off?'}</h1>
+            <p className="text-caption text-[14px] mt-1">
+              {t.pageSubtitleCheckMyRisk || "Tell us what's happening. Nothing leaves this phone."}
             </p>
           </div>
 
-          {/* Detected Indicators List */}
-          {assessmentResult.detectedIndicators.length > 0 && (
-            <div className="space-y-1.5 pt-1">
-              <span className="text-[11px] font-semibold text-slate-400 block uppercase">
-                Detected Warning Flags ({assessmentResult.detectedIndicators.length})
-              </span>
-              <ul className="space-y-1 text-xs text-slate-300">
-                {assessmentResult.detectedIndicators.map((ind, i) => (
-                  <li key={i} className="flex items-start gap-2 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                    <span>{ind}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Actionable Next Steps */}
-          <div className="space-y-1.5 pt-1">
-            <span className="text-[11px] font-semibold text-slate-400 block uppercase">
-              Recommended Protective Next Steps
-            </span>
-            <div className="space-y-1.5 text-xs text-slate-300">
-              {(assessmentResult.recommendations || assessmentResult.recommendedSteps || []).map((rec, i) => (
-                <div key={i} className="flex items-start gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800/80">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                  <span>{rec}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="pt-2 flex flex-col gap-2 text-xs">
-            <button
-              onClick={handleCreateIncidentDraft}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center justify-center gap-2 transition"
-            >
-              <FileEdit className="w-4 h-4 text-sky-400" />
-              <span>Create Incident Timeline Entry</span>
-            </button>
-
-            <button
-              onClick={() => setCurrentPage('resources')}
-              className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center justify-center gap-2 transition"
-            >
-              <LifeBuoy className="w-4 h-4" />
-              <span>Find Verified Support Services (181 / Sakhi)</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Category Pills Filter */}
-      <div className="space-y-1.5">
-        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-          Filter by Safety Scenario
-        </label>
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {categoriesList.map(cat => (
-            <button
-              key={cat.key}
-              onClick={() => setSelectedCategoryFilter(cat.key)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition ${
-                selectedCategoryFilter === cat.key
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Questions Interactive List */}
-      <div className="space-y-2">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-          Select all that apply to your current situation:
-        </span>
-
-        {filteredQuestions.map((q) => {
-          const isSelected = !!answers[q.id];
-          return (
-            <div
-              key={q.id}
-              onClick={() => toggleAnswer(q.id)}
-              className={`cursor-pointer p-3 rounded-xl border transition text-xs flex items-start gap-3 select-none ${
-                isSelected
-                  ? 'bg-sky-950/40 border-sky-600/80 text-white'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => {}} // Handled by div click
-                className="mt-0.5 rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0 shrink-0"
-              />
-              <div className="space-y-0.5 flex-1">
-                <span className="font-medium text-slate-100 block">{q.indicatorText}</span>
-                <span className="text-[10px] text-slate-400 block">
-                  Category: {q.category.replace('_', ' ')}
+          {/* Shrunk Info Box */}
+          <div className="p-3 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] text-[13px] text-[var(--text)]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 truncate">
+                <Info className="w-4 h-4 text-[var(--muted)] shrink-0 stroke-[1.75]" />
+                <span className="truncate text-[12px]">
+                  Informational guidance only, not legal advice.
                 </span>
               </div>
+              <button
+                onClick={() => setIsDisclaimerExpanded(!isDisclaimerExpanded)}
+                className="text-[12px] font-medium text-[var(--primary)] hover:underline shrink-0 cursor-pointer"
+              >
+                {isDisclaimerExpanded ? 'Hide' : 'Learn more'}
+              </button>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Calculate Button */}
-      <div className="pt-2 sticky bottom-16 z-20">
-        <button
-          onClick={computeRisk}
-          className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Compute Risk Assessment & Safety Guidance</span>
-        </button>
-      </div>
+            {isDisclaimerExpanded && (
+              <p className="text-caption text-[12px] mt-2 pt-2 border-t border-[var(--line)]">
+                This tool checks patterns of stalking, coercion, and harassment using structured indicators. It is confidential, stored only on your device, and does not replace emergency response.
+              </p>
+            )}
+          </div>
+
+          {/* RESULTS VIEW */}
+          {showResultView && assessmentResult ? (
+            <div className="soft-card p-5 space-y-5">
+              <div className="flex items-center justify-between">
+                <h2 className="section-title text-[18px]">Assessment result</h2>
+                <button
+                  onClick={() => setShowResultView(false)}
+                  className="text-[12px] text-[var(--primary)] font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3 stroke-[1.75]" />
+                  Edit answers
+                </button>
+              </div>
+
+              {/* 3-segment risk scale */}
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span
+                    className={`font-heading text-[22px] font-semibold ${
+                      assessmentResult.level === 'LOW'
+                        ? 'text-[var(--safe)]'
+                        : assessmentResult.level === 'MODERATE'
+                        ? 'text-[var(--accent)]'
+                        : 'text-[var(--sos)]'
+                    }`}
+                  >
+                    {assessmentResult.level === 'LOW'
+                      ? 'Low risk'
+                      : assessmentResult.level === 'MODERATE'
+                      ? 'Moderate risk'
+                      : 'High risk'}
+                  </span>
+                  <span className="text-[12px] text-[var(--muted)] font-mono">
+                    Score: {assessmentResult.score}/100
+                  </span>
+                </div>
+
+                {/* 3-segment scale bar */}
+                <div className="grid grid-cols-3 gap-1.5 h-2">
+                  <div
+                    className={`rounded-full transition ${
+                      assessmentResult.level === 'LOW' || assessmentResult.level === 'MODERATE' || assessmentResult.level === 'HIGH'
+                        ? 'bg-[var(--safe)]'
+                        : 'bg-[var(--line)]'
+                    }`}
+                  />
+                  <div
+                    className={`rounded-full transition ${
+                      assessmentResult.level === 'MODERATE' || assessmentResult.level === 'HIGH'
+                        ? 'bg-[var(--accent)]'
+                        : 'bg-[var(--line)]'
+                    }`}
+                  />
+                  <div
+                    className={`rounded-full transition ${
+                      assessmentResult.level === 'HIGH'
+                        ? 'bg-[var(--sos)]'
+                        : 'bg-[var(--line)]'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* "What we noticed" flags */}
+              <div className="space-y-2">
+                <h3 className="section-title text-[16px]">{t.whatWeNoticed || 'What we noticed'}</h3>
+                <div className="space-y-1.5">
+                  {assessmentResult.detectedIndicators.map((ind, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2.5 rounded-[12px] bg-[var(--surface-2)] text-[13px] text-[var(--text)] flex items-start gap-2"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1.5 shrink-0" />
+                      <span>{ind}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* "What you can do" as at most 4 steps with circle bullets */}
+              <div className="space-y-2">
+                <h3 className="section-title text-[16px]">{t.whatYouCanDo || 'What you can do'}</h3>
+                <div className="space-y-2">
+                  {assessmentResult.recommendations.slice(0, 4).map((rec, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2.5 text-[13px] text-[var(--text)] p-2.5 rounded-[12px] bg-[var(--surface-2)]"
+                    >
+                      <Circle className="w-3.5 h-3.5 text-[var(--safe)] mt-0.5 shrink-0 stroke-[2]" />
+                      <span>{rec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  id="btn-save-risk-incident"
+                  onClick={handleSaveToIncidents}
+                  className="soft-btn soft-btn-secondary text-[13px]"
+                >
+                  <FilePlus2 className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
+                  {t.saveToIncidentLog || 'Save to incident log'}
+                </button>
+                <button
+                  id="btn-risk-get-help"
+                  onClick={() => setSafetyTab('resources')}
+                  className="soft-btn soft-btn-primary text-[13px]"
+                >
+                  <LifeBuoy className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
+                  {t.getHelpNow || 'Get help now'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* QUESTIONNAIRE VIEW */
+            <div className="space-y-4">
+              {/* Sticky Filter Tabs */}
+              <div className="sticky top-14 z-20 bg-[var(--bg)] pt-1 pb-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[12px] text-[var(--muted)]">
+                    Filter by concern:
+                  </span>
+                  <span className="text-[12px] font-medium text-[var(--primary)]">
+                    {selectedCount} {t.selectedCount || 'selected'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.key}
+                      onClick={() => setSelectedCategoryFilter(cat.key)}
+                      className={`h-8 px-3 rounded-full text-[12px] font-medium whitespace-nowrap transition cursor-pointer shrink-0 ${
+                        selectedCategoryFilter === cat.key
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)]'
+                          : 'bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] border border-[var(--line)]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Questions List */}
+              <div className="space-y-2">
+                {filteredQuestions.map((q) => {
+                  const isChecked = !!answers[q.id];
+                  return (
+                    <div
+                      key={q.id}
+                      onClick={() => toggleAnswer(q.id)}
+                      className={`p-3.5 rounded-[12px] bg-[var(--surface)] border flex items-start gap-3.5 transition cursor-pointer select-none ${
+                        isChecked
+                          ? 'border-[var(--primary)] bg-[var(--surface-2)]'
+                          : 'border-[var(--line)] hover:bg-[var(--surface-2)]/50'
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        className={`w-5 h-5 rounded-[6px] flex items-center justify-center shrink-0 mt-0.5 border transition ${
+                          isChecked
+                            ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--on-primary)]'
+                            : 'bg-[var(--surface-2)] border-[var(--line)] text-transparent'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)] mb-1">
+                          {q.category.replace('_', ' ')}
+                        </span>
+                        <p className="text-[13px] text-[var(--text)] leading-relaxed">
+                          {q.indicatorText}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Action Button: "See my results" */}
+              <div className="pt-2">
+                <button
+                  id="btn-see-my-results"
+                  onClick={computeRisk}
+                  className="soft-btn soft-btn-primary w-full text-[14px]"
+                >
+                  {t.seeMyResults || 'See my results'}
+                  <ArrowRight className="w-4 h-4 ml-2 stroke-[1.75]" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -11,7 +11,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       immediate: true,
       onRegisterError(error) {
         // Benign in sandboxed dev preview iframes
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.debug('PWA ServiceWorker note (preview environment):', error);
         }
       },

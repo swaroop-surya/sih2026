@@ -3,9 +3,11 @@ import { AppTheme } from '../types';
 
 interface ThemeContextType {
   theme: AppTheme;
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: AppTheme) => void;
   toggleTheme: () => void;
-  isCream: boolean;
+  isDark: boolean;
+  isCream: boolean; // Backward compatibility fallback (maps to light mode)
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -14,54 +16,83 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [theme, setThemeState] = useState<AppTheme>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('aegis_theme') as AppTheme | null;
-      if (saved === 'cream' || saved === 'dark') {
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
         return saved;
       }
+      // Migrate old 'cream' value to 'light'
+      if (saved === ('cream' as any)) {
+        return 'light';
+      }
     }
-    return 'cream';
+    return 'dark'; // Default dark mode or system
   });
 
-  const applyTheme = (newTheme: AppTheme) => {
-    if (typeof document === 'undefined') return;
-    const root = document.documentElement;
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
 
-    root.setAttribute('data-theme', newTheme);
-    if (newTheme === 'cream') {
-      root.classList.add('theme-cream');
-      root.classList.remove('theme-dark');
-    } else {
-      root.classList.add('theme-dark');
-      root.classList.remove('theme-cream');
+  const getSystemTheme = (): 'light' | 'dark' => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-
-    // Update PWA / mobile browser theme-color meta tag
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', newTheme === 'cream' ? '#FDFBD4' : '#000000');
-    }
+    return 'dark';
   };
 
   useEffect(() => {
-    applyTheme(theme);
+    const active = theme === 'system' ? getSystemTheme() : theme;
+    setResolvedTheme(active);
+
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', active);
+      if (active === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light', 'theme-cream');
+      } else {
+        root.classList.add('light');
+        root.classList.remove('dark', 'theme-dark');
+      }
+
+      // Update PWA / mobile browser theme-color meta tag
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', active === 'dark' ? '#0B1020' : '#F6F7FC');
+      }
+    }
+
     localStorage.setItem('aegis_theme', theme);
+  }, [theme]);
+
+  // Listen to system theme changes if set to system
+  useEffect(() => {
+    if (theme !== 'system' || typeof window === 'undefined' || !window.matchMedia) return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      const active = mediaQuery.matches ? 'dark' : 'light';
+      setResolvedTheme(active);
+      document.documentElement.setAttribute('data-theme', active);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   const setTheme = (newTheme: AppTheme) => {
     setThemeState(newTheme);
-    applyTheme(newTheme);
   };
 
   const toggleTheme = () => {
-    setThemeState(prev => (prev === 'dark' ? 'cream' : 'dark'));
+    setThemeState(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (
     <ThemeContext.Provider
       value={{
         theme,
+        resolvedTheme,
         setTheme,
         toggleTheme,
-        isCream: theme === 'cream'
+        isDark: resolvedTheme === 'dark',
+        isCream: resolvedTheme === 'light'
       }}
     >
       {children}

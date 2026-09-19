@@ -1,318 +1,227 @@
 @import "tailwindcss";
 
 @layer base {
+  :root,
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg: #F5F4F9;
+    --surface: #FFFFFF;
+    --surface-2: #ECEAF3;
+    --line: #DCD9E8;
+    --text: #1A1F45;
+    --muted: #5E6383;
+    --primary: #2B3480;
+    --on-primary: #FFFFFF;
+    --accent: #F2A93B;
+    --safe: #23806A;
+    --on-safe: #FFFFFF;
+    --sos: #C81E3A;
+    --on-sos: #FFFFFF;
+    --warn: #F2A93B;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #151A3F;
+    --surface: #1E2456;
+    --surface-2: #272E68;
+    --line: #343C7A;
+    --text: #F1EFF8;
+    --muted: #A9AED0;
+    --primary: #F2A93B;
+    --on-primary: #1A1F45;
+    --accent: #F2A93B;
+    --safe: #62C9A9;
+    --on-safe: #1A1F45;
+    --sos: #FF6B80;
+    --on-sos: #FFFFFF;
+    --warn: #F2A93B;
+  }
+
   html {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: var(--bg);
+    color: var(--text);
     -webkit-tap-highlight-color: transparent;
   }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Telugu', 'Noto Serif Tamil', Georgia, serif;
+    font-weight: 600;
+  }
+
+  /* Accessibility focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Icon stroke weight consistency (1.75px) */
+  svg {
+    stroke-width: 1.75px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Typography Hierarchy */
+.page-title {
+  font-family: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Telugu', 'Noto Serif Tamil', serif;
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+}
+
+.section-title {
+  font-family: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Telugu', 'Noto Serif Tamil', serif;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+}
+
+.card-title {
+  font-family: 'Noto Serif', 'Noto Serif Devanagari', 'Noto Serif Telugu', 'Noto Serif Tamil', serif;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+}
+
+.text-body {
+  font-family: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.text-caption {
+  font-family: 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Kolam Pulli Lattice Pattern (Diamond lattice of 2px dots at 6% opacity) */
+.pulli-lattice {
+  background-image: 
+    radial-gradient(circle, var(--text) 1.2px, transparent 1.2px),
+    radial-gradient(circle, var(--text) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  opacity: 0.06;
+}
+
+/* Corner Radii by Role */
+/* Cards: 16px */
+.soft-card {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+/* Rows & Inputs: 12px */
+.soft-row {
+  border-radius: 12px;
+}
+
+.soft-input {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  color: var(--text);
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+
+.soft-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Buttons: fully round */
+.soft-btn {
+  border-radius: 9999px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 20px;
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.soft-btn:active {
+  transform: scale(0.98);
+}
+
+.soft-btn-primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.soft-btn-accent {
+  background-color: var(--accent);
+  color: #1A1F45;
+}
+
+.soft-btn-safe {
+  background-color: var(--safe);
+  color: var(--on-safe);
+}
+
+.soft-btn-secondary {
+  background-color: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.soft-btn-sos {
+  background-color: var(--sos);
+  color: #FFFFFF;
+}
+
+/* Sheets: 28px */
+.soft-sheet {
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
 }
 
 /* Safe area insets for mobile standalone PWA */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 1rem), 16px);
 }
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0.75rem);
+  padding-top: max(env(safe-area-inset-top, 0.75rem), 12px);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.35);
-}
-
-/* ==========================================================================
-   THEME 1: WHITE / CREAM MODE (#FDFBD4 AND BLACK)
-   Signature Canvas: #FDFBD4 with high-contrast Black typography and borders
-   ========================================================================== */
-
-html[data-theme="cream"],
-.theme-cream {
-  color-scheme: light;
-  --cream-canvas: #fdfbd4;
-  --cream-outer: #ede9b7;
-  --cream-card: #ffffff;
-  --cream-card-subtle: #f8f6cc;
-  --cream-element: #f2eeb4;
-  --cream-element-hover: #e5e09d;
-  --cream-border: #cfcb86;
-  --cream-text-black: #0D0D0D;
-  --cream-text-body: #242424;
-  --cream-text-muted: #242424;
-}
-
-/* Outer Desktop Background & Base Body */
-html[data-theme="cream"] body {
-  background-color: var(--cream-outer);
-  color: #0D0D0D;
-}
-
-html[data-theme="cream"] .bg-black {
-  background-color: #ede9b7 !important;
-}
-
-/* Main Mobile Shell Viewport */
-html[data-theme="cream"] .bg-slate-950 {
-  background-color: var(--cream-canvas) !important;
-}
-
-html[data-theme="cream"] .bg-slate-950\/95,
-html[data-theme="cream"] .bg-slate-950\/90,
-html[data-theme="cream"] .bg-slate-950\/80,
-html[data-theme="cream"] .bg-slate-950\/70,
-html[data-theme="cream"] .bg-slate-950\/60 {
-  background-color: rgba(253, 251, 212, 0.96) !important;
-  backdrop-filter: blur(12px);
-}
-
-/* Cards & Surfaces in Cream Mode */
-html[data-theme="cream"] .bg-slate-900 {
-  background-color: var(--cream-card) !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="cream"] .bg-slate-900\/95,
-html[data-theme="cream"] .bg-slate-900\/90,
-html[data-theme="cream"] .bg-slate-900\/80,
-html[data-theme="cream"] .bg-slate-900\/70,
-html[data-theme="cream"] .bg-slate-900\/60,
-html[data-theme="cream"] .bg-slate-900\/50,
-html[data-theme="cream"] .bg-slate-900\/40 {
-  background-color: rgba(255, 255, 255, 0.97) !important;
-}
-
-html[data-theme="cream"] .bg-slate-800 {
-  background-color: var(--cream-element) !important;
-}
-
-html[data-theme="cream"] .bg-slate-800\/90,
-html[data-theme="cream"] .bg-slate-800\/80,
-html[data-theme="cream"] .bg-slate-800\/60,
-html[data-theme="cream"] .bg-slate-800\/50,
-html[data-theme="cream"] .bg-slate-800\/40 {
-  background-color: rgba(242, 238, 180, 0.88) !important;
-}
-
-html[data-theme="cream"] .hover\:bg-slate-800:hover {
-  background-color: var(--cream-element-hover) !important;
-}
-
-html[data-theme="cream"] .hover\:bg-slate-700:hover {
-  background-color: #ded995 !important;
-}
-
-/* Borders in Cream Mode */
-html[data-theme="cream"] .border-slate-950,
-html[data-theme="cream"] .border-slate-900,
-html[data-theme="cream"] .border-slate-900\/80,
-html[data-theme="cream"] .border-slate-900\/60,
-html[data-theme="cream"] .border-slate-900\/40,
-html[data-theme="cream"] .border-slate-800,
-html[data-theme="cream"] .border-slate-800\/80,
-html[data-theme="cream"] .border-slate-800\/60,
-html[data-theme="cream"] .border-slate-800\/50,
-html[data-theme="cream"] .border-slate-800\/40,
-html[data-theme="cream"] .border-slate-700 {
-  border-color: var(--cream-border) !important;
-}
-
-/* Typography in Cream Mode:
-   Main headings: #0D0D0D (black)
-   Sub text: #242424 (a little light) */
-html[data-theme="cream"] h1,
-html[data-theme="cream"] h2,
-html[data-theme="cream"] h3,
-html[data-theme="cream"] h4,
-html[data-theme="cream"] h5,
-html[data-theme="cream"] h6,
-html[data-theme="cream"] .heading-main,
-html[data-theme="cream"] .text-white,
-html[data-theme="cream"] .text-slate-100 {
-  color: #0D0D0D !important;
-}
-
-html[data-theme="cream"] p,
-html[data-theme="cream"] .sub-text,
-html[data-theme="cream"] .text-slate-200,
-html[data-theme="cream"] .text-slate-300,
-html[data-theme="cream"] .text-slate-400,
-html[data-theme="cream"] .text-slate-500 {
-  color: #242424 !important;
-}
-
-/* Accents in Cream Mode: Deep Bold #0D0D0D */
-html[data-theme="cream"] .text-sky-400,
-html[data-theme="cream"] .text-sky-300 {
-  color: #0D0D0D !important;
-  font-weight: 700;
-}
-
-html[data-theme="cream"] .border-sky-500,
-html[data-theme="cream"] .border-sky-400,
-html[data-theme="cream"] .border-sky-800\/50,
-html[data-theme="cream"] .border-sky-800\/40,
-html[data-theme="cream"] .border-sky-800\/30 {
-  border-color: #000000 !important;
-}
-
-html[data-theme="cream"] .bg-sky-950,
-html[data-theme="cream"] .bg-sky-950\/60,
-html[data-theme="cream"] .bg-sky-950\/50,
-html[data-theme="cream"] .bg-sky-950\/40,
-html[data-theme="cream"] .bg-sky-950\/30 {
-  background-color: #fcf9c5 !important;
-  border-color: #000000 !important;
-}
-
-/* Emergency Action Buttons in Cream Mode */
-html[data-theme="cream"] .bg-rose-600,
-html[data-theme="cream"] .bg-rose-600 *,
-html[data-theme="cream"] .bg-rose-500,
-html[data-theme="cream"] .bg-rose-500 *,
-html[data-theme="cream"] .bg-emerald-600,
-html[data-theme="cream"] .bg-emerald-600 * {
-  color: #ffffff !important;
-}
-
-/* Form Inputs in Cream Mode */
-html[data-theme="cream"] input:not([type="checkbox"]):not([type="radio"]),
-html[data-theme="cream"] textarea,
-html[data-theme="cream"] select {
-  background-color: #ffffff !important;
-  color: #0D0D0D !important;
-  border-color: #0D0D0D !important;
-}
-html[data-theme="cream"] input::placeholder,
-html[data-theme="cream"] textarea::placeholder {
-  color: #666660 !important;
-}
-
-/* ==========================================================================
-   THEME 2: DARK MODE (BLACK AND #FDFBD4)
-   Deep pitch-black canvas with striking #FDFBD4 cream highlights
-   ========================================================================== */
-
-html[data-theme="dark"],
-.theme-dark {
-  color-scheme: dark;
-  --dark-canvas: #050505;
-  --dark-outer: #000000;
-  --dark-card: #0d0d0d;
-  --dark-card-subtle: #141414;
-  --dark-element: #1a1a17;
-  --dark-element-hover: #262622;
-  --dark-border: #282824;
-  --dark-highlight: #fdfbd4;
-}
-
-html[data-theme="dark"] body {
-  background-color: #000000;
-  color: #ffffff;
-}
-
-html[data-theme="dark"] .bg-black {
-  background-color: #000000 !important;
-}
-
-html[data-theme="dark"] .bg-slate-950 {
-  background-color: #050505 !important;
-}
-
-html[data-theme="dark"] .bg-slate-950\/95,
-html[data-theme="dark"] .bg-slate-950\/90,
-html[data-theme="dark"] .bg-slate-950\/80 {
-  background-color: rgba(5, 5, 5, 0.96) !important;
-  backdrop-filter: blur(12px);
-}
-
-html[data-theme="dark"] .bg-slate-900 {
-  background-color: #0e0e0e !important;
-  border-color: #242420 !important;
-}
-
-html[data-theme="dark"] .bg-slate-900\/90,
-html[data-theme="dark"] .bg-slate-900\/80,
-html[data-theme="dark"] .bg-slate-900\/70,
-html[data-theme="dark"] .bg-slate-900\/60,
-html[data-theme="dark"] .bg-slate-900\/50 {
-  background-color: rgba(14, 14, 14, 0.95) !important;
-  border-color: #242420 !important;
-}
-
-html[data-theme="dark"] .bg-slate-800 {
-  background-color: #1a1a18 !important;
-}
-
-html[data-theme="dark"] .border-slate-800,
-html[data-theme="dark"] .border-slate-900,
-html[data-theme="dark"] .border-slate-700 {
-  border-color: #282824 !important;
-}
-
-/* In Dark Mode: Highlights and primary accents use #FDFBD4 */
-html[data-theme="dark"] .text-sky-400,
-html[data-theme="dark"] .text-sky-300 {
-  color: #fdfbd4 !important;
-}
-
-html[data-theme="dark"] .border-sky-500,
-html[data-theme="dark"] .border-sky-400 {
-  border-color: #fdfbd4 !important;
-}
-
-html[data-theme="dark"] .bg-sky-950,
-html[data-theme="dark"] .bg-sky-950\/60,
-html[data-theme="dark"] .bg-sky-950\/50,
-html[data-theme="dark"] .bg-sky-950\/40,
-html[data-theme="dark"] .bg-sky-950\/30 {
-  background-color: rgba(253, 251, 212, 0.08) !important;
-  border-color: rgba(253, 251, 212, 0.3) !important;
-}
-
-/* Leaflet Map Customizations */
-.leaflet-popup-content-wrapper {
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  border-radius: 1rem !important;
-}
-.leaflet-popup-content {
-  margin: 0 !important;
-  line-height: inherit !important;
-}
-.leaflet-popup-tip-container {
-  display: none !important;
-}
+/* Leaflet Map Styling */
 .leaflet-container {
-  font-family: inherit !important;
-  z-index: 10 !important;
-}
-.leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
-}
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out {
-  background-color: #181814 !important;
-  color: #FDFBD4 !important;
-  border: 1px solid #282824 !important;
-}
-html[data-theme="cream"] .leaflet-control-zoom-in,
-html[data-theme="cream"] .leaflet-control-zoom-out {
-  background-color: #ffffff !important;
-  color: #0D0D0D !important;
-  border: 1px solid #0D0D0D !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  background: var(--bg) !important;
 }
 
+html[data-theme="dark"] .leaflet-tile-pane {
+  filter: brightness(0.75) invert(1) contrast(2.2) hue-rotate(210deg) saturate(0.4);
+}

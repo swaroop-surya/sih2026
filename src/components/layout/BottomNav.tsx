@@ -1,30 +1,62 @@
-import React from 'react';
-import { Home, ShieldCheck, FileText, LifeBuoy, User, AlertCircle, Sparkles } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Home, ShieldAlert, AlertTriangle, FileText, User } from 'lucide-react';
 import { useAegis } from '../../hooks/useAegisState';
 import { useTranslation } from '../../hooks/useTranslation';
-import { useTheme } from '../../context/ThemeContext';
 
 export const BottomNav: React.FC = () => {
-  const { currentPage, setCurrentPage, activeSOS } = useAegis();
+  const { currentPage, setCurrentPage, activeSOS, initiateSOSCountdown } = useAegis();
   const { t } = useTranslation();
-  const { isCream } = useTheme();
 
-  type NavTab = 'home' | 'safety' | 'sos' | 'incidents' | 'resources' | 'ai' | 'profile';
+  type NavTab = 'home' | 'safety' | 'sos' | 'incidents' | 'profile';
+
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [isHolding, setIsHolding] = useState(false);
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const holdStartTimeRef = useRef<number>(0);
+
+  const startHold = (e: React.TouchEvent | React.MouseEvent) => {
+    setIsHolding(true);
+    setHoldProgress(0);
+    holdStartTimeRef.current = Date.now();
+    const duration = 1500;
+
+    holdIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - holdStartTimeRef.current;
+      const progress = Math.min(100, (elapsed / duration) * 100);
+      setHoldProgress(progress);
+
+      if (progress >= 100) {
+        if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        setIsHolding(false);
+        setHoldProgress(0);
+        initiateSOSCountdown(false, 'Activated via Bottom Navigation hold');
+      }
+    }, 30);
+  };
+
+  const cancelHold = () => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    const elapsed = Date.now() - holdStartTimeRef.current;
+    setIsHolding(false);
+    setHoldProgress(0);
+    if (elapsed < 300 && elapsed > 0) {
+      setCurrentPage('emergency');
+    }
+  };
 
   const isTabActive = (tab: NavTab) => {
     switch (tab) {
       case 'home':
         return currentPage === 'home';
       case 'safety':
-        return ['risk-check', 'recruitment-checker', 'checkin', 'safety-plan', 'location-safety'].includes(currentPage);
+        return ['risk-check', 'resources', 'recruitment-checker', 'checkin', 'safety-plan', 'location-safety', 'cyber-safety'].includes(currentPage);
       case 'sos':
         return currentPage === 'emergency';
       case 'incidents':
         return ['incidents', 'evidence'].includes(currentPage);
-      case 'resources':
-        return ['resources', 'cyber-safety'].includes(currentPage);
-      case 'ai':
-        return currentPage === 'ai-assistant';
       case 'profile':
         return ['profile', 'responder', 'analytics'].includes(currentPage);
       default:
@@ -32,159 +64,109 @@ export const BottomNav: React.FC = () => {
     }
   };
 
-  const navItems = [
-    {
-      id: 'nav-tab-home',
-      label: t.navHome || 'Home',
-      tab: 'home' as NavTab,
-      icon: Home,
-      page: 'home' as const,
-      isSOS: false
-    },
-    {
-      id: 'nav-tab-safety',
-      label: t.navSafety || 'Safety',
-      tab: 'safety' as NavTab,
-      icon: ShieldCheck,
-      page: 'risk-check' as const,
-      isSOS: false
-    },
-    {
-      id: 'nav-tab-sos',
-      label: t.navSOS || 'SOS',
-      tab: 'sos' as NavTab,
-      icon: AlertCircle,
-      page: 'emergency' as const,
-      isSOS: true
-    },
-    {
-      id: 'nav-tab-incidents',
-      label: t.navIncidents || 'Incidents',
-      tab: 'incidents' as NavTab,
-      icon: FileText,
-      page: 'incidents' as const,
-      isSOS: false
-    },
-    {
-      id: 'nav-tab-resources',
-      label: t.navResources || 'Resources',
-      tab: 'resources' as NavTab,
-      icon: LifeBuoy,
-      page: 'resources' as const,
-      isSOS: false
-    },
-    {
-      id: 'nav-tab-ai',
-      label: t.navAI || 'AI',
-      tab: 'ai' as NavTab,
-      icon: Sparkles,
-      page: 'ai-assistant' as const,
-      isSOS: false
-    },
-    {
-      id: 'nav-tab-profile',
-      label: t.navProfile || 'Profile',
-      tab: 'profile' as NavTab,
-      icon: User,
-      page: 'profile' as const,
-      isSOS: false
-    }
-  ];
-
   return (
     <nav
-      className={`fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto pb-safe transition-colors ${
-        isCream
-          ? 'border-t-2 border-black bg-[#FDFBD4]/95 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]'
-          : 'border-t border-[#FDFBD4]/20 bg-[#000000]/95 shadow-[0_-4px_20px_rgba(0,0,0,0.9)]'
-      } backdrop-blur-md`}
+      className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto bg-[var(--surface)] border-t border-[var(--line)] pb-safe select-none"
       aria-label="Main Navigation"
     >
-      <div className="grid grid-cols-7 items-center w-full px-1 py-1.5 gap-0.5">
-        {navItems.map((item) => {
-          const active = isTabActive(item.tab);
-          const Icon = item.icon;
+      <div className="grid grid-cols-5 items-center w-full px-2 h-16">
+        {/* 1. Home */}
+        <button
+          id="nav-tab-home"
+          onClick={() => setCurrentPage('home')}
+          className={`flex flex-col items-center justify-center h-full focus:outline-none transition-colors ${
+            isTabActive('home') ? 'text-[var(--primary)] font-medium' : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+          aria-label={t.navHome || 'Home'}
+        >
+          <Home className="w-5 h-5 stroke-[1.75]" />
+          <span className="text-[12px] mt-1 tracking-tight">
+            {t.navHome || 'Home'}
+          </span>
+        </button>
 
-          if (item.isSOS) {
-            return (
-              <button
-                key={item.id}
-                id={item.id}
-                onClick={() => setCurrentPage(item.page)}
-                className="flex flex-col items-center justify-center py-0.5 focus:outline-none transition-all active:scale-90 select-none group w-full"
-                aria-label="Emergency SOS"
-                title="Emergency SOS"
-              >
-                <div
-                  className={`h-7 w-7 rounded-full flex items-center justify-center transition-all ${
-                    activeSOS
-                      ? 'bg-rose-600 text-white animate-pulse shadow-md'
-                      : 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm'
-                  } ${
-                    isCream
-                      ? 'border border-black'
-                      : 'border border-[#FDFBD4]/40'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5 stroke-[2.4] text-white" />
-                </div>
-                <span
-                  className={`text-[9px] mt-0.5 font-bold tracking-tight uppercase leading-none ${
-                    isCream ? 'text-rose-700' : 'text-rose-400'
-                  }`}
-                >
-                  SOS
-                </span>
-              </button>
-            );
-          }
+        {/* 2. Safety */}
+        <button
+          id="nav-tab-safety"
+          onClick={() => setCurrentPage('risk-check')}
+          className={`flex flex-col items-center justify-center h-full focus:outline-none transition-colors ${
+            isTabActive('safety') ? 'text-[var(--primary)] font-medium' : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+          aria-label={t.navSafety || 'Safety'}
+        >
+          <ShieldAlert className="w-5 h-5 stroke-[1.75]" />
+          <span className="text-[12px] mt-1 tracking-tight">
+            {t.navSafety || 'Safety'}
+          </span>
+        </button>
 
-          return (
-            <button
-              key={item.id}
-              id={item.id}
-              onClick={() => setCurrentPage(item.page)}
-              className="flex flex-col items-center justify-center py-0.5 focus:outline-none transition-all active:scale-95 select-none w-full min-w-0"
-              aria-label={item.label}
-              title={item.label}
-            >
-              <div
-                className={`relative flex items-center justify-center h-7 w-7 rounded-full transition-all duration-150 ${
-                  active
-                    ? isCream
-                      ? 'text-[#0D0D0D]'
-                      : 'text-[#FDFBD4]'
-                    : isCream
-                    ? 'text-[#242424]/60 hover:text-[#0D0D0D]'
-                    : 'text-[#888880] hover:text-[#FDFBD4]'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 transition-transform ${active ? 'stroke-[2.3] scale-110' : 'stroke-[1.6]'}`} />
-                {active && (
-                  <span
-                    className={`absolute -bottom-0.5 h-1 w-1 rounded-full ${
-                      isCream ? 'bg-[#0D0D0D]' : 'bg-[#FDFBD4]'
-                    }`}
-                  />
-                )}
-              </div>
+        {/* 3. Center SOS: Raised kumkum circle, hold to trigger */}
+        <div className="relative flex items-center justify-center -top-3">
+          <button
+            id="nav-tab-sos"
+            onMouseDown={startHold}
+            onMouseUp={cancelHold}
+            onMouseLeave={cancelHold}
+            onTouchStart={startHold}
+            onTouchEnd={cancelHold}
+            onTouchCancel={cancelHold}
+            className={`relative w-14 h-14 rounded-full flex flex-col items-center justify-center text-white select-none transition-transform active:scale-95 ${
+              activeSOS ? 'bg-[var(--sos)] ring-4 ring-[var(--sos)]/30' : 'bg-[var(--sos)]'
+            }`}
+            aria-label="Emergency SOS"
+            title="Emergency SOS"
+          >
+            {/* Progress Ring during Hold */}
+            {isHolding && (
+              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 56 56">
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="25"
+                  stroke="var(--accent)"
+                  strokeWidth="3"
+                  fill="transparent"
+                  strokeDasharray="157"
+                  strokeDashoffset={157 - (157 * holdProgress) / 100}
+                />
+              </svg>
+            )}
+            <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
+            <span className="text-[10px] font-semibold tracking-wider leading-none mt-0.5">
+              SOS
+            </span>
+          </button>
+        </div>
 
-              <span
-                className={`text-[9px] mt-0.5 tracking-tight transition-colors whitespace-nowrap leading-none truncate max-w-full px-0.5 ${
-                  active
-                    ? isCream
-                      ? 'font-bold text-[#0D0D0D]'
-                      : 'font-bold text-[#FDFBD4]'
-                    : isCream
-                    ? 'font-medium text-[#242424]'
-                    : 'font-medium text-[#888880]'
-                }`}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+        {/* 4. Incidents */}
+        <button
+          id="nav-tab-incidents"
+          onClick={() => setCurrentPage('incidents')}
+          className={`flex flex-col items-center justify-center h-full focus:outline-none transition-colors ${
+            isTabActive('incidents') ? 'text-[var(--primary)] font-medium' : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+          aria-label={t.navIncidents || 'Incidents'}
+        >
+          <FileText className="w-5 h-5 stroke-[1.75]" />
+          <span className="text-[12px] mt-1 tracking-tight">
+            {t.navIncidents || 'Incidents'}
+          </span>
+        </button>
+
+        {/* 5. Profile */}
+        <button
+          id="nav-tab-profile"
+          onClick={() => setCurrentPage('profile')}
+          className={`flex flex-col items-center justify-center h-full focus:outline-none transition-colors ${
+            isTabActive('profile') ? 'text-[var(--primary)] font-medium' : 'text-[var(--muted)] hover:text-[var(--text)]'
+          }`}
+          aria-label={t.navProfile || 'Profile'}
+        >
+          <User className="w-5 h-5 stroke-[1.75]" />
+          <span className="text-[12px] mt-1 tracking-tight">
+            {t.navProfile || 'Profile'}
+          </span>
+        </button>
       </div>
     </nav>
   );

@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 import {
   Smartphone,
-  QrCode,
-  Share2,
-  Copy,
-  Check,
   Download,
-  ExternalLink,
+  Share2,
   X,
-  Apple,
+  Check,
+  Copy,
+  ExternalLink,
   MessageCircle,
-  Shield,
-  Send
+  Apple
 } from 'lucide-react';
-import { usePWAInstall } from '../../hooks/usePWAInstall';
+import { AbhayaLogo } from './AbhayaLogo';
 
 interface MobileDownloadModalProps {
   isOpen: boolean;
@@ -22,44 +19,29 @@ interface MobileDownloadModalProps {
 }
 
 export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen, onClose }) => {
-  const { isInstallable, isInstalled, isIOS, isAndroid, isInIframe, install } = usePWAInstall();
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const { isInstallable, install, isInIframe } = usePWAInstall();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'scan' | 'ios' | 'android'>('scan');
+  const [activeTab, setActiveTab] = useState<'scan' | 'android' | 'ios'>('scan');
 
-  // Determine the best public URL for this application
-  const getAppUrl = () => {
-    if (typeof window === 'undefined') return '';
-    // If in iframe or top window, use the canonical URL
-    const url = window.location.href;
-    return url;
-  };
+  // Generate clean current URL (removing iframe / AI studio wrappers if accessible)
+  const appUrl = typeof window !== 'undefined' ? window.location.href : '';
+  
+  // Using QR code service to generate instantaneous QR code
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+    appUrl
+  )}&bgcolor=FFFFFF&color=151A3F&margin=1`;
 
-  const appUrl = getAppUrl();
-
+  // Auto-detect mobile OS to pre-select helpful tab
   useEffect(() => {
-    if (appUrl) {
-      QRCode.toDataURL(appUrl, {
-        width: 240,
-        margin: 2,
-        color: {
-          dark: '#020617',
-          light: '#ffffff'
-        }
-      })
-        .then(url => setQrCodeUrl(url))
-        .catch(err => console.error('Error generating QR code:', err));
+    if (typeof window !== 'undefined') {
+      const ua = navigator.userAgent.toLowerCase();
+      if (/iphone|ipad|ipod/.test(ua)) {
+        setActiveTab('ios');
+      } else if (/android/.test(ua)) {
+        setActiveTab('android');
+      }
     }
-  }, [appUrl]);
-
-  // Set default tab based on detected platform
-  useEffect(() => {
-    if (isIOS) {
-      setActiveTab('ios');
-    } else if (isAndroid) {
-      setActiveTab('android');
-    }
-  }, [isIOS, isAndroid]);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -69,8 +51,15 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback prompt if clipboard API is restricted in iframe
-      window.prompt('Copy this link to open on your mobile phone:', appUrl);
+      // Fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = appUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     }
   };
 
@@ -78,8 +67,8 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Aegis Women Safety App',
-          text: 'Download and install Aegis Women Safety App on your mobile device:',
+          title: 'Abhaya Safety App',
+          text: 'Install Abhaya on your mobile device:',
           url: appUrl,
         });
       } catch (e) {
@@ -91,7 +80,7 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
   };
 
   const openWhatsAppShare = () => {
-    const text = encodeURIComponent(`Install Aegis Women Safety App on your phone: ${appUrl}`);
+    const text = encodeURIComponent(`Install Abhaya on your phone: ${appUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
@@ -107,112 +96,107 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-[16px] border border-[var(--line)] bg-[var(--surface)] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-950/60">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--line)]">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-400">
-              <Smartphone className="h-5 w-5" />
-            </div>
+            <AbhayaLogo size={24} />
             <div>
-              <h3 className="text-sm font-bold text-white">Download Aegis to Mobile</h3>
-              <p className="text-[11px] text-slate-400">Install as a standalone native app</p>
+              <h3 className="text-[15px] font-medium text-[var(--text)]">Install Abhaya</h3>
+              <p className="text-caption text-[11px]">Install as a standalone app on your phone</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-full p-1.5 text-[var(--muted)] hover:text-[var(--text)] transition cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[1.75]" />
           </button>
         </div>
 
-        {/* Tab Selector */}
-        <div className="grid grid-cols-3 gap-1 p-2 bg-slate-950 border-b border-slate-800 text-xs font-semibold">
+        {/* Tab Navigation */}
+        <div className="grid grid-cols-3 border-b border-[var(--line)] bg-[var(--surface-2)] text-[12px] font-medium">
           <button
             onClick={() => setActiveTab('scan')}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+            className={`py-2.5 transition border-b-2 cursor-pointer ${
               activeTab === 'scan'
-                ? 'bg-sky-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'border-[var(--primary)] text-[var(--text)] font-semibold'
+                : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            <QrCode className="w-3.5 h-3.5" />
-            <span>Scan QR</span>
+            Scan QR
           </button>
           <button
             onClick={() => setActiveTab('android')}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+            className={`py-2.5 transition border-b-2 cursor-pointer ${
               activeTab === 'android'
-                ? 'bg-sky-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'border-[var(--primary)] text-[var(--text)] font-semibold'
+                : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>Android</span>
+            Android
           </button>
           <button
             onClick={() => setActiveTab('ios')}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+            className={`py-2.5 transition border-b-2 cursor-pointer ${
               activeTab === 'ios'
-                ? 'bg-sky-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'border-[var(--primary)] text-[var(--text)] font-semibold'
+                : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            <Apple className="w-3.5 h-3.5" />
-            <span>iPhone / iOS</span>
+            iPhone
           </button>
         </div>
 
-        {/* Modal Scrollable Content */}
-        <div className="p-5 overflow-y-auto space-y-4 text-xs">
-          {/* TAB 1: SCAN QR CODE (Easiest from desktop or laptop) */}
+        {/* Content Area */}
+        <div className="p-5 overflow-y-auto space-y-4">
+          {/* TAB 1: SCAN QR CODE */}
           {activeTab === 'scan' && (
             <div className="space-y-4 text-center">
-              <div className="mx-auto w-fit p-3 bg-white rounded-2xl shadow-xl border-4 border-sky-500/30">
+              <div className="mx-auto w-fit p-3 bg-white rounded-[12px] border border-[var(--line)]">
                 {qrCodeUrl ? (
                   <img
                     src={qrCodeUrl}
-                    alt="Scan QR code to install Aegis on mobile"
-                    className="w-44 h-44 mx-auto rounded-lg"
+                    alt="Scan QR code to install Abhaya on mobile"
+                    className="w-44 h-44 mx-auto rounded-[8px]"
                   />
                 ) : (
-                  <div className="w-44 h-44 flex items-center justify-center bg-slate-100 text-slate-400 text-xs">
+                  <div className="w-44 h-44 flex items-center justify-center text-[var(--muted)] text-xs">
                     Generating QR code...
                   </div>
                 )}
               </div>
 
               <div>
-                <p className="font-bold text-white text-sm">Scan with Your Phone's Camera</p>
-                <p className="text-slate-400 text-[11px] mt-1 max-w-xs mx-auto">
-                  Open your camera app on iPhone or Android, scan the QR code above, and tap the link to open and install Aegis.
+                <p className="font-medium text-[var(--text)] text-[14px]">Scan with phone camera</p>
+                <p className="text-caption text-[12px] mt-1 max-w-xs mx-auto">
+                  Open your camera app on iPhone or Android, scan the code, and tap to open Abhaya.
                 </p>
               </div>
 
               {/* Direct Link Share options */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="space-y-2 pt-2 border-t border-[var(--line)]">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={appUrl}
-                    className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[11px] text-slate-300 select-all font-mono truncate"
+                    className="soft-input flex-1 text-[11px] font-mono truncate"
                   />
                   <button
                     onClick={handleCopyLink}
-                    className="flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-white transition shrink-0"
+                    className="soft-btn soft-btn-secondary text-[12px] shrink-0"
                   >
                     {copied ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Copied!</span>
+                        <Check className="w-3.5 h-3.5 text-[var(--safe)] stroke-[1.75]" />
+                        <span className="text-[var(--safe)]">Copied</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Link</span>
+                        <Copy className="w-3.5 h-3.5 stroke-[1.75]" />
+                        <span>Copy</span>
                       </>
                     )}
                   </button>
@@ -221,18 +205,18 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
                     onClick={openWhatsAppShare}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2 px-3 text-xs font-semibold text-white transition shadow"
+                    className="soft-btn soft-btn-secondary text-[12px]"
                   >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    <span>Send to WhatsApp</span>
+                    <MessageCircle className="w-3.5 h-3.5 mr-1 stroke-[1.75]" />
+                    <span>WhatsApp</span>
                   </button>
 
                   <button
                     onClick={handleNativeShare}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 py-2 px-3 text-xs font-semibold text-white transition shadow"
+                    className="soft-btn soft-btn-secondary text-[12px]"
                   >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Share via Device</span>
+                    <Share2 className="w-3.5 h-3.5 mr-1 stroke-[1.75]" />
+                    <span>Share</span>
                   </button>
                 </div>
               </div>
@@ -242,47 +226,41 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
           {/* TAB 2: ANDROID INSTALLATION GUIDE */}
           {activeTab === 'android' && (
             <div className="space-y-3.5">
-              {/* If on Android right now and installable */}
               {isInstallable && (
-                <div className="bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-600/50 p-3.5 rounded-2xl">
-                  <p className="font-bold text-white text-xs mb-1 flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                <div className="bg-[var(--surface-2)] border border-[var(--line)] p-3.5 rounded-[12px]">
+                  <p className="font-medium text-[var(--text)] text-[13px] mb-1 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 stroke-[1.75]" />
                     One-Tap Install Ready
                   </p>
-                  <p className="text-[11px] text-slate-300 mb-3">
-                    Your browser is ready to install Aegis directly to your Android home screen and app drawer.
+                  <p className="text-caption text-[12px] mb-3">
+                    Your browser can install Abhaya directly to your home screen.
                   </p>
                   <button
                     onClick={handleDirectInstall}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-bold text-white shadow-lg transition active:scale-95"
+                    className="soft-btn soft-btn-primary w-full text-[13px]"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Install Aegis App Now</span>
+                    <Download className="w-4 h-4 mr-1.5 stroke-[1.75]" />
+                    <span>Install Abhaya now</span>
                   </button>
                 </div>
               )}
 
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <h4 className="font-bold text-sky-400 text-xs flex items-center gap-1.5">
-                  <Smartphone className="w-4 h-4" />
+              <div className="p-4 rounded-[12px] bg-[var(--surface-2)] space-y-2.5">
+                <h4 className="font-medium text-[var(--text)] text-[13px]">
                   Step-by-Step Android (Chrome) Setup:
                 </h4>
-                <div className="space-y-3 text-slate-300 text-xs">
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">1</span>
-                    <span>Open <strong>Google Chrome</strong> on your Android phone and navigate to the app link.</span>
+                <div className="space-y-2 text-[12px] text-[var(--muted)]">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">1.</span>
+                    <span>Open <strong>Google Chrome</strong> on your phone and open the link.</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">2</span>
-                    <span>Tap the <strong>three dots (⋮)</strong> menu in the top right corner.</span>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">2.</span>
+                    <span>Tap the <strong>three dots (⋮)</strong> menu in Chrome.</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">3</span>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">3.</span>
                     <span>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">4</span>
-                    <span>Tap <strong>Install</strong>. Aegis will download and appear as an app on your phone!</span>
                   </div>
                 </div>
               </div>
@@ -290,78 +268,44 @@ export const MobileDownloadModal: React.FC<MobileDownloadModalProps> = ({ isOpen
               {isInIframe && (
                 <button
                   onClick={() => window.open(appUrl, '_blank')}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-semibold text-slate-200 transition"
+                  className="soft-btn soft-btn-secondary w-full text-[12px]"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open in Clean Window (for Native Install Banner)</span>
+                  <ExternalLink className="w-3.5 h-3.5 mr-1 stroke-[1.75]" />
+                  <span>Open in new window</span>
                 </button>
               )}
             </div>
           )}
 
-          {/* TAB 3: APPLE IOS (IPHONE / IPAD) */}
+          {/* TAB 3: APPLE IOS */}
           {activeTab === 'ios' && (
             <div className="space-y-3.5">
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <h4 className="font-bold text-sky-400 text-xs flex items-center gap-1.5">
-                  <Apple className="w-4 h-4" />
+              <div className="p-4 rounded-[12px] bg-[var(--surface-2)] space-y-2.5">
+                <h4 className="font-medium text-[var(--text)] text-[13px] flex items-center gap-1.5">
+                  <Apple className="w-4 h-4 stroke-[1.75]" />
                   Step-by-Step iPhone (Safari) Setup:
                 </h4>
-                <div className="space-y-3 text-slate-300 text-xs">
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">1</span>
-                    <span>Open this app in <strong>Safari</strong> on your iPhone.</span>
+                <div className="space-y-2 text-[12px] text-[var(--muted)]">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">1.</span>
+                    <span>Open this link in <strong>Safari</strong> on your iPhone.</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">2</span>
-                    <span>Tap the <strong>Share</strong> button (box with an arrow pointing up ⎋) in Safari's bottom toolbar.</span>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">2.</span>
+                    <span>Tap the <strong>Share</strong> button in Safari's bottom toolbar.</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">3</span>
-                    <span>Scroll down the share sheet and tap <strong>Add to Home Screen</strong>.</span>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">3.</span>
+                    <span>Scroll and tap <strong>Add to Home Screen</strong>.</span>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-400 font-bold text-[10px]">4</span>
-                    <span>Tap <strong>Add</strong> in the top right corner. The Aegis shield icon will appear on your iPhone home screen!</span>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-[var(--text)]">4.</span>
+                    <span>Tap <strong>Add</strong>. Abhaya will appear on your home screen.</span>
                   </div>
                 </div>
               </div>
-
-              <div className="rounded-xl bg-sky-950/40 border border-sky-800/40 p-3 text-[11px] text-sky-300 flex items-start gap-2">
-                <Shield className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-                <span>Once added to your home screen, Aegis runs full-screen without Safari browser address bars, with offline vault support.</span>
-              </div>
             </div>
           )}
-
-          {/* Benefits summary pill */}
-          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400">Offline</p>
-              <p className="font-bold text-white text-xs">Full Access</p>
-            </div>
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400">Home Screen</p>
-              <p className="font-bold text-white text-xs">1-Tap Launch</p>
-            </div>
-            <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400">Response</p>
-              <p className="font-bold text-white text-xs">Instant SOS</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400">
-            {isInstalled ? '● Standalone App Active' : '● Free & No App Store Needed'}
-          </span>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition"
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>

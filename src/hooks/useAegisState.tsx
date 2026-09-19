@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   UserProfile,
   TrustedContact,
@@ -59,6 +59,10 @@ interface AegisContextType {
   // Active Emergency
   activeSOS: EmergencyEvent | null;
   sosDispatchResult: SOSDispatchResult | null;
+  sosCountdown: number | null;
+  initiateSOSCountdown: (isSilent?: boolean, customMessage?: string) => void;
+  cancelSOSCountdown: () => void;
+  executeSOSImmediate: () => void;
   startSOS: (isSilent?: boolean, customMessage?: string) => Promise<void>;
   resolveSOS: (reason?: string) => void;
 
@@ -112,21 +116,39 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeDemoScenarioId, setActiveDemoScenarioId] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<UserProfile>(initialData.profile);
-  const [contacts, setContacts] = useState<TrustedContact[]>(initialData.contacts);
-  const [incidents, setIncidents] = useState<IncidentRecord[]>(initialData.incidents);
-  const [evidence, setEvidence] = useState<EvidenceItem[]>(initialData.evidence);
-  const [checkins, setCheckins] = useState<SafetyCheckin[]>(initialData.checkins);
-  const [safePlaces, setSafePlaces] = useState<SafePlace[]>(initialData.safePlaces);
-  const [safetyPlan, setSafetyPlan] = useState<SafetyPlanItem[]>(initialData.safetyPlan);
+  const [contacts, setContacts] = useState<TrustedContact[]>(() => {
+    return (initialData.contacts || []).map(c => {
+      const match = c.name.match(/^(.*?)\s*\((.*?)\)$/);
+      if (match) {
+        return {
+          ...c,
+          name: match[1].trim(),
+          relationship: c.relationship || match[2].trim()
+        };
+      }
+      return c;
+    });
+  });
+  const [incidents, setIncidents] = useState<IncidentRecord[]>(initialData.incidents || []);
+  const [evidence, setEvidence] = useState<EvidenceItem[]>(initialData.evidence || []);
+  const [checkins, setCheckins] = useState<SafetyCheckin[]>(initialData.checkins || []);
+  const [safePlaces, setSafePlaces] = useState<SafePlace[]>(initialData.safePlaces || []);
+  const [safetyPlan, setSafetyPlan] = useState<SafetyPlanItem[]>(initialData.safetyPlan || []);
   const [latestRiskResult, setLatestRiskResult] = useState<RiskAssessmentResult | null>(initialData.latestRiskResult);
-  const [emergencyEvents, setEmergencyEvents] = useState<EmergencyEvent[]>(initialData.emergencyEvents);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(initialData.auditLogs);
+  const [emergencyEvents, setEmergencyEvents] = useState<EmergencyEvent[]>(initialData.emergencyEvents || []);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(initialData.auditLogs || []);
 
   const [activeSOS, setActiveSOS] = useState<EmergencyEvent | null>(() => {
-    const active = initialData.emergencyEvents.find(e => e.status === 'ACTIVE');
+    const events = initialData.emergencyEvents || [];
+    const active = events.find(e => e.status === 'ACTIVE');
     return active || null;
   });
   const [sosDispatchResult, setSosDispatchResult] = useState<SOSDispatchResult | null>(null);
+
+  // 5-second cancel countdown state
+  const [sosCountdown, setSosCountdown] = useState<number | null>(null);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSOSParamsRef = useRef<{ isSilent: boolean; customMessage?: string }>({ isSilent: false });
 
   // Sync back to storage on updates
   useEffect(() => {
@@ -215,7 +237,7 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       category: 'other',
       severity: 5,
       location: result.event.location.addressText,
-      description: `Emergency ${isSilent ? 'Silent ' : ''}SOS activated by user. Dispatch notifications sent to ${result.contactNotifications.length} trusted contacts.`,
+      description: `Emergency ${isSilent ? 'Silent ' : ''}SOS activated by user. Dispatch notifications sent to ${result?.contactNotifications?.length || 0} trusted contacts.`,
       evidenceIds: [],
       notes: customMessage || 'Auto-generated incident record from emergency trigger.',
       reportedToPolice: false
@@ -223,6 +245,45 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIncidents(prev => [newIncident, ...prev]);
     setCurrentPage('emergency');
   }, [contacts]);
+
+  const cancelSOSCountdown = useCallback(() => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setSosCountdown(null);
+  }, []);
+
+  const executeSOSImmediate = useCallback(() => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setSosCountdown(null);
+    startSOS(pendingSOSParamsRef.current.isSilent, pendingSOSParamsRef.current.customMessage);
+  }, [startSOS]);
+
+  const initiateSOSCountdown = useCallback((isSilent: boolean = false, customMessage?: string) => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+    }
+    pendingSOSParamsRef.current = { isSilent, customMessage };
+    setSosCountdown(5);
+
+    countdownTimerRef.current = setInterval(() => {
+      setSosCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+          }
+          startSOS(isSilent, customMessage);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [startSOS]);
 
   const resolveSOS = useCallback((reason: string = 'User confirmed safety') => {
     if (activeSOS) {
@@ -451,6 +512,10 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         auditLogs,
         activeSOS,
         sosDispatchResult,
+        sosCountdown,
+        initiateSOSCountdown,
+        cancelSOSCountdown,
+        executeSOSImmediate,
         startSOS,
         resolveSOS,
         updateProfile,

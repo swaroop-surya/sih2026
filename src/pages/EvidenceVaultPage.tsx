@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { useAegis } from '../hooks/useAegisState';
+import { useTranslation } from '../hooks/useTranslation';
 import {
   ShieldCheck,
   Upload,
   File,
-  Image as ImageIcon,
   Trash2,
   Download,
   Copy,
   Check,
-  Lock,
-  Info,
-  ExternalLink,
-  Plus
+  ArrowLeft
 } from 'lucide-react';
 import { formatBytes, formatDate } from '../lib/utils';
 
@@ -24,11 +21,15 @@ export const EvidenceVaultPage: React.FC = () => {
     incidents,
     setCurrentPage
   } = useAegis();
+  const { t } = useTranslation();
 
   const [isUploading, setIsUploading] = useState(false);
   const [description, setDescription] = useState('');
   const [selectedIncidentId, setSelectedIncidentId] = useState<string>('');
   const [copiedHashId, setCopiedHashId] = useState<string | null>(null);
+
+  const safeEvidence = evidence || [];
+  const safeIncidents = incidents || [];
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,7 +44,6 @@ export const EvidenceVaultPage: React.FC = () => {
       );
       setDescription('');
       setSelectedIncidentId('');
-      // Reset input
       e.target.value = '';
     } finally {
       setIsUploading(false);
@@ -58,14 +58,13 @@ export const EvidenceVaultPage: React.FC = () => {
 
   const exportEvidenceManifest = () => {
     const manifest = {
-      title: 'Aegis Cryptographic Evidence Manifest',
+      title: 'Abhaya Private Record Manifest',
       generatedAt: new Date().toISOString(),
-      vaultItemCount: evidence.length,
-      integrityAlgorithm: 'SHA-256 (NIST FIPS 180-4)',
-      records: evidence.map(ev => ({
+      vaultItemCount: safeEvidence.length,
+      records: safeEvidence.map(ev => ({
         id: ev.id,
         filename: ev.filename,
-        sha256: ev.sha256Hash,
+        fingerprint: ev.sha256Hash,
         fileSize: ev.fileSize,
         fileType: ev.fileType,
         uploadedAt: ev.uploadedAt,
@@ -78,182 +77,147 @@ export const EvidenceVaultPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `aegis-evidence-manifest-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `abhaya-evidence-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Lock className="w-5 h-5 text-emerald-400" />
-            Cryptographic Evidence Vault
-          </h2>
-          <p className="text-xs text-slate-400">
-            Tamper-evident client-side SHA-256 fingerprinting for legal preservation.
+          <button
+            onClick={() => setCurrentPage('incidents')}
+            className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--primary)] hover:underline mb-1 cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 stroke-[1.75]" />
+            Back to incidents
+          </button>
+          <h1 className="page-title">{t.evidenceVaultTitle || 'Your private record'}</h1>
+          <p className="text-caption text-[14px] mt-1">
+            Save screenshots and recordings securely so they cannot be altered later.
           </p>
         </div>
 
         <button
           onClick={exportEvidenceManifest}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
-          title="Download verified cryptographic ledger"
+          className="h-8 px-3 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] text-[12px] font-medium hover:bg-[var(--surface)] transition cursor-pointer flex items-center shrink-0"
         >
-          <Download className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Export Ledger</span>
+          <Download className="w-3.5 h-3.5 mr-1 stroke-[1.75]" />
+          Export
         </button>
       </div>
 
-      {/* Educational Legal Integrity Box */}
-      <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-1.5">
-        <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Why Cryptographic Hashes Matter for Indian Courts</span>
+      {/* Plain Language Note */}
+      <div className="p-3.5 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] text-[13px] text-[var(--text)] space-y-1">
+        <div className="flex items-center gap-1.5 font-medium text-[var(--text)]">
+          <ShieldCheck className="w-4 h-4 text-[var(--safe)] stroke-[1.75]" />
+          <span>Protected from edits</span>
         </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          Under Section 65B of the Indian Evidence Act, digital proof must demonstrate chain-of-custody. When you upload a screenshot or call recording, Aegis computes an irreversible mathematical fingerprint (SHA-256) directly in your browser. If a file is altered by even one pixel, its hash changes entirely.
+        <p className="text-caption text-[12px] leading-relaxed">
+          When you upload photos, recordings, or screenshots, Abhaya generates a cryptographic digital fingerprint stored on your device. This verifies that your file has remained original and untouched since saved.
         </p>
       </div>
 
       {/* Upload Box */}
-      <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3">
-        <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-          <Upload className="w-3.5 h-3.5 text-emerald-400" />
-          Seal New Evidence File
-        </h3>
+      <div className="p-4 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] space-y-3">
+        <h3 className="section-title text-[16px]">Add new file</h3>
+        <div>
+          <label className="text-[12px] font-medium text-[var(--text)] block mb-1">Description</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g., Screenshot of threatening message on WhatsApp"
+            className="soft-input w-full text-[13px]"
+          />
+        </div>
 
-        <div className="space-y-2.5 text-xs">
+        {safeIncidents.length > 0 && (
           <div>
-            <label className="block text-slate-400 mb-1">Description / Context</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Threatening WhatsApp message screenshot, CCTV snippet"
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-400 mb-1">Link to Incident Record (Optional)</label>
+            <label className="text-[12px] font-medium text-[var(--text)] block mb-1">
+              Link to incident (Optional)
+            </label>
             <select
               value={selectedIncidentId}
               onChange={(e) => setSelectedIncidentId(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="soft-input w-full text-[13px] cursor-pointer"
             >
-              <option value="">-- Do not link to an incident --</option>
-              {incidents.map(inc => (
+              <option value="">Do not link (Stand-alone evidence)</option>
+              {safeIncidents.map((inc) => (
                 <option key={inc.id} value={inc.id}>
-                  {inc.date} - {inc.category} ({inc.location.slice(0, 20)})
+                  {inc.category.replace('_', ' ')} • {inc.location} ({formatDate(inc.timestamp)})
                 </option>
               ))}
             </select>
           </div>
+        )}
 
-          <label className="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-800 hover:border-emerald-500/60 rounded-xl cursor-pointer bg-slate-950/60 transition group">
-            <Upload className="w-6 h-6 text-slate-400 group-hover:text-emerald-400 transition mb-1" />
-            <span className="font-semibold text-slate-200 text-xs">
-              {isUploading ? 'Computing SHA-256...' : 'Select or drop file to seal'}
-            </span>
-            <span className="text-[10px] text-slate-500 mt-0.5">
-              Supports screenshots (.png, .jpg), voice recordings (.m4a), and PDFs
-            </span>
-            <input
-              type="file"
-              disabled={isUploading}
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </label>
-        </div>
+        <label className="p-4 border-2 border-dashed border-[var(--line)] rounded-[12px] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[var(--surface-2)] transition">
+          <Upload className="w-6 h-6 text-[var(--primary)] mb-1 stroke-[1.75]" />
+          <span className="text-[13px] font-medium text-[var(--text)]">
+            {isUploading ? 'Securing file...' : 'Choose file to lock & protect'}
+          </span>
+          <span className="text-caption text-[11px] mt-0.5">Images, PDFs, audio recordings</span>
+          <input
+            type="file"
+            onChange={handleFileUpload}
+            disabled={isUploading}
+            className="hidden"
+            accept="image/*,.pdf,audio/*"
+          />
+        </label>
       </div>
 
-      {/* Vault Items List */}
-      <div className="space-y-2.5">
-        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-          Secured Artifacts ({evidence.length})
-        </h3>
-
-        {evidence.length === 0 ? (
-          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
-            No evidence files sealed yet.
+      {/* Evidence Files List */}
+      <div className="space-y-2">
+        <h3 className="section-title text-[16px]">Stored files ({safeEvidence.length})</h3>
+        {safeEvidence.length === 0 ? (
+          <div className="p-6 rounded-[12px] bg-[var(--surface-2)] text-center text-caption text-[13px]">
+            Nothing saved here yet. Save photos, screenshots, or recordings. They are locked with a fingerprint so no one can say they were edited.
           </div>
         ) : (
-          <div className="space-y-2.5">
-            {evidence.map((item) => (
-              <div
-                key={item.id}
-                className="bg-slate-900/90 rounded-2xl border border-slate-800 p-3.5 space-y-2.5 shadow-sm text-xs"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-emerald-400">
-                      {item.fileType.startsWith('image/') ? (
-                        <ImageIcon className="w-4 h-4" />
-                      ) : (
-                        <File className="w-4 h-4" />
-                      )}
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+            {safeEvidence.map((ev) => (
+              <div key={ev.id} className="py-3.5 space-y-2 px-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
+                      <File className="w-4 h-4 stroke-[1.75]" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-white truncate max-w-[200px]">
-                        {item.filename}
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        {formatBytes(item.fileSize)} • {formatDate(item.uploadedAt)}
-                      </div>
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-[14px] text-[var(--text)] truncate">{ev.filename}</h4>
+                      <p className="text-caption text-[12px] truncate">{ev.description}</p>
+                      <p className="text-caption text-[11px] mt-0.5">
+                        {formatBytes(ev.fileSize)} • {formatDate(ev.uploadedAt)}
+                      </p>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => deleteEvidence(item.id)}
-                    className="text-slate-500 hover:text-rose-400 p-1 transition"
-                    title="Remove from vault"
+                    onClick={() => deleteEvidence(ev.id)}
+                    className="p-1.5 text-[var(--muted)] hover:text-[var(--sos)] transition"
+                    aria-label="Delete file"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5 stroke-[1.75]" />
                   </button>
                 </div>
 
-                <p className="text-[11px] text-slate-300 bg-slate-950/50 p-2 rounded-lg border border-slate-800/80">
-                  {item.description}
-                </p>
-
-                {/* Cryptographic SHA-256 Hash pill */}
-                <div className="bg-slate-950 p-2 rounded-lg border border-slate-800/80 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] text-slate-400">
-                    <span className="font-mono font-semibold text-emerald-400">SHA-256 FINGERPRINT</span>
-                    <button
-                      onClick={() => copyHash(item.id, item.sha256Hash)}
-                      className="flex items-center gap-1 text-slate-400 hover:text-white transition"
-                      title="Copy complete hash"
-                    >
-                      {copiedHashId === item.id ? (
-                        <span className="text-emerald-400 flex items-center gap-0.5">
-                          <Check className="w-2.5 h-2.5" /> Copied
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-0.5">
-                          <Copy className="w-2.5 h-2.5" /> Copy
-                        </span>
-                      )}
-                    </button>
+                {/* Digital Fingerprint */}
+                <div className="p-2 rounded-[8px] bg-[var(--surface-2)] flex items-center justify-between gap-2 text-[11px]">
+                  <div className="min-w-0 flex items-center gap-1.5 truncate">
+                    <span className="text-[var(--muted)] shrink-0">Fingerprint:</span>
+                    <span className="font-mono text-[var(--text)] truncate">{ev.sha256Hash}</span>
                   </div>
-                  <div className="font-mono text-[10px] text-slate-300 break-all select-all leading-tight">
-                    {item.sha256Hash}
-                  </div>
+                  <button
+                    onClick={() => copyHash(ev.id, ev.sha256Hash)}
+                    className="text-[var(--primary)] hover:underline shrink-0 flex items-center gap-1 font-medium cursor-pointer"
+                  >
+                    {copiedHashId === ev.id ? <Check className="w-3 h-3 text-[var(--safe)]" /> : <Copy className="w-3 h-3 stroke-[1.75]" />}
+                    <span>{copiedHashId === ev.id ? 'Copied' : 'Copy'}</span>
+                  </button>
                 </div>
-
-                {item.dataUrl && (
-                  <div className="pt-1">
-                    <img
-                      src={item.dataUrl}
-                      alt={item.filename}
-                      className="max-h-40 rounded-xl border border-slate-800 object-cover"
-                    />
-                  </div>
-                )}
               </div>
             ))}
           </div>
