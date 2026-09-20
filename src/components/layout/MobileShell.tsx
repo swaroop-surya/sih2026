@@ -85,11 +85,12 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           <button
             id="btn-floating-ask-abhaya"
             onClick={() => setCurrentPage('ai-assistant')}
-            className="fixed bottom-20 right-4 z-40 w-13 h-13 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] flex items-center justify-center hover:bg-[var(--surface)] active:scale-95 transition-all cursor-pointer"
-            aria-label="Ask Abhaya"
-            title="Ask Abhaya"
+            className="fixed bottom-20 right-4 z-40 h-10 px-3.5 rounded-full bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] shadow-md flex items-center gap-2 hover:bg-[var(--surface-2)] active:scale-95 transition-all cursor-pointer"
+            aria-label="Ask Abhaya AI"
+            title="Ask Abhaya AI"
           >
-            <Sparkles className="w-5 h-5 stroke-[1.75]" />
+            <Sparkles className="w-4 h-4 text-[var(--primary)] stroke-[2]" />
+            <span className="text-[12px] font-semibold tracking-tight">Ask Abhaya</span>
           </button>
         )}
 

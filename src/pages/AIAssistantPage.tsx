@@ -7,10 +7,12 @@ import {
   Trash2,
   Send,
   Info,
-  MessageSquare
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { generateId } from '../lib/utils';
 import { AbhayaLogo } from '../components/common/AbhayaLogo';
+import { FormattedSafetyText } from '../components/common/FormattedSafetyText';
 
 export const AIAssistantPage: React.FC = () => {
   const { profile, setCurrentPage } = useAegis();
@@ -22,7 +24,7 @@ export const AIAssistantPage: React.FC = () => {
     {
       id: 'welcome',
       sender: 'assistant',
-      text: `Hello ${profile.name ? profile.name.split(' ')[0] : 'there'}. I am your Abhaya advisor. You can describe what is happening in your own words, ask about safety steps, or get guidance on Indian legal protections.\n\nIn danger, call 112.`,
+      text: `Hello ${profile.name ? profile.name.split(' ')[0] : 'there'}. I am your Abhaya AI safety advisor.\n\nYou can describe what is happening in your own words, ask about safety steps, or get guidance on Indian legal protections (like Zero FIR and cybercrime reporting).\n\nIf you are in immediate danger, dial 112 immediately.`,
       timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -57,6 +59,14 @@ export const AIAssistantPage: React.FC = () => {
         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, botMsg]);
+    } catch {
+      const errorMsg: AIChatMessage = {
+        id: generateId('msg_err'),
+        sender: 'assistant',
+        text: 'I had trouble connecting to the network right now. If you are in urgent distress, call 112 or 181 immediately, or try asking your question again.',
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
@@ -67,22 +77,24 @@ export const AIAssistantPage: React.FC = () => {
       {
         id: 'welcome',
         sender: 'assistant',
-        text: 'Chat cleared. Tell us what is happening.',
+        text: 'Chat cleared. Tell me what is happening, and I will provide private, objective guidance.',
         timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       }
     ]);
   };
 
   const starterChips = [
-    'My partner checks my phone and demands my location constantly',
-    'A recruiter is asking for my original passport for a job abroad',
+    'My partner checks my phone and location constantly',
+    'A recruiter is asking for my original passport for a job',
     'Someone is threatening to leak private photos unless I pay',
-    'How do I file a Zero FIR at any police station in India?'
+    'How do I file a Zero FIR at any police station in India?',
+    'Someone is following me on the street right now',
+    'What free legal aid is available under NALSA?'
   ];
 
   return (
     <div className="flex flex-col h-[calc(100vh-130px)] space-y-3 pb-2">
-      {/* Header: Back button + Title + Clear chat trash icon */}
+      {/* Header: Back button + Title + Live AI Badge + Clear chat */}
       <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
         <div className="flex items-center gap-2">
           <button
@@ -93,9 +105,15 @@ export const AIAssistantPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4 stroke-[1.75]" />
           </button>
           <div>
-            <h1 className="font-heading font-semibold text-[18px] text-[var(--text)]">
-              {t.askAegis || 'Ask Abhaya'}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading font-semibold text-[18px] text-[var(--text)]">
+                {t.askAegis || 'Ask Abhaya'}
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--safe)]/15 text-[var(--safe)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--safe)] animate-pulse" />
+                Live AI
+              </span>
+            </div>
             <p className="text-caption text-[12px]">Private safety guidance</p>
           </div>
         </div>
@@ -134,13 +152,17 @@ export const AIAssistantPage: React.FC = () => {
               )}
 
               <div
-                className={`max-w-[84%] p-3.5 rounded-[16px] text-[14px] leading-relaxed ${
+                className={`max-w-[86%] p-3.5 rounded-[16px] text-[14px] leading-relaxed ${
                   isUser
                     ? 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]'
-                    : 'bg-[var(--surface)] text-[var(--text)] border border-[var(--line)]'
+                    : 'bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] shadow-xs'
                 }`}
               >
-                <div className="whitespace-pre-line">{m.text}</div>
+                {isUser ? (
+                  <div className="whitespace-pre-wrap">{m.text}</div>
+                ) : (
+                  <FormattedSafetyText content={m.text} />
+                )}
                 <span className="block text-[11px] text-[var(--muted)] text-right mt-1.5 font-mono">
                   {m.timestamp}
                 </span>
@@ -151,11 +173,12 @@ export const AIAssistantPage: React.FC = () => {
 
         {loading && (
           <div className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
-            <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 stroke-[1.75]" />
+            <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] text-[var(--primary)] flex items-center justify-center animate-pulse">
+              <Sparkles className="w-4 h-4 stroke-[1.75]" />
             </div>
-            <span className="p-3 rounded-[12px] bg-[var(--surface)] border border-[var(--line)]">
-              Thinking...
+            <span className="p-3 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--primary)]" />
+              Abhaya is thinking...
             </span>
           </div>
         )}
@@ -163,7 +186,7 @@ export const AIAssistantPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 4 Starter Chips as horizontal scroll */}
+      {/* Starter Chips as horizontal scroll */}
       <div className="overflow-x-auto pb-1 -mx-2 px-2 scrollbar-none">
         <div className="flex items-center gap-2">
           {starterChips.map((chip, idx) => (

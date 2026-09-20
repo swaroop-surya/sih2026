@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   Lock,
   Compass,
-  Plus
+  Plus,
+  Sparkles
 } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 import { KolamRosette } from '../components/common/KolamRosette';
@@ -204,6 +205,36 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0 stroke-[1.75]" />
+        </button>
+      </section>
+
+      {/* Ask Abhaya AI Safety Advisor */}
+      <section>
+        <button
+          id="btn-home-ask-abhaya-ai"
+          onClick={() => setCurrentPage('ai-assistant')}
+          className="soft-card w-full p-4 flex items-center justify-between gap-3 text-left hover:border-[var(--primary)] transition cursor-pointer group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--primary)] border border-[var(--line)] flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 stroke-[1.75]" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="card-title text-[16px]">
+                  Ask Abhaya AI
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--safe)]/15 text-[var(--safe)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--safe)] animate-pulse" />
+                  Live AI
+                </span>
+              </div>
+              <p className="text-caption text-[13px] mt-0.5 truncate">
+                Private safety advisor for red flags, legal rights & next steps
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[var(--muted)] group-hover:text-[var(--text)] shrink-0 stroke-[1.75]" />
         </button>
       </section>
 

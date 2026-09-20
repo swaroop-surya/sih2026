@@ -52,7 +52,7 @@ export const BottomNav: React.FC = () => {
       case 'home':
         return currentPage === 'home';
       case 'safety':
-        return ['risk-check', 'resources', 'recruitment-checker', 'checkin', 'safety-plan', 'location-safety', 'cyber-safety'].includes(currentPage);
+        return ['risk-check', 'resources', 'recruitment-checker', 'checkin', 'safety-plan', 'location-safety', 'cyber-safety', 'ai-assistant'].includes(currentPage);
       case 'sos':
         return currentPage === 'emergency';
       case 'incidents':

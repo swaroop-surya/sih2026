@@ -11,7 +11,8 @@ import {
   FilePlus2,
   LifeBuoy,
   Info,
-  Circle
+  Circle,
+  Sparkles
 } from 'lucide-react';
 import { generateId } from '../lib/utils';
 
@@ -296,22 +297,32 @@ export const RiskAssessmentPage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="space-y-2 pt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    id="btn-save-risk-incident"
+                    onClick={handleSaveToIncidents}
+                    className="soft-btn soft-btn-secondary text-[13px]"
+                  >
+                    <FilePlus2 className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
+                    {t.saveToIncidentLog || 'Save to incident log'}
+                  </button>
+                  <button
+                    id="btn-risk-get-help"
+                    onClick={() => setSafetyTab('resources')}
+                    className="soft-btn soft-btn-primary text-[13px]"
+                  >
+                    <LifeBuoy className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
+                    {t.getHelpNow || 'Get help now'}
+                  </button>
+                </div>
                 <button
-                  id="btn-save-risk-incident"
-                  onClick={handleSaveToIncidents}
-                  className="soft-btn soft-btn-secondary text-[13px]"
+                  id="btn-risk-discuss-ai"
+                  onClick={() => setCurrentPage('ai-assistant')}
+                  className="w-full h-11 px-4 rounded-[12px] bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] hover:border-[var(--primary)] flex items-center justify-center gap-2 text-[13px] font-medium transition cursor-pointer"
                 >
-                  <FilePlus2 className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
-                  {t.saveToIncidentLog || 'Save to incident log'}
-                </button>
-                <button
-                  id="btn-risk-get-help"
-                  onClick={() => setSafetyTab('resources')}
-                  className="soft-btn soft-btn-primary text-[13px]"
-                >
-                  <LifeBuoy className="w-3.5 h-3.5 mr-1.5 stroke-[1.75]" />
-                  {t.getHelpNow || 'Get help now'}
+                  <Sparkles className="w-4 h-4 text-[var(--primary)] stroke-[1.75]" />
+                  <span>Discuss answers with Abhaya AI Advisor</span>
                 </button>
               </div>
             </div>

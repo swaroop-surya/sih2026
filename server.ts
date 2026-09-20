@@ -34,14 +34,14 @@ function getAI(): GoogleGenAI | null {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    appName: 'Aegis',
+    appName: 'Abhaya',
     hasGemini: !!process.env.GEMINI_API_KEY,
     timestamp: new Date().toISOString()
   });
 });
 
-// Helper for timeout-guarded async operations
-function withTimeout<T>(promise: Promise<T>, ms: number = 7000): Promise<T> {
+// Helper for timeout-guarded async operations (18s timeout for stability)
+function withTimeout<T>(promise: Promise<T>, ms: number = 18000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error('AI request timeout')), ms))
@@ -54,7 +54,7 @@ const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-f
 async function generateWithFallback(
   ai: GoogleGenAI,
   prompt: string,
-  timeoutMs: number = 7000
+  timeoutMs: number = 18000
 ): Promise<string | null> {
   for (const model of CANDIDATE_MODELS) {
     try {
@@ -68,8 +68,8 @@ async function generateWithFallback(
       if (response?.text) {
         return response.text;
       }
-    } catch {
-      // Continue to next candidate model
+    } catch (err: any) {
+      console.warn(`[AI] Model ${model} unavailable: ${err?.message || err}`);
     }
   }
   return null;
@@ -78,16 +78,18 @@ async function generateWithFallback(
 // Helper for trauma-informed rule-based safety responses
 function getRuleBasedSafetyReply(message: string): string {
   const lower = message.toLowerCase();
-  if (lower.includes('passport') || lower.includes('document') || lower.includes('contract') || lower.includes('leave')) {
-    return "Restricting identity documents (such as withholding your passport or Aadhaar) or preventing someone from leaving is a serious warning indicator associated with coercive control and exploitation. In India, you can reach the National Emergency Service at 112 or the Women Helpline at 181 for guidance. If you are in immediate physical danger, please activate Emergency SOS.";
-  } else if (lower.includes('money') || lower.includes('debt') || lower.includes('salary') || lower.includes('pay')) {
-    return "Financial coercion—such as demanding repayment of unexplained recruitment fees, withholding earned wages, or controlling personal finances—is a significant risk indicator. Document dates and communication without confronting the person directly if it is unsafe.";
-  } else if (lower.includes('photo') || lower.includes('blackmail') || lower.includes('video') || lower.includes('leak')) {
-    return "Digital blackmail or threats to circulate private media is a cyber offense. Do not delete screenshots or chat logs, as they serve as vital evidence. In India, you can report cyber harassment anonymously to the National Cyber Crime Reporting Portal at cybercrime.gov.in or call 1930.";
-  } else if (lower.includes('follow') || lower.includes('stalk') || lower.includes('tracking')) {
-    return "Being followed physically or tracked digitally is unacceptable. Try to reach a populated, well-lit safe space (such as a metro station, store, or police station), share your live check-in with a trusted contact, and call 112 or 181 if you feel threatened.";
+  if (lower.includes('passport') || lower.includes('document') || lower.includes('contract') || lower.includes('leave') || lower.includes('traffick')) {
+    return "Restricting personal identity documents (such as withholding your passport, Aadhaar, or education certificates) or restricting your freedom of movement is a serious violation associated with coercive control and forced labor.\n\nKey Steps:\n1. Under Indian law, no employer or agency has the legal right to confiscate your original papers.\n2. Contact the National Emergency Number at 112 or the Women Helpline at 181.\n3. For overseas recruitment verification, check emigrate.gov.in (MEA eMigrate).\n4. Seek free legal guidance through NALSA (dial 15100).";
+  } else if (lower.includes('photo') || lower.includes('blackmail') || lower.includes('video') || lower.includes('leak') || lower.includes('extort') || lower.includes('cyber')) {
+    return "Digital extortion or threats to distribute private photos/videos is a punishable offense under Sections 66E and 67 of the IT Act, as well as the BNS (Indian criminal code).\n\nImmediate Actions:\n1. Do NOT delete messages, screenshots, or call records—they are crucial legal evidence.\n2. Do NOT send money or comply with extortion demands; compliance rarely stops blackmail.\n3. Report immediately to the National Cyber Crime Portal at cybercrime.gov.in or call the 1930 Cyber Fraud helpline.\n4. Hash and save your evidence securely in your Abhaya Evidence Vault.";
+  } else if (lower.includes('follow') || lower.includes('stalk') || lower.includes('tracking') || lower.includes('watching')) {
+    return "Being followed or tracked is frightening and requires immediate situational awareness.\n\nSafety Steps:\n1. Head immediately toward a well-lit, populated public area—such as a metro station, hospital, 24/7 store, or police station.\n2. Do not go directly home or into isolated lanes.\n3. Call 112 immediately or trigger your Abhaya Emergency SOS to alert your trusted contacts.\n4. You can also start an Abhaya Safety Check-In with an automatic countdown.";
+  } else if (lower.includes('fir') || lower.includes('police') || lower.includes('complaint') || lower.includes('legal') || lower.includes('rights')) {
+    return "Your Legal Rights in India:\n1. Zero FIR: Any police station in India is legally obligated to register a Zero FIR for a cognizable offense against women, regardless of where the incident occurred, and transfer it to the jurisdictional station.\n2. Free Legal Aid: The National Legal Services Authority (NALSA) provides free legal assistance to women. Helpline: 15100.\n3. Statement to Magistrate: Under Section 164 CrPC / BNSS, your statement can be recorded confidentially by a female magistrate.\n4. NCW: National Commission for Women helpline 7827170170.";
+  } else if (lower.includes('relationship') || lower.includes('partner') || lower.includes('husband') || lower.includes('boyfriend') || lower.includes('abuse') || lower.includes('hit') || lower.includes('threat')) {
+    return "Recognizing unhealthy control or abuse is an important first step. You deserve to be safe, respected, and free from fear.\n\nGuidance:\n1. Create a confidential safety plan: know where your emergency documents and spare cash are kept.\n2. Establish a safe word with a trusted friend or neighbor.\n3. Reach out to the 181 Women Helpline (24/7, confidential) or visit a local One Stop Centre (Sakhi Centre) for shelter, legal aid, and counseling.\n4. In any active physical danger, dial 112 or use Abhaya SOS.";
   } else {
-    return "I understand you're sharing a sensitive situation. Aegis is here to help you identify safety indicators and connect with verified resources. Notice whether there are patterns of isolation, threats, or movement restrictions. You can log this in your Incident Journal with timestamps to establish a chronological record. In any emergency, dial 112 or 181 immediately.";
+    return "I am here with you. Abhaya is designed to support you with objective, confidential safety guidance.\n\nYou can ask about:\n• Warning signs of coercion, harassment, or stalking\n• Your legal rights under Indian law (including Zero FIR)\n• Cyber safety, blackmail response, and evidence preservation\n• How to plan a safe exit or set up check-in timers\n\nIf you are in immediate danger right now, please dial 112 or activate Emergency SOS.";
   }
 }
 
@@ -104,19 +106,31 @@ app.post('/api/ai/chat', async (req, res) => {
     let isFallback = false;
 
     if (ai) {
-      const systemInstruction = `You are Aegis AI Safety Assistant, an empathetic, trauma-informed safety advisor built for women's protection.
+      const systemInstruction = `You are Abhaya AI Safety Advisor, an empathetic, trauma-informed safety advisor built for women's protection and autonomy.
 CORE MANDATES:
-1. Emphasize immediate physical safety first. If in imminent danger, urge using the 112 Emergency helpline or Aegis SOS.
+1. Emphasize immediate physical safety first. If in imminent danger, urge using the 112 Emergency helpline or Abhaya SOS.
 2. NEVER engage in victim blaming, judgment, or dismissive remarks.
 3. NEVER instruct the user to aggressively confront a potentially dangerous perpetrator or abuser.
 4. Distinguish clearly that risk assessments and indicators are informational flags, NOT definitive legal verdicts or medical diagnoses.
 5. Important product policy: Consensual adult sex work must NOT be treated as trafficking. Specifically focus on coercion, exploitation, trafficking, violence, harassment, stalking, abuse, blackmail, forced activity, and inability to safely leave.
-6. Provide structured, actionable next steps: evidence preservation (screenshots, timestamps), trusted circle alert, safe places, verified Indian resources (112, 181 Women Helpline, 1930 Cyber Crime, One Stop Centres).
+6. Provide structured, actionable next steps: evidence preservation (screenshots, timestamps), trusted circle alert, safe places, verified Indian resources (112, 181 Women Helpline, 1930 Cyber Crime, One Stop Centres / Sakhi Centres, NALSA 15100).
 7. Respond in ${language === 'te' ? 'Telugu' : language === 'hi' ? 'Hindi' : language === 'ta' ? 'Tamil' : 'English'}, or provide clear, accessible explanations.
-8. Keep your response calm, grounded, objective, and concise.`;
+8. Keep your response calm, grounded, objective, structured, and easy to read.`;
 
-      const prompt = `${systemInstruction}\n\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
-      const generated = await generateWithFallback(ai, prompt, 7000);
+      let conversationContext = '';
+      if (Array.isArray(conversationHistory) && conversationHistory.length > 0) {
+        const cleanHistory = conversationHistory
+          .filter((m: any) => m && m.text && m.id !== 'welcome')
+          .slice(-6)
+          .map((m: any) => `${m.sender === 'user' ? 'User' : 'Abhaya Advisor'}: ${m.text}`)
+          .join('\n');
+        if (cleanHistory) {
+          conversationContext = `\nRecent Conversation Context:\n${cleanHistory}\n`;
+        }
+      }
+
+      const prompt = `${systemInstruction}${conversationContext}\nUser situation: "${message}"\nProvide a supportive, objective safety response:`;
+      const generated = await generateWithFallback(ai, prompt, 18000);
       if (generated) {
         reply = generated;
       } else {
@@ -204,7 +218,7 @@ app.post('/api/ai/analyze-recruitment', async (req, res) => {
 Content: "${contentToAnalyze.slice(0, 1500)}"
 Provide a 2-3 sentence objective assessment of potential risks and 2 safety verification steps.
 Do not make a definitive accusation; frame as indicators to inspect.`;
-      const generated = await generateWithFallback(ai, aiPrompt, 7000);
+      const generated = await generateWithFallback(ai, aiPrompt, 18000);
       if (generated) {
         aiExplanation = generated;
       }
