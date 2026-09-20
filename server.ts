@@ -263,7 +263,7 @@ async function start() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Aegis] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`[Abhaya] Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
