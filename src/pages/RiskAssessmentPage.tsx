@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import { initialRiskQuestions } from '../data/initialState';
 import { RiskAssessmentResult, RiskCategory, RiskLevel } from '../types';
@@ -12,18 +12,36 @@ import {
   LifeBuoy,
   Info,
   Circle,
-  Sparkles
+  Sparkles,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
-import { generateId } from '../lib/utils';
+import { generateId, formatMMSS } from '../lib/utils';
 
 export const RiskAssessmentPage: React.FC = () => {
   const {
     saveRiskResult,
     latestRiskResult,
     setCurrentPage,
-    addIncident
+    addIncident,
+    checkins
   } = useAegis();
   const { t } = useTranslation();
+
+  const activeCheckin = (checkins || []).find(c => c.status === 'ACTIVE');
+  const [nowTime, setNowTime] = useState(Date.now());
+  useEffect(() => {
+    if (!activeCheckin) return;
+    const interval = setInterval(() => setNowTime(Date.now()), 1000);
+    const handleSync = () => setNowTime(Date.now());
+    window.addEventListener('visibilitychange', handleSync);
+    window.addEventListener('focus', handleSync);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleSync);
+      window.removeEventListener('focus', handleSync);
+    };
+  }, [activeCheckin]);
 
   // Top Segmented Control: "Something feels off?" | "Get help"
   const [safetyTab, setSafetyTab] = useState<'risk' | 'resources'>('risk');
@@ -175,6 +193,51 @@ export const RiskAssessmentPage: React.FC = () => {
             <p className="text-caption text-[14px] mt-1">
               {t.pageSubtitleCheckMyRisk || "Tell us what's happening. Nothing leaves this phone."}
             </p>
+          </div>
+
+          {/* Check-in timer section on Safety page */}
+          <div
+            id="safety-page-checkin-section"
+            onClick={() => setCurrentPage('checkin')}
+            className={`p-4 rounded-[14px] border transition cursor-pointer ${
+              activeCheckin
+                ? 'bg-[var(--surface)] border-[var(--accent)] shadow-sm'
+                : 'bg-[var(--surface-2)] border-[var(--line)] hover:border-[var(--primary)]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                  activeCheckin ? 'bg-[var(--accent)] text-[#1A1F45]' : 'bg-[var(--surface)] text-[var(--primary)] border border-[var(--line)]'
+                }`}>
+                  <Clock className={`w-4 h-4 stroke-[2] ${activeCheckin ? 'animate-pulse' : ''}`} />
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-[15px] text-[var(--text)] leading-tight">
+                    {t.checkinTimerSection || 'Check-in timer'}
+                  </h3>
+                  <p className="text-caption text-[12px] mt-0.5">
+                    {activeCheckin ? activeCheckin.purpose : (t.checkinTimerSectionSubtitle || 'Set automated alert countdowns for travel or meetings')}
+                  </p>
+                </div>
+              </div>
+
+              {activeCheckin ? (
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--accent)] text-[#1A1F45]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1A1F45] animate-ping" />
+                    {t.checkinRunningStatus || 'Running'}
+                  </span>
+                  <div className="font-heading font-serif text-[18px] font-bold text-[var(--text)] tabular-nums mt-0.5">
+                    {formatMMSS(new Date(activeCheckin.expiresAt).getTime() - nowTime)}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-[12px] font-medium text-[var(--primary)] flex items-center gap-1">
+                  Set timer <ChevronRight className="w-4 h-4" />
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Shrunk Info Box */}

@@ -1,6 +1,151 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Filter benign Vite HMR reconnection notices and websocket error events in sandboxed preview iframe
+      (function () {
+        function shouldSuppress(val) {
+          if (val === undefined || val === null) return false;
+          var s = '';
+          try {
+            if (typeof val === 'string') {
+              s = val;
+            } else if (val instanceof Error) {
+              s = (val.message || '') + ' ' + (val.stack || '');
+            } else if (typeof val === 'object') {
+              s = (val.message || '') + ' ' + (val.stack || '') + ' ' + (val.reason || '');
+              try { s += ' ' + JSON.stringify(val); } catch (e) {}
+            } else {
+              s = String(val);
+            }
+          } catch (e) {
+            return false;
+          }
+          s = s.toLowerCase();
+          return (
+            s.indexOf('[vite]') !== -1 ||
+            s.indexOf('vite-hmr') !== -1 ||
+            s.indexOf('vite/dist/client') !== -1 ||
+            s.indexOf('failed to connect to websocket') !== -1 ||
+            s.indexOf('websocket closed without opened') !== -1
+          );
+        }
+
+        function checkArgs(args) {
+          for (var i = 0; i < args.length; i++) {
+            var item = args[i];
+            if (shouldSuppress(item)) return true;
+          }
+          return false;
+        }
+
+        var origError = console.error;
+        console.error = function () {
+          if (checkArgs(arguments)) {
+            return;
+          }
+          origError.apply(console, arguments);
+        };
+
+        var origWarn = console.warn;
+        console.warn = function () {
+          if (checkArgs(arguments)) {
+            return;
+          }
+          origWarn.apply(console, arguments);
+        };
+
+        var origInfo = console.info;
+        console.info = function () {
+          if (checkArgs(arguments)) {
+            return;
+          }
+          origInfo.apply(console, arguments);
+        };
+
+        var origLog = console.log;
+        console.log = function () {
+          if (checkArgs(arguments)) {
+            return;
+          }
+          origLog.apply(console, arguments);
+        };
+
+        var origDebug = console.debug;
+        console.debug = function () {
+          if (checkArgs(arguments)) {
+            return;
+          }
+          origDebug.apply(console, arguments);
+        };
+
+        // Suppress browser-level network connection failures for Vite dev HMR websocket
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var RealWebSocket = window.WebSocket;
+          var SafeWebSocket = function (url, protocols) {
+            var urlStr = typeof url === 'string' ? url : (url && url.toString ? url.toString() : '');
+            var isViteHmr =
+              protocols === 'vite-hmr' ||
+              (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) ||
+              (urlStr.indexOf('token=') !== -1 && (urlStr.indexOf('vite') !== -1 || urlStr.indexOf('5173') !== -1 || urlStr.indexOf('3000') !== -1));
+            
+            if (isViteHmr) {
+              var fakeWs = new EventTarget();
+              fakeWs.url = urlStr;
+              fakeWs.readyState = 1; // 1 = OPEN
+              fakeWs.OPEN = 1;
+              fakeWs.CONNECTING = 0;
+              fakeWs.CLOSING = 2;
+              fakeWs.CLOSED = 3;
+              fakeWs.bufferedAmount = 0;
+              fakeWs.extensions = '';
+              fakeWs.protocol = 'vite-hmr';
+              fakeWs.binaryType = 'blob';
+              fakeWs.send = function () {};
+              fakeWs.close = function () {
+                fakeWs.readyState = 3;
+              };
+              setTimeout(function () {
+                try {
+                  fakeWs.dispatchEvent(new Event('open'));
+                  if (typeof fakeWs.onopen === 'function') {
+                    fakeWs.onopen(new Event('open'));
+                  }
+                } catch (e) {}
+              }, 0);
+              return fakeWs;
+            }
+            return new RealWebSocket(url, protocols);
+          };
+          SafeWebSocket.CONNECTING = 0;
+          SafeWebSocket.OPEN = 1;
+          SafeWebSocket.CLOSING = 2;
+          SafeWebSocket.CLOSED = 3;
+          SafeWebSocket.prototype = RealWebSocket.prototype;
+          window.WebSocket = SafeWebSocket;
+        }
+
+        window.addEventListener('error', function (event) {
+          var msg = (event && (event.message || (event.error && event.error.message))) || '';
+          var filename = (event && event.filename) || '';
+          if (shouldSuppress(msg) || shouldSuppress(filename) || shouldSuppress(event && event.error)) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event && event.reason;
+          var msg = (reason && (reason.message || reason.stack || String(reason))) || '';
+          if (shouldSuppress(msg) || shouldSuppress(reason)) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Abhaya — You're not alone.</title>

@@ -1,4 +1,4 @@
-import { EmergencyEvent, TrustedContact } from '../types';
+import { EmergencyEvent, TrustedContact, SafetyCheckin } from '../types';
 import { generateId } from '../lib/utils';
 import { logAudit } from '../lib/storage';
 
@@ -118,4 +118,97 @@ export async function connectToEmergencyServices112(event: EmergencyEvent): Prom
     cadTicketNumber: `ERSS-112-KA-${Date.now().toString().slice(-6)}`,
     dispatchNote: 'Ready for official 112 ERSS API dispatch. In actual emergencies, direct dial 112.'
   };
+}
+
+/**
+ * Triggers the automated Overdue Check-in alert pipeline:
+ * Sends alert to selected trusted contacts with purpose, note, location, and time.
+ * Logs to SMS dispatch log and audit log.
+ */
+export async function triggerOverdueCheckinAlert(
+  checkin: SafetyCheckin,
+  contacts: TrustedContact[],
+  userName: string = 'Ananya'
+): Promise<SOSDispatchResult> {
+  const loc = await getCurrentCoordinates();
+  const targetIds = checkin.notifyContactIds && checkin.notifyContactIds.length > 0
+    ? checkin.notifyContactIds
+    : contacts.filter(c => c.notifyOnCheckinMiss).map(c => c.id);
+
+  const notifyableContacts = contacts.filter(c => targetIds.includes(c.id));
+  const effectiveContacts = notifyableContacts.length > 0
+    ? notifyableContacts
+    : (contacts.length > 0 ? [contacts[0]] : []);
+
+  const event: EmergencyEvent = {
+    id: generateId('sos_chk'),
+    startedAt: new Date().toISOString(),
+    status: 'ACTIVE',
+    isSilent: false,
+    location: loc,
+    notifiedContactIds: effectiveContacts.map(c => c.id),
+    dispatchedToServices: false,
+    serviceType: 'Automated Overdue Check-in Dispatch',
+    notes: `Overdue check-in for "${checkin.purpose}". ${checkin.note ? 'Note: ' + checkin.note : ''} Last location: ${loc.addressText}`
+  };
+
+  const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const mapsLink = `https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
+  const noteInfo = checkin.note ? ` (Note: ${checkin.note})` : '';
+
+  const contactNotifications = effectiveContacts.map(contact => {
+    const text = `[ABHAYA SAFETY ALERT] Overdue Check-in: ${userName} did not check in as scheduled for "${checkin.purpose}"${noteInfo} at ${timeStr}. Last known location: ${loc.addressText} (${mapsLink}). Reach immediately or call 112.`;
+
+    return {
+      contactId: contact.id,
+      contactName: contact.name,
+      phone: contact.phone,
+      status: 'SENT' as const,
+      messagePreview: text
+    };
+  });
+
+  logAudit(
+    'Overdue Check-in Alert Dispatched',
+    `Check-in for "${checkin.purpose}" expired with no response. Alert sent to ${effectiveContacts.length} contacts.`
+  );
+
+  return {
+    event,
+    contactNotifications
+  };
+}
+
+/**
+ * Simulates dispatching a "safe" notification if the user enabled "Tell my contacts when I'm safe"
+ */
+export function simulateSafeCheckinNotification(
+  checkin: SafetyCheckin,
+  contacts: TrustedContact[],
+  userName: string = 'Ananya'
+): Array<{
+  contactId: string;
+  contactName: string;
+  phone: string;
+  status: 'SENT';
+  messagePreview: string;
+}> {
+  const targetIds = checkin.notifyContactIds && checkin.notifyContactIds.length > 0
+    ? checkin.notifyContactIds
+    : contacts.filter(c => c.notifyOnCheckinMiss).map(c => c.id);
+
+  const notifyableContacts = contacts.filter(c => targetIds.includes(c.id));
+  const effectiveContacts = notifyableContacts.length > 0
+    ? notifyableContacts
+    : (contacts.length > 0 ? [contacts[0]] : []);
+
+  const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+  return effectiveContacts.map(contact => ({
+    contactId: contact.id,
+    contactName: contact.name,
+    phone: contact.phone,
+    status: 'SENT' as const,
+    messagePreview: `[ABHAYA] Safe Check-in: ${userName} has arrived safely and closed their check-in for "${checkin.purpose}" at ${timeStr}.`
+  }));
 }

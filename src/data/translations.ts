@@ -115,6 +115,107 @@ export interface Translations {
   selectedCount: string;
   emptyIncidents: string;
   emptyTrustedContacts: string;
+
+  // Check-in timer keys
+  checkinTimerSection: string;
+  checkinTimerSectionSubtitle: string;
+  checkinDurationTitle: string;
+  checkinWhatForTitle: string;
+  checkinNotePlaceholder: string;
+  checkinWhoAlertedTitle: string;
+  checkinShareLocationSwitch: string;
+  checkinTellContactsSafeSwitch: string;
+  checkinStartButton: string;
+  checkinHonestLine: string;
+  checkinRunningStatus: string;
+  checkinImSafeButton: string;
+  checkinAdd10MinButton: string;
+  checkinEndWithoutAlertingButton: string;
+  checkinConfirmEndTitle: string;
+  checkinConfirmEndSubtitle: string;
+  checkinConfirmEndYes: string;
+  checkinConfirmEndNo: string;
+  checkinDueSoonBannerTitle: string;
+  checkinAreYouSafeTitle: string;
+  checkinGraceCountdownNotice: string;
+  checkinAlertSentTitle: string;
+  checkinAlertSentSubtitle: string;
+  checkinCancelAlertButton: string;
+  checkinPurposeCommute: string;
+  checkinPurposeCab: string;
+  checkinPurposeWalking: string;
+  checkinPurposeMeeting: string;
+  checkinPurposeOther: string;
+  checkinDurationCustom: string;
+  checkinCustomMinutesLabel: string;
+  checkinLiveLocationSharing: string;
+
+  // Auth, Welcome, Code, Onboarding & Profile
+  welcomeTagline: string;
+  welcomeTabPhone: string;
+  welcomeTabEmail: string;
+  phoneLabel: string;
+  phonePlaceholder: string;
+  phoneHint: string;
+  emailLabel: string;
+  emailPlaceholder: string;
+  emailHint: string;
+  btnSendCode: string;
+  btnSending: string;
+  needHelpNow: string;
+  call112Short: string;
+  call181Short: string;
+  call1930Short: string;
+  evaluatorDemoLink: string;
+  evaluatorDemoPhone: string;
+  evaluatorDemoOtp: string;
+  btnFillDemo: string;
+  codeScreenTitle: string;
+  codeSentTo: string;
+  resendIn: string;
+  btnResend: string;
+  btnChangeTarget: string;
+  tooManyAttemptsCooldown: string;
+  wrongCodeError: string;
+  expiredCodeError: string;
+  onboardingAliasTitle: string;
+  onboardingAliasSubtitle: string;
+  onboardingAliasCustomPlaceholder: string;
+  onboardingFirstNameTitle: string;
+  onboardingFirstNameSubtitle: string;
+  onboardingLanguageTitle: string;
+  onboardingLocationTitle: string;
+  onboardingLocationSubtitle: string;
+  btnAllowLocation: string;
+  btnNotNow: string;
+  privacyAndRulesCheckbox: string;
+  btnContinue: string;
+  btnCompleteSetup: string;
+  profileCommunityAlias: string;
+  profileAuthAccount: string;
+  btnLogout: string;
+  btnLogoutConfirmTitle: string;
+  btnLogoutConfirmDesc: string;
+  btnDeleteCommunityData: string;
+  btnDeleteCommunityDataDesc: string;
+  btnConfirmDelete: string;
+  btnCancel: string;
+
+  // Nearby Community Area
+  nearbyTitle: string;
+  nearbyYourArea: string;
+  nearbyNewAlerts24h: string;
+  nearbyCommunityAlertsChip: string;
+  nearbyFeedTabAll: string;
+  nearbyFeedTabAlerts: string;
+  nearbyFeedTabChat: string;
+  nearbyPostAlertBtn: string;
+  nearbyCommunityRulesBtn: string;
+  nearbyReadOnlyNotice: string;
+  nearbyConfirmHelpful: string;
+  nearbyMarkFixed: string;
+  nearbyReportContent: string;
+  nearbyBlockUser: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -231,7 +332,106 @@ export const translations: Record<SupportedLanguage, Translations> = {
     trustedContacts: 'Trusted contacts',
     selectedCount: 'selected',
     emptyIncidents: 'Nothing here yet. If something happens, write it down. Only you can see it.',
-    emptyTrustedContacts: "Add someone you trust. They'll hear from us if you need help."
+    emptyTrustedContacts: "Add someone you trust. They'll hear from us if you need help.",
+
+    checkinTimerSection: 'Check-in timer',
+    checkinTimerSectionSubtitle: 'Set automated alert countdowns for travel or meetings',
+    checkinDurationTitle: 'How long will you be?',
+    checkinWhatForTitle: 'What is this for?',
+    checkinNotePlaceholder: 'Optional note (e.g., auto number, meeting details)',
+    checkinWhoAlertedTitle: 'Who gets alerted',
+    checkinShareLocationSwitch: 'Share my live location while this runs',
+    checkinTellContactsSafeSwitch: "Tell my contacts when I'm safe",
+    checkinStartButton: 'Start check-in',
+    checkinHonestLine: 'Keep Abhaya open, or add it to your home screen, so reminders arrive on time.',
+    checkinRunningStatus: 'Running',
+    checkinImSafeButton: "I'm safe",
+    checkinAdd10MinButton: 'Add 10 min',
+    checkinEndWithoutAlertingButton: 'End without alerting',
+    checkinConfirmEndTitle: 'End check-in without alerting?',
+    checkinConfirmEndSubtitle: 'Your timer will stop immediately. No notifications will be sent to your contacts.',
+    checkinConfirmEndYes: 'Yes, end timer',
+    checkinConfirmEndNo: 'Keep running',
+    checkinDueSoonBannerTitle: 'Check-in due soon. Are you okay?',
+    checkinAreYouSafeTitle: 'Are you safe?',
+    checkinGraceCountdownNotice: 'Alerting trusted contacts with your live location in',
+    checkinAlertSentTitle: 'Overdue alert sent',
+    checkinAlertSentSubtitle: 'Your trusted contacts have been sent your last known location and check-in details.',
+    checkinCancelAlertButton: "I'm safe, cancel alert",
+    checkinPurposeCommute: 'Commute',
+    checkinPurposeCab: 'Cab or auto ride',
+    checkinPurposeWalking: 'Walking home',
+    checkinPurposeMeeting: 'Meeting',
+    checkinPurposeOther: 'Other',
+    checkinDurationCustom: 'Custom',
+    checkinCustomMinutesLabel: 'Minutes (1 to 480)',
+    checkinLiveLocationSharing: 'Live location sharing active',
+
+    // Auth & Welcome
+    welcomeTagline: "You're not alone.",
+    welcomeTabPhone: 'Phone',
+    welcomeTabEmail: 'Email',
+    phoneLabel: 'Phone number',
+    phonePlaceholder: '10-digit mobile number',
+    phoneHint: "We'll send a 6-digit SMS code. No password needed.",
+    emailLabel: 'Email address',
+    emailPlaceholder: 'name@example.com',
+    emailHint: "We'll email a 6-digit code. Works with any provider.",
+    btnSendCode: 'Send code',
+    btnSending: 'Sending code...',
+    needHelpNow: 'Need help now?',
+    call112Short: '112 Police',
+    call181Short: '181 Women',
+    call1930Short: '1930 Cyber',
+    evaluatorDemoLink: 'Evaluator? Use the demo login',
+    evaluatorDemoPhone: 'Demo phone',
+    evaluatorDemoOtp: 'Demo code',
+    btnFillDemo: 'Fill it in for me',
+    codeScreenTitle: 'Enter verification code',
+    codeSentTo: 'We sent a 6-digit code to',
+    resendIn: 'Resend in',
+    btnResend: 'Resend code',
+    btnChangeTarget: 'Change number or email',
+    tooManyAttemptsCooldown: 'Too many incorrect attempts. Please wait before trying again.',
+    wrongCodeError: 'Incorrect code. Please check and try again.',
+    expiredCodeError: 'This code has expired. Please tap Resend to get a new code.',
+    onboardingAliasTitle: 'Pick a name others will see',
+    onboardingAliasSubtitle: 'Your real name and phone are never shown to others in community discussions.',
+    onboardingAliasCustomPlaceholder: 'Or write a custom alias (3-20 characters)',
+    onboardingFirstNameTitle: 'First name (private)',
+    onboardingFirstNameSubtitle: 'Only used to greet you privately on your phone.',
+    onboardingLanguageTitle: 'Choose your language',
+    onboardingLocationTitle: 'Area safety alerts',
+    onboardingLocationSubtitle: 'We use your area to show alerts and chat near you. We never show your exact location to anyone.',
+    btnAllowLocation: 'Allow location',
+    btnNotNow: 'Not now',
+    privacyAndRulesCheckbox: 'I accept the privacy note and community safety rules.',
+    btnContinue: 'Continue',
+    btnCompleteSetup: 'Finish setup',
+    profileCommunityAlias: 'Community alias',
+    profileAuthAccount: 'Signed in as',
+    btnLogout: 'Log out',
+    btnLogoutConfirmTitle: 'Log out of Abhaya?',
+    btnLogoutConfirmDesc: 'You can sign back in at any time with your phone or email. Your local records remain on this phone.',
+    btnDeleteCommunityData: 'Delete my community data',
+    btnDeleteCommunityDataDesc: 'Removes your public profile and alias from the server. Offline records remain intact.',
+    btnConfirmDelete: 'Delete data',
+    btnCancel: 'Cancel',
+
+    nearbyTitle: 'Nearby',
+    nearbyYourArea: 'Your area',
+    nearbyNewAlerts24h: 'new alerts in the last 24 hours',
+    nearbyCommunityAlertsChip: 'Community alerts',
+    nearbyFeedTabAll: 'All',
+    nearbyFeedTabAlerts: 'Alerts',
+    nearbyFeedTabChat: 'Local chat',
+    nearbyPostAlertBtn: 'Post safety alert',
+    nearbyCommunityRulesBtn: 'Community rules',
+    nearbyReadOnlyNotice: 'Viewing outside your physical area. Read-only mode.',
+    nearbyConfirmHelpful: 'Confirm',
+    nearbyMarkFixed: 'Mark resolved',
+    nearbyReportContent: 'Report',
+    nearbyBlockUser: 'Block user'
   },
   hi: {
     appName: 'अभया',
@@ -346,7 +546,106 @@ export const translations: Record<SupportedLanguage, Translations> = {
     trustedContacts: 'विश्वसनीय संपर्क',
     selectedCount: 'चयनित',
     emptyIncidents: 'यहाँ अभी कुछ नहीं है। अगर कुछ होता है, तो उसे लिख लें। केवल आप देख सकते हैं।',
-    emptyTrustedContacts: 'किसी ऐसे व्यक्ति को जोड़ें जिस पर आप भरोसा करते हैं। मदद चाहिए तो हम सूचित करेंगे।'
+    emptyTrustedContacts: 'किसी ऐसे व्यक्ति को जोड़ें जिस पर आप भरोसा करते हैं। मदद चाहिए तो हम सूचित करेंगे।',
+
+    checkinTimerSection: 'चेक-इन टाइमर',
+    checkinTimerSectionSubtitle: 'यात्रा या बैठकों के लिए स्वचालित अलर्ट उलटी गिनती सेट करें',
+    checkinDurationTitle: 'आपको कितना समय लगेगा?',
+    checkinWhatForTitle: 'यह किस लिए है?',
+    checkinNotePlaceholder: 'वैकल्पिक नोट (उदा. ऑटो नंबर, बैठक का विवरण)',
+    checkinWhoAlertedTitle: 'किन्हें सतर्क किया जाए',
+    checkinShareLocationSwitch: 'चलते समय मेरा लाइव स्थान साझा करें',
+    checkinTellContactsSafeSwitch: 'सुरक्षित होने पर संपर्कों को बताएं',
+    checkinStartButton: 'चेक-इन शुरू करें',
+    checkinHonestLine: 'अभया खुला रखें, या इसे अपनी होम स्क्रीन पर जोड़ें, ताकि अनुस्मारक समय पर मिलें।',
+    checkinRunningStatus: 'चल रहा है',
+    checkinImSafeButton: 'मैं सुरक्षित हूँ',
+    checkinAdd10MinButton: '+10 मिनट जोड़ें',
+    checkinEndWithoutAlertingButton: 'बिना अलर्ट भेजे समाप्त करें',
+    checkinConfirmEndTitle: 'बिना अलर्ट भेजे चेक-इन समाप्त करें?',
+    checkinConfirmEndSubtitle: 'टाइमर तुरंत रुक जाएगा। आपके संपर्कों को कोई सूचना नहीं भेजी जाएगी।',
+    checkinConfirmEndYes: 'हाँ, टाइमर समाप्त करें',
+    checkinConfirmEndNo: 'चालू रखें',
+    checkinDueSoonBannerTitle: 'चेक-इन समय समाप्त होने वाला है। क्या आप ठीक हैं?',
+    checkinAreYouSafeTitle: 'क्या आप सुरक्षित हैं?',
+    checkinGraceCountdownNotice: 'जवाब न देने पर आपके लाइव स्थान के साथ संपर्कों को अलर्ट भेजा जाएगा:',
+    checkinAlertSentTitle: 'ओवरड्यू अलर्ट भेजा गया',
+    checkinAlertSentSubtitle: 'आपके संपर्कों को आपका अंतिम ज्ञात स्थान और विवरण भेज दिया गया है।',
+    checkinCancelAlertButton: 'मैं सुरक्षित हूँ, अलर्ट रद्द करें',
+    checkinPurposeCommute: 'आवागमन',
+    checkinPurposeCab: 'कैब या ऑटो यात्रा',
+    checkinPurposeWalking: 'पैदल घर जाना',
+    checkinPurposeMeeting: 'बैठक',
+    checkinPurposeOther: 'अन्य',
+    checkinDurationCustom: 'कस्टम',
+    checkinCustomMinutesLabel: 'मिनट (1 से 480)',
+    checkinLiveLocationSharing: 'लाइव स्थान साझाकरण सक्रिय है',
+
+    // Auth & Welcome
+    welcomeTagline: 'आप अकेले नहीं हैं।',
+    welcomeTabPhone: 'फ़ोन',
+    welcomeTabEmail: 'ईमेल',
+    phoneLabel: 'फ़ोन नंबर',
+    phonePlaceholder: '10 अंकों का मोबाइल नंबर',
+    phoneHint: 'हम 6 अंकों का SMS कोड भेजेंगे। पासवर्ड की आवश्यकता नहीं।',
+    emailLabel: 'ईमेल पता',
+    emailPlaceholder: 'name@example.com',
+    emailHint: 'हम 6 अंकों का कोड ईमेल करेंगे। किसी भी प्रदाता के साथ काम करता है।',
+    btnSendCode: 'कोड भेजें',
+    btnSending: 'कोड भेजा जा रहा है...',
+    needHelpNow: 'तुरंत मदद चाहिए?',
+    call112Short: '112 पुलिस',
+    call181Short: '181 महिला',
+    call1930Short: '1930 साइबर',
+    evaluatorDemoLink: 'परीक्षक? डेमो लॉगिन का उपयोग करें',
+    evaluatorDemoPhone: 'डेमो फ़ोन',
+    evaluatorDemoOtp: 'डेमो कोड',
+    btnFillDemo: 'मेरे लिए भरें',
+    codeScreenTitle: 'सत्यापन कोड दर्ज करें',
+    codeSentTo: 'हमने 6 अंकों का कोड यहाँ भेजा:',
+    resendIn: 'पुनः भेजने का समय',
+    btnResend: 'कोड पुनः भेजें',
+    btnChangeTarget: 'नंबर या ईमेल बदलें',
+    tooManyAttemptsCooldown: 'बहुत अधिक गलत प्रयास। कृपया कुछ समय बाद प्रयास करें।',
+    wrongCodeError: 'गलत कोड। कृपया जाँच कर पुनः प्रयास करें।',
+    expiredCodeError: 'यह कोड समाप्त हो गया है। कृपया पुनः भेजें दबाएं।',
+    onboardingAliasTitle: 'एक उपनाम चुनें जो अन्य देखेंगे',
+    onboardingAliasSubtitle: 'सामुदायिक चर्चा में आपका वास्तविक नाम और नंबर कभी नहीं दिखाया जाता।',
+    onboardingAliasCustomPlaceholder: 'या कोई उपनाम लिखें (3-20 वर्ण)',
+    onboardingFirstNameTitle: 'पहला नाम (निजी)',
+    onboardingFirstNameSubtitle: 'केवल इस फ़ोन पर आपका स्वागत करने के लिए उपयोग किया जाएगा।',
+    onboardingLanguageTitle: 'अपनी भाषा चुनें',
+    onboardingLocationTitle: 'क्षेत्रीय सुरक्षा अलर्ट',
+    onboardingLocationSubtitle: 'हम आपके आसपास के अलर्ट दिखाने के लिए क्षेत्र का उपयोग करते हैं। सटीक स्थान कभी साझा नहीं किया जाता।',
+    btnAllowLocation: 'स्थान की अनुमति दें',
+    btnNotNow: 'अभी नहीं',
+    privacyAndRulesCheckbox: 'मैं गोपनीयता नीति और सामुदायिक सुरक्षा नियमों को स्वीकार करती हूँ।',
+    btnContinue: 'जारी रखें',
+    btnCompleteSetup: 'सेटअप पूरा करें',
+    profileCommunityAlias: 'सामुदायिक उपनाम',
+    profileAuthAccount: 'लॉगिन खाता',
+    btnLogout: 'लॉग आउट',
+    btnLogoutConfirmTitle: 'अभया से लॉग आउट करें?',
+    btnLogoutConfirmDesc: 'आप कभी भी अपने फ़ोन या ईमेल से पुनः साइन इन कर सकते हैं। स्थानीय डेटा फ़ोन में रहेगा।',
+    btnDeleteCommunityData: 'मेरा समुदाय डेटा हटाएं',
+    btnDeleteCommunityDataDesc: 'सर्वर से आपका समुदाय प्रोफ़ाइल और उपनाम हटा दिया जाएगा। ऑफ़लाइन डेटा सुरक्षित रहेगा।',
+    btnConfirmDelete: 'डेटा हटाएं',
+    btnCancel: 'रद्द करें',
+
+    nearbyTitle: 'आस-पास',
+    nearbyYourArea: 'आपका इलाका',
+    nearbyNewAlerts24h: 'पिछले 24 घंटों में नए अलर्ट',
+    nearbyCommunityAlertsChip: 'सामुदायिक अलर्ट',
+    nearbyFeedTabAll: 'सभी',
+    nearbyFeedTabAlerts: 'अलर्ट',
+    nearbyFeedTabChat: 'स्थानीय चैट',
+    nearbyPostAlertBtn: 'सुरक्षा अलर्ट पोस्ट करें',
+    nearbyCommunityRulesBtn: 'समुदाय नियम',
+    nearbyReadOnlyNotice: 'आप अपने क्षेत्र से बाहर देख रहे हैं। केवल पढ़ने योग्य।',
+    nearbyConfirmHelpful: 'पुष्टि करें',
+    nearbyMarkFixed: 'हल हो गया',
+    nearbyReportContent: 'रिपोर्ट करें',
+    nearbyBlockUser: 'ब्लॉक करें'
   },
   te: {
     appName: 'అభయ',
@@ -461,7 +760,106 @@ export const translations: Record<SupportedLanguage, Translations> = {
     trustedContacts: 'నమ్మకమైన పరిచయాలు',
     selectedCount: 'ఎంపిక చేయబడింది',
     emptyIncidents: 'ఇక్కడ ఇంకా ఏమీ లేదు. ఏదైనా జరిగితే రాసుకోండి. మీరు మాత్రమే చూడగలరు.',
-    emptyTrustedContacts: 'మీరు విశ్వసించే వ్యక్తిని జోడించండి. సహాయం అవసరమైతే తెలియజేస్తాము.'
+    emptyTrustedContacts: 'మీరు విశ్వసించే వ్యక్తిని జోడించండి. సహాయం అవసరమైతే తెలియజేస్తాము.',
+
+    checkinTimerSection: 'చెక్-ఇన్ టైమర్',
+    checkinTimerSectionSubtitle: 'ప్రయాణం లేదా సమావేశాల కోసం ఆటోమేటెడ్ హెచ్చరిక కౌంట్‌డౌన్ సెట్ చేయండి',
+    checkinDurationTitle: 'మీకు ఎంత సమయం పడుతుంది?',
+    checkinWhatForTitle: 'ఇది దేని కోసం?',
+    checkinNotePlaceholder: 'ఐచ్ఛిక గమనిక (ఉదా. ఆటో నంబర్, సమావేశ వివరాలు)',
+    checkinWhoAlertedTitle: 'ఎవరికి హెచ్చరిక వెళ్లాలి',
+    checkinShareLocationSwitch: 'ఇది నడుస్తున్నప్పుడు నా ప్రత్యక్ష స్థానాన్ని భాగస్వామ్యం చేయండి',
+    checkinTellContactsSafeSwitch: 'నేను సురక్షితంగా ఉన్నప్పుడు నా పరిచయాలకు తెలియజేయండి',
+    checkinStartButton: 'చెక్-ఇన్ ప్రారంభించండి',
+    checkinHonestLine: 'జ్ఞాపికలు సమయానికి చేరడానికి అభయను తెరిచి ఉంచండి లేదా మీ హోమ్ స్క్రీన్‌కు జోడించండి.',
+    checkinRunningStatus: 'నడుస్తోంది',
+    checkinImSafeButton: 'నేను సురక్షితం',
+    checkinAdd10MinButton: '+10 నిమిషాలు జోడించండి',
+    checkinEndWithoutAlertingButton: 'హెచ్చరిక లేకుండా ముగించండి',
+    checkinConfirmEndTitle: 'హెచ్చరిక లేకుండా చెక్-ఇన్ ముగించాలా?',
+    checkinConfirmEndSubtitle: 'టైమర్ వెంటనే ఆగిపోతుంది. మీ పరిచయాలకు ఎటువంటి నోటిఫికేషన్ వెళ్లదు.',
+    checkinConfirmEndYes: 'అవును, ముగించండి',
+    checkinConfirmEndNo: 'కొనసాగించండి',
+    checkinDueSoonBannerTitle: 'చెక్-ఇన్ సమయం దగ్గరపడింది. మీరు క్షేమంగా ఉన్నారా?',
+    checkinAreYouSafeTitle: 'మీరు సురక్షితంగా ఉన్నారా?',
+    checkinGraceCountdownNotice: 'స్పందించకపోతే ప్రత్యక్ష స్థానంతో హెచ్చరిక పంపబడుతుంది:',
+    checkinAlertSentTitle: 'గడువు ముగిసిన హెచ్చరిక పంపబడింది',
+    checkinAlertSentSubtitle: 'మీ చివరి స్థానం మరియు వివరాలు మీ నమ్మకమైన పరిచయాలకు పంపబడ్డాయి.',
+    checkinCancelAlertButton: 'నేను సురక్షితం, హెచ్చరిక రద్దు చేయి',
+    checkinPurposeCommute: 'ప్రయాణం',
+    checkinPurposeCab: 'క్యాబ్ లేదా ఆటో ప్రయాణం',
+    checkinPurposeWalking: 'నడుచుకుంటూ ఇంటికి వెళ్లడం',
+    checkinPurposeMeeting: 'సమావేశం',
+    checkinPurposeOther: 'ఇతర',
+    checkinDurationCustom: 'అనుకూల',
+    checkinCustomMinutesLabel: 'నిమిషాలు (1 నుండి 480)',
+    checkinLiveLocationSharing: 'ప్రత్యక్ష స్థాన భాగస్వామ్యం ప్రారంభంలో ఉంది',
+
+    // Auth & Welcome
+    welcomeTagline: 'మీరు ఒంటరిగా లేరు.',
+    welcomeTabPhone: 'ఫోన్',
+    welcomeTabEmail: 'ఈమెయిల్',
+    phoneLabel: 'ఫోన్ నంబర్',
+    phonePlaceholder: '10 అంకెల మొబైల్ నంబర్',
+    phoneHint: 'మేము 6 అంకెల SMS కోడ్‌ని పంపుతాము. పాస్‌వర్డ్ అవసరం లేదు.',
+    emailLabel: 'ఈమెయిల్ చిరునామా',
+    emailPlaceholder: 'name@example.com',
+    emailHint: 'మేము 6 అంకెల కోడ్‌ని ఈమెయిల్ చేస్తాము. ఏ ప్రొవైడర్‌తోనైనా పనిచేస్తుంది.',
+    btnSendCode: 'కోడ్ పంపండి',
+    btnSending: 'కోడ్ పంపబడుతోంది...',
+    needHelpNow: 'ఇప్పుడే సహాయం కావాలా?',
+    call112Short: '112 పోలీస్',
+    call181Short: '181 మహిళ',
+    call1930Short: '1930 సైబర్',
+    evaluatorDemoLink: 'మూల్యాంకనం చేస్తున్నారా? డెమో లాగిన్ వాడండి',
+    evaluatorDemoPhone: 'డెమో ఫోన్',
+    evaluatorDemoOtp: 'డెమో కోడ్',
+    btnFillDemo: 'నా కోసం పూరించండి',
+    codeScreenTitle: 'ధృవీకరణ కోడ్‌ను నమోదు చేయండి',
+    codeSentTo: 'మేము 6 అంకెల కోడ్‌ను ఇక్కడికి పంపాము:',
+    resendIn: 'మళ్లీ పంపే సమయం',
+    btnResend: 'కోడ్ మళ్లీ పంపండి',
+    btnChangeTarget: 'నంబర్ లేదా ఈమెయిల్ మార్చండి',
+    tooManyAttemptsCooldown: 'చాలా తప్పుడు ప్రయత్నాలు. దయచేసి కాసేపు ఆగి మళ్లీ ప్రయత్నించండి.',
+    wrongCodeError: 'తప్పుడు కోడ్. దయచేసి సరిచూసి మళ్లీ ప్రయత్నించండి.',
+    expiredCodeError: 'ఈ కోడ్ గడువు ముగిసింది. కొత్త కోడ్ కోసం మళ్లీ పంపండి నొక్కండి.',
+    onboardingAliasTitle: 'ఇతరులు చూసే పేరును ఎంచుకోండి',
+    onboardingAliasSubtitle: 'కమ్యూనిటీలో మీ అసలు పేరు మరియు ఫోన్ నంబర్ ఎవరికీ చూపబడవు.',
+    onboardingAliasCustomPlaceholder: 'లేదా ప్రత్యేక మారుపేరు రాయండి (3-20 అక్షరాలు)',
+    onboardingFirstNameTitle: 'మొదటి పేరు (ప్రైవేట్)',
+    onboardingFirstNameSubtitle: 'మీ ఫోన్‌లో మిమ్మల్ని పలకరించడానికి మాత్రమే వాడబడుతుంది.',
+    onboardingLanguageTitle: 'మీ భాషను ఎంచుకోండి',
+    onboardingLocationTitle: 'ప్రాంత భద్రతా హెచ్చరికలు',
+    onboardingLocationSubtitle: 'మీ ప్రాంతానికి సంబంధించిన హెచ్చరికలను చూపించడానికి ఉపయోగిస్తాము. ఖచ్చితమైన స్థానాన్ని ఎవరికీ చూపము.',
+    btnAllowLocation: 'స్థానాన్ని అనుమతించండి',
+    btnNotNow: 'ఇప్పుడు కాదు',
+    privacyAndRulesCheckbox: 'నేను గోప్యతా గమనిక మరియు కమ్యూనిటీ నియమాలను అంగీకరిస్తున్నాను.',
+    btnContinue: 'కొనసాగించండి',
+    btnCompleteSetup: 'సెటప్ పూర్తి చేయండి',
+    profileCommunityAlias: 'కమ్యూనిటీ మారుపేరు',
+    profileAuthAccount: 'లాగిన్ అయిన ఖాతా',
+    btnLogout: 'లాగ్ అవుట్',
+    btnLogoutConfirmTitle: 'అభయ నుండి లాగ్ అవుట్ అవ్వాలా?',
+    btnLogoutConfirmDesc: 'మీరు ఎప్పుడైనా మీ ఫోన్ లేదా ఈమెయిల్‌తో మళ్లీ సైన్ ఇన్ చేయవచ్చు. స్థానిక రికార్డులు అలాగే ఉంటాయి.',
+    btnDeleteCommunityData: 'నా కమ్యూనిటీ డేటాను తొలగించండి',
+    btnDeleteCommunityDataDesc: 'సర్వర్ నుండి మీ ప్రొఫైల్ మరియు మారుపేరు తొలగించబడుతుంది. మీ ఆఫ్‌లైన్ రికార్డులు అలాగే ఉంటాయి.',
+    btnConfirmDelete: 'డేటా తొలగించు',
+    btnCancel: 'రద్దు చేయి',
+
+    nearbyTitle: 'సమీపంలో',
+    nearbyYourArea: 'మీ ప్రాంతం',
+    nearbyNewAlerts24h: 'గత 24 గంటల్లో కొత్త అలర్ట్‌లు',
+    nearbyCommunityAlertsChip: 'కమ్యూనిటీ అలర్ట్‌లు',
+    nearbyFeedTabAll: 'అన్నీ',
+    nearbyFeedTabAlerts: 'అలర్ట్‌లు',
+    nearbyFeedTabChat: 'స్థానిక చాట్',
+    nearbyPostAlertBtn: 'సేఫ్టీ అలర్ట్ పోస్ట్ చేయండి',
+    nearbyCommunityRulesBtn: 'కమ్యూనిటీ నియమాలు',
+    nearbyReadOnlyNotice: 'మీ భౌతిక ప్రాంతం వెలుపల చూస్తున్నారు. చదవడానికి మాత్రమే.',
+    nearbyConfirmHelpful: 'ధృవీకరించండి',
+    nearbyMarkFixed: 'పరిష్కరించబడింది',
+    nearbyReportContent: 'రిపోర్ట్ చేయండి',
+    nearbyBlockUser: 'బ్లాక్ చేయండి'
   },
   ta: {
     appName: 'அபயா',
@@ -576,6 +974,105 @@ export const translations: Record<SupportedLanguage, Translations> = {
     trustedContacts: 'நம்பகமான தொடர்புகள்',
     selectedCount: 'தேர்ந்தெடுக்கப்பட்டது',
     emptyIncidents: 'இங்கு இன்னும் எதுவும் இல்லை. ஏதேனும் நடந்தால் குறித்து வையுங்கள். நீங்கள் மட்டுமே பார்க்க முடியும்.',
-    emptyTrustedContacts: 'நீங்கள் நம்பும் ஒருவரைச் சேர்க்கவும். உதவி தேவைப்பட்டால் அவர்களுக்குத் தெரிவிப்போம்.'
+    emptyTrustedContacts: 'நீங்கள் நம்பும் ஒருவரைச் சேர்க்கவும். உதவி தேவைப்பட்டால் அவர்களுக்குத் தெரிவிப்போம்.',
+
+    checkinTimerSection: 'பாதுகாப்பு சோதனை டைமர்',
+    checkinTimerSectionSubtitle: 'பயணம் அல்லது கூட்டங்களுக்கான தானியங்கி எச்சரிக்கை கவுண்டவுன்',
+    checkinDurationTitle: 'எவ்வளவு நேரம் ஆகும்?',
+    checkinWhatForTitle: 'இது எதற்காக?',
+    checkinNotePlaceholder: 'விருப்பக் குறிப்பு (எ.கா. ஆட்டோ எண், கூட்ட விவரங்கள்)',
+    checkinWhoAlertedTitle: 'யாருக்கு எச்சரிக்கை அனுப்ப வேண்டும்',
+    checkinShareLocationSwitch: 'இது இயங்கும் போது எனது நேரலை இருப்பிடத்தைப் பகிரவும்',
+    checkinTellContactsSafeSwitch: 'நான் பாதுகாப்பாக இருக்கும்போது என் தொடர்புகளுக்குத் தெரிவிக்கவும்',
+    checkinStartButton: 'செக்-இன் தொடங்கவும்',
+    checkinHonestLine: 'நினைவூட்டல்கள் சரியான நேரத்தில் வர அபயாவை திறந்து வைக்கவும் அல்லது முகப்புத் திரையில் சேர்க்கவும்.',
+    checkinRunningStatus: 'இயங்குகிறது',
+    checkinImSafeButton: 'நான் பாதுகாப்பாக உள்ளேன்',
+    checkinAdd10MinButton: '+10 நிமிடம் சேர்க்க',
+    checkinEndWithoutAlertingButton: 'எச்சரிக்கை இன்றி முடிக்க',
+    checkinConfirmEndTitle: 'எச்சரிக்கை இன்றி செக்-இன் முடிக்கவா?',
+    checkinConfirmEndSubtitle: 'டைமர் உடனடியாக நிறுத்தப்படும். உங்கள் தொடர்புகளுக்கு எந்த அறிவிப்பும் அனுப்பப்படாது.',
+    checkinConfirmEndYes: 'ஆம், முடிக்கவும்',
+    checkinConfirmEndNo: 'தொடரவும்',
+    checkinDueSoonBannerTitle: 'செக்-இன் நேரம் நெருங்குகிறது. நீங்கள் நலமா?',
+    checkinAreYouSafeTitle: 'நீங்கள் பாதுகாப்பாக உள்ளீர்களா?',
+    checkinGraceCountdownNotice: 'பதிலளிக்காவிட்டால் நேரலை இருப்பிடத்துடன் தொடர்புகளுக்கு எச்சரிக்கை அனுப்பப்படும்:',
+    checkinAlertSentTitle: 'காலாவதியான எச்சரிக்கை அனுப்பப்பட்டது',
+    checkinAlertSentSubtitle: 'உங்கள் கடைசி இருப்பிடம் மற்றும் விவரங்கள் உங்கள் தொடர்புகளுக்கு அனுப்பப்பட்டன.',
+    checkinCancelAlertButton: 'நான் பாதுகாப்பு, எச்சரிக்கையை ரத்து செய்',
+    checkinPurposeCommute: 'பயணம்',
+    checkinPurposeCab: 'கேப் அல்லது ஆட்டோ பயணம்',
+    checkinPurposeWalking: 'நடந்து வீடு திரும்புதல்',
+    checkinPurposeMeeting: 'சந்திப்பு',
+    checkinPurposeOther: 'மற்றவை',
+    checkinDurationCustom: 'விருப்பப்படி',
+    checkinCustomMinutesLabel: 'நிமிடங்கள் (1 முதல் 480)',
+    checkinLiveLocationSharing: 'நேரலை இருப்பிடப் பகிர்வு செயலில் உள்ளது',
+
+    // Auth & Welcome
+    welcomeTagline: 'நீங்கள் தனியாக இல்லை.',
+    welcomeTabPhone: 'தொலைபேசி',
+    welcomeTabEmail: 'மின்னஞ்சல்',
+    phoneLabel: 'தொலைபேசி எண்',
+    phonePlaceholder: '10 இலக்க மொபைல் எண்',
+    phoneHint: '6 இலக்க SMS குறியீட்டை அனுப்புவோம். கடவுச்சொல் தேவையில்லை.',
+    emailLabel: 'மின்னஞ்சல் முகவரி',
+    emailPlaceholder: 'name@example.com',
+    emailHint: '6 இலக்க குறியீட்டை அனுப்புவோம். அனைத்து மின்னஞ்சல்களுடனும் செயல்படும்.',
+    btnSendCode: 'குறியீட்டை அனுப்புக',
+    btnSending: 'அனுப்பப்படுகிறது...',
+    needHelpNow: 'உடனடி உதவி தேவையா?',
+    call112Short: '112 காவல்',
+    call181Short: '181 பெண்கள்',
+    call1930Short: '1930 சைபர்',
+    evaluatorDemoLink: 'மதிப்பீட்டாளரா? டெமோ உள்நுழைவைப் பயன்படுத்துங்கள்',
+    evaluatorDemoPhone: 'டெமோ போன்',
+    evaluatorDemoOtp: 'டெமோ குறியீடு',
+    btnFillDemo: 'எனக்காக நிரப்பவும்',
+    codeScreenTitle: 'சரிபார்ப்புக் குறியீட்டை உள்ளிடவும்',
+    codeSentTo: '6 இலக்க குறியீடு அனுப்பப்பட்டது:',
+    resendIn: 'மீண்டும் அனுப்ப நேரம்',
+    btnResend: 'குறியீட்டை மீண்டும் அனுப்பு',
+    btnChangeTarget: 'எண் அல்லது மின்னஞ்சலை மாற்று',
+    tooManyAttemptsCooldown: 'பல தவறான முயற்சிகள். சிறிது நேரம் கழித்து முயற்சிக்கவும்.',
+    wrongCodeError: 'தவறான குறியீடு. சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
+    expiredCodeError: 'குறியீட்டின் காலாவதியானது. புதிய குறியீட்டைப் பெற மீண்டும் அனுப்பு என்பதைத் தட்டவும்.',
+    onboardingAliasTitle: 'பிறர் பார்க்கும் புனைப்பெயரைத் தேர்ந்தெடுக்கவும்',
+    onboardingAliasSubtitle: 'சமூகத்தில் உங்கள் உண்மையான பெயர் மற்றும் எண் எப்போதும் காட்டப்படாது.',
+    onboardingAliasCustomPlaceholder: 'அல்லது விருப்பப் பெயரை எழுதுங்கள் (3-20 எழுத்துகள்)',
+    onboardingFirstNameTitle: 'முதல் பெயர் (தனிப்பட்டது)',
+    onboardingFirstNameSubtitle: 'உங்கள் தொலைபேசியில் உங்களை வரவேற்க மட்டுமே பயன்படுத்தப்படும்.',
+    onboardingLanguageTitle: 'உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்',
+    onboardingLocationTitle: 'பகுதி பாதுகாப்பு எச்சரிக்கைகள்',
+    onboardingLocationSubtitle: 'உங்கள் பகுதிக்கான எச்சரிக்கைகளைக் காட்ட மட்டுமே பயன்படுகிறது. துல்லியமான இடம் யாருக்கும் காட்டப்படாது.',
+    btnAllowLocation: 'இருப்பிடத்தை அனுமதிக்கவும்',
+    btnNotNow: 'இப்போது வேண்டாம்',
+    privacyAndRulesCheckbox: 'தனியுரிமை மற்றும் சமூக பாதுகாப்பு விதிகளை ஏற்கிறேன்.',
+    btnContinue: 'தொடரவும்',
+    btnCompleteSetup: 'முடிக்கவும்',
+    profileCommunityAlias: 'சமூக புனைப்பெயர்',
+    profileAuthAccount: 'உள்நுழைந்துள்ள கணக்கு',
+    btnLogout: 'வெளியேறு',
+    btnLogoutConfirmTitle: 'அபயாவிலிருந்து வெளியேறவா?',
+    btnLogoutConfirmDesc: 'உங்கள் தொலைபேசி அல்லது மின்னஞ்சல் மூலம் எப்போது வேண்டுமானாலும் மீண்டும் உள்நுழையலாம்.',
+    btnDeleteCommunityData: 'எனது சமூகத் தரவை நீக்கு',
+    btnDeleteCommunityDataDesc: 'சேவையகத்திலிருந்து உங்கள் சுயவிவரம் மற்றும் புனைப்பெயர் நீக்கப்படும். உள்ளூர் தரவு பாதுகாப்பாக இருக்கும்.',
+    btnConfirmDelete: 'தரவை நீக்கு',
+    btnCancel: 'ரத்து செய்',
+
+    nearbyTitle: 'அருகில்',
+    nearbyYourArea: 'உங்கள் பகுதி',
+    nearbyNewAlerts24h: 'கடந்த 24 மணிநேரத்தில் புதிய எச்சரிக்கைகள்',
+    nearbyCommunityAlertsChip: 'சமூக எச்சரிக்கைகள்',
+    nearbyFeedTabAll: 'அனைத்தும்',
+    nearbyFeedTabAlerts: 'எச்சரிக்கைகள்',
+    nearbyFeedTabChat: 'உள்ளூர் உரையாடல்',
+    nearbyPostAlertBtn: 'பாதுகாப்பு எச்சரிக்கை இடுக',
+    nearbyCommunityRulesBtn: 'சமூக விதிகள்',
+    nearbyReadOnlyNotice: 'உங்கள் பகுதிக்கு வெளியே பார்க்கிறீர்கள். வாசிப்பு முறை மட்டும்.',
+    nearbyConfirmHelpful: 'உறுதி செய்',
+    nearbyMarkFixed: 'தீர்க்கப்பட்டது',
+    nearbyReportContent: 'புகாரளி',
+    nearbyBlockUser: 'தடை செய்'
   }
 };

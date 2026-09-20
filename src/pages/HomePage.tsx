@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAegis } from '../hooks/useAegisState';
 import { useTranslation } from '../hooks/useTranslation';
 import { useVoiceTrigger } from '../context/VoiceTriggerContext';
+import { useNearby } from '../context/NearbyContext';
 import {
   ShieldAlert,
   ChevronRight,
@@ -12,9 +13,10 @@ import {
   Lock,
   Compass,
   Plus,
-  Sparkles
+  Sparkles,
+  MapPin
 } from 'lucide-react';
-import { formatDate } from '../lib/utils';
+import { formatDate, formatMMSS } from '../lib/utils';
 import { KolamRosette } from '../components/common/KolamRosette';
 
 export const HomePage: React.FC = () => {
@@ -31,6 +33,7 @@ export const HomePage: React.FC = () => {
   } = useAegis();
   const { t } = useTranslation();
   const { isListening, startListening, stopListening, setIsModalOpen } = useVoiceTrigger();
+  const { activeArea, activeRoomId, alerts24hCount, latestAlert } = useNearby();
 
   // Hold-to-activate 1.5s SOS logic
   const [isHoldingSOS, setIsHoldingSOS] = useState(false);
@@ -74,6 +77,21 @@ export const HomePage: React.FC = () => {
   const nextPlanItem = safePlan.find(p => !p.isCompleted);
   const activeCheckin = safeCheckins.find(c => c.status === 'ACTIVE');
 
+  // Real-time ticker for active checkin countdown
+  const [nowTime, setNowTime] = useState(Date.now());
+  useEffect(() => {
+    if (!activeCheckin) return;
+    const interval = setInterval(() => setNowTime(Date.now()), 1000);
+    const handleSync = () => setNowTime(Date.now());
+    window.addEventListener('visibilitychange', handleSync);
+    window.addEventListener('focus', handleSync);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleSync);
+      window.removeEventListener('focus', handleSync);
+    };
+  }, [activeCheckin]);
+
   // Extract first name
   const firstName = profile.name ? profile.name.split(' ')[0] : 'there';
 
@@ -113,20 +131,10 @@ export const HomePage: React.FC = () => {
               {t.voiceTriggerChip || 'Voice safe word'}: {isListening ? (t.statusListening || 'Listening') : (t.statusOff || 'Off')}
             </span>
           </button>
-
-          {/* Contacts status */}
-          <button
-            onClick={() => setCurrentPage('profile')}
-            className="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface)] text-[var(--text)] text-[13px] border border-[var(--line)] transition cursor-pointer"
-            aria-label="Trusted contacts status"
-          >
-            <span className="w-2 h-2 rounded-full bg-[var(--safe)]" />
-            <span>{t.trustedCircle || 'Trusted contacts'}: {safeContacts.length}</span>
-          </button>
         </div>
       </section>
 
-      {/* 2. THE ONE MEMORABLE ELEMENT: SOS ROSETTE
+      {/* 2. THE ONE MEMORABLE ELEMENT: SOS ROSETTE FIRST
           Kolam-style rosette in 200x200 viewBox. Faint static copy in --line.
           While user holds SOS, animate stroke-dashoffset from 1 to 0 in accent color (marigold).
           If user releases early, it undraws. No ambient breathing rings. */}
@@ -165,6 +173,46 @@ export const HomePage: React.FC = () => {
         <p className="text-caption text-[13px] mt-1 max-w-xs">
           {t.holdHeroMuted || 'Alerts your trusted contacts with your live location.'}
         </p>
+      </section>
+
+      {/* 3. Your Area Community Row under SOS Hero */}
+      <section id="home-nearby-area-row" className="pt-1">
+        <button
+          type="button"
+          onClick={() => setCurrentPage('nearby')}
+          className="w-full rounded-[18px] border border-[var(--line)] bg-[var(--surface-2)] hover:bg-[var(--surface)] p-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer shadow-xs group active:scale-[0.99]"
+          aria-label="Open Nearby area community alerts and chat"
+        >
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+                  {t.nearbyYourArea || 'Your area'}
+                </span>
+                <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.2 rounded-full border border-orange-500/20">
+                  {alerts24hCount} {t.nearbyNewAlerts24h || 'new alerts in the last 24 hours'}
+                </span>
+              </div>
+              <div className="text-sm font-bold text-[var(--text)] truncate">
+                {activeArea?.name || `Area ${activeRoomId.toUpperCase()}`}
+              </div>
+              {latestAlert ? (
+                <div className="text-xs text-[var(--muted)] truncate mt-0.5 flex items-center gap-1.5">
+                  <span className="font-semibold text-[var(--text)] shrink-0">Latest:</span>
+                  <span className="truncate">{latestAlert.body}</span>
+                </div>
+              ) : (
+                <div className="text-xs text-[var(--muted)] mt-0.5 truncate">
+                  Tap to view local area alerts & neighbourhood chat
+                </div>
+              )}
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[var(--muted)] group-hover:text-[var(--text)] group-hover:translate-x-0.5 transition shrink-0" />
+        </button>
       </section>
 
       {/* 3. "Something feels off?" (Check my risk) - Filled container 1 */}
@@ -264,13 +312,18 @@ export const HomePage: React.FC = () => {
         <button
           id="btn-home-safety-checkin"
           onClick={() => setCurrentPage('checkin')}
-          className="p-4 rounded-[12px] bg-[var(--surface-2)] border border-[var(--line)] flex flex-col justify-between text-left hover:border-[var(--accent)] transition cursor-pointer min-h-[105px]"
+          className={`p-4 rounded-[12px] border flex flex-col justify-between text-left transition cursor-pointer min-h-[105px] ${
+            activeCheckin
+              ? 'bg-[var(--surface)] border-[var(--accent)] ring-1 ring-[var(--accent)]/30 shadow-sm'
+              : 'bg-[var(--surface-2)] border-[var(--line)] hover:border-[var(--accent)]'
+          }`}
         >
           <div className="flex items-center justify-between w-full">
-            <Clock className="w-5 h-5 text-[var(--text)] stroke-[1.75]" />
+            <Clock className={`w-5 h-5 stroke-[1.75] ${activeCheckin ? 'text-[var(--accent)] animate-pulse' : 'text-[var(--text)]'}`} />
             {activeCheckin ? (
-              <span className="text-[12px] font-medium text-[var(--accent)]">
-                Active
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--accent)] text-[#1A1F45]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1A1F45] animate-ping" />
+                {t.checkinRunningStatus || 'Running'}
               </span>
             ) : (
               <span className="text-[12px] text-[var(--muted)]">
@@ -279,10 +332,26 @@ export const HomePage: React.FC = () => {
             )}
           </div>
           <div className="mt-2">
-            <h3 className="font-heading font-semibold text-[15px] text-[var(--text)]">
-              {t.safetyCheckin || 'Safety check-in'}
-            </h3>
-            <p className="text-caption text-[12px] mt-0.5">Auto alert if overdue</p>
+            {activeCheckin ? (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-heading font-serif text-[22px] font-bold text-[var(--text)] tabular-nums tracking-tight">
+                    {formatMMSS(new Date(activeCheckin.expiresAt).getTime() - nowTime)}
+                  </span>
+                  <span className="text-[11px] text-[var(--muted)]">remaining</span>
+                </div>
+                <p className="text-caption text-[12px] mt-0.5 truncate font-medium text-[var(--text)]">
+                  {activeCheckin.purpose}
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="font-heading font-semibold text-[15px] text-[var(--text)]">
+                  {t.safetyCheckin || 'Safety check-in'}
+                </h3>
+                <p className="text-caption text-[12px] mt-0.5">Auto alert if overdue</p>
+              </>
+            )}
           </div>
         </button>
       </section>

@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AegisProvider, useAegis } from './hooks/useAegisState';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { VoiceTriggerProvider } from './context/VoiceTriggerContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { DiscreetVoiceGuardModal } from './components/common/DiscreetVoiceGuardModal';
 import { MobileShell } from './components/layout/MobileShell';
+import { SplashScreen } from './components/auth/SplashScreen';
+import { WelcomePage } from './pages/WelcomePage';
+import { AuthCodePage } from './pages/AuthCodePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { HomePage } from './pages/HomePage';
 import { EmergencyPage } from './pages/EmergencyPage';
@@ -20,10 +24,44 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { ResponderDashboardPage } from './pages/ResponderDashboardPage';
 import { AnalyticsDashboardPage } from './pages/AnalyticsDashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { NearbyPage } from './pages/NearbyPage';
+import { NearbyProvider } from './context/NearbyContext';
 
 const AppContent: React.FC = () => {
-  const { currentPage } = useAegis();
+  const { currentPage, setCurrentPage } = useAegis();
+  const { session, isLoading, communityProfile } = useAuth();
+  const [authStep, setAuthStep] = useState<'welcome' | 'code'>('welcome');
 
+  // 1. Initial Loading: Arch logo splash
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+
+  // 2. Unauthenticated: Welcome & OTP screens
+  if (!session) {
+    if (authStep === 'welcome') {
+      return <WelcomePage onCodeSent={() => setAuthStep('code')} />;
+    }
+    return (
+      <AuthCodePage
+        onChangeTarget={() => setAuthStep('welcome')}
+        onSuccess={(onboarded) => {
+          if (!onboarded) {
+            setCurrentPage('onboarding');
+          } else {
+            setCurrentPage('home');
+          }
+        }}
+      />
+    );
+  }
+
+  // 3. First-login onboarding (if profile is not yet onboarded)
+  if (communityProfile && !communityProfile.onboarded && currentPage === 'onboarding') {
+    return <OnboardingPage />;
+  }
+
+  // 4. Authenticated Main Flow
   const renderPage = () => {
     switch (currentPage) {
       case 'onboarding':
@@ -58,6 +96,8 @@ const AppContent: React.FC = () => {
         return <AnalyticsDashboardPage />;
       case 'profile':
         return <ProfilePage />;
+      case 'nearby':
+        return <NearbyPage />;
       default:
         return <HomePage />;
     }
@@ -69,12 +109,16 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <AegisProvider>
-        <VoiceTriggerProvider>
-          <AppContent />
-          <DiscreetVoiceGuardModal />
-        </VoiceTriggerProvider>
-      </AegisProvider>
+      <AuthProvider>
+        <AegisProvider>
+          <VoiceTriggerProvider>
+            <NearbyProvider>
+              <AppContent />
+              <DiscreetVoiceGuardModal />
+            </NearbyProvider>
+          </VoiceTriggerProvider>
+        </AegisProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -72,6 +72,19 @@ export function formatTimeRemaining(expiresAtIso: string): string {
   }
 }
 
+export function formatMMSS(msOrIso: number | string): string {
+  try {
+    const diff = typeof msOrIso === 'string' ? new Date(msOrIso).getTime() - Date.now() : msOrIso;
+    if (diff <= 0) return '00:00';
+    const totalSecs = Math.floor(diff / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  } catch {
+    return '00:00';
+  }
+}
+
 export function generateId(prefix: string = 'aegis'): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }

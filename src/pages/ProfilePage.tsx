@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAegis } from '../hooks/useAegisState';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useVoiceTrigger } from '../context/VoiceTriggerContext';
 import { demoScenarios } from '../data/demoScenarios';
@@ -19,7 +20,11 @@ import {
   Play,
   X,
   RotateCcw,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  ShieldCheck,
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { DiscreetVoiceModal } from '../components/voice/DiscreetVoiceModal';
 
@@ -37,6 +42,7 @@ export const ProfilePage: React.FC = () => {
     setCurrentPage
   } = useAegis();
 
+  const { user, communityProfile, signOut, deleteCommunityData } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
 
@@ -53,6 +59,32 @@ export const ProfilePage: React.FC = () => {
   const [showSafeWord, setShowSafeWord] = useState(false);
   const [showDemoSheet, setShowDemoSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteCommunityConfirm, setShowDeleteCommunityConfirm] = useState(false);
+  const [isDeletingCommunity, setIsDeletingCommunity] = useState(false);
+
+  // Real logged-in account (not a demo placeholder)
+  const rawAccount =
+    user?.phone ||
+    localStorage.getItem('abhaya_logged_in_account') ||
+    (localStorage.getItem('abhaya_last_phone') ? `+91${localStorage.getItem('abhaya_last_phone')}` : '') ||
+    user?.email ||
+    '';
+
+  const formatAccount = (account: string) => {
+    if (!account) return 'Registered mobile';
+    if (account.includes('@')) return account;
+    const clean = account.replace(/\D/g, '');
+    const ten = clean.slice(-10);
+    if (ten.length === 10) {
+      return `+91 ${ten.slice(0, 5)} ${ten.slice(5)}`;
+    }
+    return account;
+  };
+
+  const displayAccount = formatAccount(rawAccount);
+
+  const userAlias = communityProfile?.alias || 'Community Member';
 
   // New Contact form state
   const [cName, setCName] = useState('');
@@ -104,6 +136,46 @@ export const ProfilePage: React.FC = () => {
         <p className="text-caption text-[14px] mt-1">
           {t.pageSubtitleProfile || 'Manage your protection settings, trusted contacts, and private data.'}
         </p>
+      </div>
+
+      {/* Community Identity & Authenticated Account Card */}
+      <div className="soft-card p-4 space-y-4 border border-[var(--line)] bg-[var(--surface)]">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{t.profileCommunityAlias || 'Community identity'}</span>
+            </div>
+            <h2 className="text-lg font-bold text-[var(--text)] tracking-tight">
+              {userAlias}
+            </h2>
+            <p className="text-xs text-[var(--muted)] mt-0.5">
+              {t.profileAuthAccount || 'Signed in as'}: <span className="font-mono font-medium text-[var(--text)]">{displayAccount}</span>
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Connected
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-[var(--line)]">
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface)] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5 text-[var(--muted)]" />
+            <span>{t.btnLogout || 'Log out'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowDeleteCommunityConfirm(true)}
+            className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{t.btnDeleteCommunityData || 'Delete community data'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Account Info Card */}
@@ -567,6 +639,78 @@ export const ProfilePage: React.FC = () => {
                 className="soft-btn soft-btn-sos text-[13px]"
               >
                 Confirm reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM LOGOUT MODAL */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="soft-card w-full max-w-sm p-5 space-y-4 bg-[var(--surface)] border border-[var(--line)]">
+            <div className="flex items-center gap-2 text-[var(--primary)]">
+              <LogOut className="w-5 h-5" />
+              <h3 className="section-title text-[18px]">{t.btnLogoutConfirmTitle || 'Log out of Abhaya?'}</h3>
+            </div>
+            <p className="text-caption text-[13px] leading-relaxed">
+              {t.btnLogoutConfirmDesc || 'You can sign back in at any time with your phone or email. Your local records remain on this phone.'}
+            </p>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="min-h-[44px] px-4 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface)] cursor-pointer"
+              >
+                {t.btnCancel || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowLogoutConfirm(false);
+                  await signOut();
+                }}
+                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--primary)] text-[var(--primary-fg)] text-xs font-semibold hover:opacity-95 cursor-pointer"
+              >
+                {t.btnLogout || 'Log out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE COMMUNITY DATA MODAL */}
+      {showDeleteCommunityConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="soft-card w-full max-w-sm p-5 space-y-4 bg-[var(--surface)] border border-[var(--line)]">
+            <div className="flex items-center gap-2 text-red-500">
+              <AlertTriangle className="w-5 h-5" />
+              <h3 className="section-title text-[18px]">{t.btnDeleteCommunityData || 'Delete community data'}</h3>
+            </div>
+            <p className="text-caption text-[13px] leading-relaxed">
+              {t.btnDeleteCommunityDataDesc || 'Removes your public profile and alias from the server. Offline records remain intact.'}
+            </p>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteCommunityConfirm(false)}
+                disabled={isDeletingCommunity}
+                className="min-h-[44px] px-4 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface)] cursor-pointer"
+              >
+                {t.btnCancel || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingCommunity}
+                onClick={async () => {
+                  setIsDeletingCommunity(true);
+                  await deleteCommunityData();
+                  setIsDeletingCommunity(false);
+                  setShowDeleteCommunityConfirm(false);
+                }}
+                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-600 text-white text-xs font-semibold hover:bg-red-700 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingCommunity ? 'Deleting...' : (t.btnConfirmDelete || 'Delete data')}
               </button>
             </div>
           </div>

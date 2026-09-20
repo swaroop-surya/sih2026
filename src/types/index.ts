@@ -93,6 +93,11 @@ export interface SafetyCheckin {
   notifyContactIds?: string[];
   status: 'ACTIVE' | 'SAFE' | 'EXPIRED' | 'HELP_REQUESTED';
   isRecurring: boolean;
+  note?: string;
+  shareLocation?: boolean;
+  notifyWhenSafe?: boolean;
+  graceExpiresAt?: string;
+  overdueAlertSent?: boolean;
 }
 
 export type SafePlaceType =

@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { IncidentRecord } from '../../types';
+import { useNearby } from '../../context/NearbyContext';
+import { decodePinGeohash } from '../../services/nearbyService';
+import { NearbyMessage } from '../../types/nearby';
+import { getAlertCategoryMeta } from '../../lib/nearbyCategories';
 import {
   MapPin,
   Crosshair,
@@ -10,7 +14,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  ExternalLink
+  ExternalLink,
+  ThumbsUp,
+  Clock
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 
@@ -28,14 +34,29 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const communityLayerRef = useRef<L.LayerGroup | null>(null);
   const bufferLayerRef = useRef<L.LayerGroup | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
+  const { messages } = useNearby();
+
   const [activeIncidentId, setActiveIncidentId] = useState<string | null>(null);
+  const [activeCommunityAlert, setActiveCommunityAlert] = useState<NearbyMessage | null>(null);
+  const [showCommunityAlerts, setShowCommunityAlerts] = useState<boolean>(true);
   const [showBufferZones, setShowBufferZones] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState<boolean>(false);
+
+  // Filter alerts from last 48 hours with a pin geohash
+  const communityAlerts = useMemo(() => {
+    const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+    return (messages || []).filter((m) => {
+      if (m.kind !== 'alert' || !m.pin_geohash) return false;
+      const t = new Date(m.created_at).getTime();
+      return t >= cutoff;
+    });
+  }, [messages]);
 
   // Filter incidents that have valid coordinates
   const geotaggedIncidents = useMemo(() => {
@@ -86,9 +107,11 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
 
       const bufferLayer = L.layerGroup().addTo(map);
       const markersLayer = L.layerGroup().addTo(map);
+      const communityLayer = L.layerGroup().addTo(map);
 
       bufferLayerRef.current = bufferLayer;
       markersLayerRef.current = markersLayer;
+      communityLayerRef.current = communityLayer;
       mapInstanceRef.current = map;
 
       // Handle map click for reporting
@@ -157,6 +180,7 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
 
       marker.on('click', () => {
         setActiveIncidentId(inc.id);
+        setActiveCommunityAlert(null);
         if (onSelectIncident) {
           onSelectIncident(inc);
         }
@@ -180,6 +204,48 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
       mapInstanceRef.current.fitBounds(L.latLngBounds(latLngs), { padding: [40, 40], maxZoom: 15 });
     }
   }, [geotaggedIncidents, activeIncidentId, showBufferZones, onSelectIncident]);
+
+  // Update Community Alert Diamond Markers (last 48h, precision 7 ~150m pin)
+  useEffect(() => {
+    if (!communityLayerRef.current || !mapInstanceRef.current) return;
+    const layer = communityLayerRef.current;
+    layer.clearLayers();
+
+    if (!showCommunityAlerts || communityAlerts.length === 0) return;
+
+    communityAlerts.forEach((alert) => {
+      if (!alert.pin_geohash) return;
+      try {
+        const { latitude, longitude } = decodePinGeohash(alert.pin_geohash);
+        const isSelected = activeCommunityAlert?.id === alert.id;
+
+        const diamondIcon = L.divIcon({
+          className: 'community-alert-diamond-pin',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+          popupAnchor: [0, -11],
+          html: `
+            <div style="position: relative; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s; ${
+              isSelected ? 'transform: scale(1.3); z-index: 45;' : ''
+            }">
+              <div style="width: 15px; height: 15px; transform: rotate(45deg); background-color: #f97316; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                <div style="width: 4px; height: 4px; border-radius: 9999px; background-color: #ffffff;"></div>
+              </div>
+            </div>
+          `
+        });
+
+        const marker = L.marker([latitude, longitude], { icon: diamondIcon }).addTo(layer);
+
+        marker.on('click', () => {
+          setActiveCommunityAlert(alert);
+          setActiveIncidentId(null);
+        });
+      } catch (e) {
+        console.warn('Failed to decode pin geohash for community alert:', alert.id);
+      }
+    });
+  }, [communityAlerts, showCommunityAlerts, activeCommunityAlert]);
 
   // Handle GPS Locate Me
   const handleLocateMe = () => {
@@ -294,33 +360,68 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
         </button>
       </div>
 
-      {/* Small "Legend" chip that expands */}
-      <div className="absolute top-3 left-3 z-10">
+      {/* Top Left Controls: Community alerts chip & Legend */}
+      <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[70%]">
+        {/* Community alerts toggle chip (default on) */}
         <button
-          onClick={() => setIsLegendExpanded(!isLegendExpanded)}
-          className="h-8 px-3 rounded-full bg-[var(--surface)]/95 text-[var(--text)] border border-[var(--line)] shadow-md text-xs font-semibold flex items-center gap-1.5 hover:bg-[var(--surface-2)] transition"
+          onClick={() => setShowCommunityAlerts(!showCommunityAlerts)}
+          className={`h-8 px-2.5 rounded-full border shadow-md text-[11px] font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
+            showCommunityAlerts
+              ? 'bg-orange-600 text-white border-orange-600'
+              : 'bg-[var(--surface)]/95 text-[var(--text)] border-[var(--line)] hover:bg-[var(--surface-2)]'
+          }`}
+          aria-label="Toggle community alerts"
+          title="Community alerts from last 48 hours"
         >
-          <span className="w-2 h-2 rounded-full bg-[var(--safe)]" />
-          <span>Legend</span>
-          {isLegendExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          <span
+            className={`w-2 h-2 transform rotate-45 shrink-0 ${
+              showCommunityAlerts ? 'bg-white' : 'bg-orange-500'
+            }`}
+          />
+          <span className="whitespace-nowrap">Community alerts</span>
+          {communityAlerts.length > 0 && (
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                showCommunityAlerts ? 'bg-black/20 text-white' : 'bg-orange-500/10 text-orange-600'
+              }`}
+            >
+              {communityAlerts.length}
+            </span>
+          )}
         </button>
 
-        {isLegendExpanded && (
-          <div className="mt-1.5 p-3 rounded-[14px] bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--line)] shadow-lg text-xs space-y-1.5 animate-in fade-in min-w-[170px]">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#0B8577]" />
-              <span className="font-medium text-[var(--text)]">Level 1-2: Low / Notice</span>
+        {/* Small "Legend" chip that expands */}
+        <div className="relative">
+          <button
+            onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+            className="h-8 px-2.5 rounded-full bg-[var(--surface)]/95 text-[var(--text)] border border-[var(--line)] shadow-md text-[11px] font-semibold flex items-center gap-1 hover:bg-[var(--surface-2)] transition cursor-pointer"
+          >
+            <span>Legend</span>
+            {isLegendExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+
+          {isLegendExpanded && (
+            <div className="absolute top-9 left-0 p-3 rounded-[14px] bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--line)] shadow-lg text-xs space-y-2 animate-in fade-in min-w-[200px] z-20">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 transform rotate-45 bg-orange-500 shrink-0" />
+                <span className="font-medium text-[var(--text)]">Community alert (~150m diamond)</span>
+              </div>
+              <div className="h-px bg-[var(--line)]" />
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#0B8577] shrink-0" />
+                <span className="font-medium text-[var(--text)]">Level 1-2: Low / Notice</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#B36B00] shrink-0" />
+                <span className="font-medium text-[var(--text)]">Level 3: Moderate hazard</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#E5314B] shrink-0" />
+                <span className="font-medium text-[var(--text)]">Level 4-5: High risk / Danger</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#B36B00]" />
-              <span className="font-medium text-[var(--text)]">Level 3: Moderate hazard</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#E5314B]" />
-              <span className="font-medium text-[var(--text)]">Level 4-5: High risk / Danger</span>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Selected Incident Drawer Card on Map bottom */}
@@ -350,6 +451,50 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
             <button
               onClick={() => setActiveIncidentId(null)}
               className="p-1 rounded-full text-[var(--muted)] hover:text-[var(--text)]"
+              aria-label="Close card"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Community Alert Drawer Card on Map bottom */}
+      {activeCommunityAlert && (
+        <div className="absolute bottom-2 left-2 right-2 z-10 p-3.5 rounded-[16px] bg-[var(--surface)]/95 backdrop-blur-md border border-orange-500/30 shadow-lg animate-in slide-in-from-bottom-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="w-2 h-2 transform rotate-45 bg-orange-500 shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                  Community Alert
+                </span>
+                {activeCommunityAlert.category && (
+                  <span className="text-[11px] font-semibold text-[var(--muted)]">
+                    • {getAlertCategoryMeta(activeCommunityAlert.category).label}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[var(--text)] font-medium mt-1 leading-snug">
+                {activeCommunityAlert.body}
+              </p>
+              <div className="flex items-center gap-3 mt-1.5 text-[11px] text-[var(--muted)] flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {formatDate(activeCommunityAlert.created_at)}
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <ThumbsUp className="w-3 h-3" />
+                  {activeCommunityAlert.confirmations_count || 0} confirmed
+                </span>
+                <span className="text-[10px] text-[var(--muted)]">
+                  ~150m privacy area
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveCommunityAlert(null)}
+              className="p-1 rounded-full text-[var(--muted)] hover:text-[var(--text)] shrink-0"
               aria-label="Close card"
             >
               <X className="w-3.5 h-3.5" />

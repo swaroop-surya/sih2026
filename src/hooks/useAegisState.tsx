@@ -14,7 +14,12 @@ import {
   UserRole
 } from '../types';
 import { loadAllState, saveItem, logAudit, wipeAllLocalData } from '../lib/storage';
-import { triggerEmergencySOS, SOSDispatchResult } from '../services/emergencyService';
+import {
+  triggerEmergencySOS,
+  triggerOverdueCheckinAlert,
+  simulateSafeCheckinNotification,
+  SOSDispatchResult
+} from '../services/emergencyService';
 import { calculateSHA256 } from '../lib/crypto';
 import { generateId } from '../lib/utils';
 import { demoScenarios } from '../data/demoScenarios';
@@ -35,7 +40,8 @@ export type AppPage =
   | 'responder'
   | 'analytics'
   | 'profile'
-  | 'onboarding';
+  | 'onboarding'
+  | 'nearby';
 
 interface AegisContextType {
   currentPage: AppPage;
@@ -79,8 +85,12 @@ interface AegisContextType {
 
   // Checkins
   createCheckin: (checkin: Omit<SafetyCheckin, 'id' | 'status' | 'startedAt' | 'expiresAt'>) => void;
+  extendCheckin: (id: string, additionalMinutes?: number) => void;
   resolveCheckinSafe: (id: string) => void;
+  endCheckinWithoutAlert: (id: string) => void;
   triggerCheckinHelp: (id: string) => void;
+  triggerCheckinOverdueAlertAction: (id: string) => Promise<SOSDispatchResult | null>;
+  cancelCheckinAlert: (id: string) => void;
 
   // Incidents & Evidence
   addIncident: (incident: Omit<IncidentRecord, 'id' | 'timestamp'>) => string;
@@ -186,26 +196,6 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     saveItem('aegis_emergency_events', emergencyEvents);
   }, [emergencyEvents]);
-
-  // Checkin expiration monitor (runs every 10 seconds)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      setCheckins(prev => {
-        let changed = false;
-        const updated = prev.map(c => {
-          if (c.status === 'ACTIVE' && new Date(c.expiresAt).getTime() < now) {
-            changed = true;
-            logAudit('Check-In Expired', `Missed response for "${c.purpose}". Alert triggered to contacts.`);
-            return { ...c, status: 'EXPIRED' as const };
-          }
-          return c;
-        });
-        return changed ? updated : prev;
-      });
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
 
   const updateProfile = useCallback((updates: Partial<UserProfile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
@@ -335,21 +325,125 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: generateId('chk'),
       status: 'ACTIVE',
       startedAt: now.toISOString(),
-      expiresAt: expires.toISOString()
+      expiresAt: expires.toISOString(),
+      overdueAlertSent: false
     };
-    setCheckins(prev => [newCheckin, ...prev]);
-    logAudit('Check-In Started', `Destination: ${checkinData.destination}. Duration: ${checkinData.durationMinutes} min.`);
+    // Only one active timer at a time
+    setCheckins(prev => [
+      newCheckin,
+      ...prev.map(c => c.status === 'ACTIVE' ? { ...c, status: 'SAFE' as const } : c)
+    ]);
+    logAudit('Check-In Started', `Purpose: ${checkinData.purpose}. Duration: ${checkinData.durationMinutes} min.`);
+  }, []);
+
+  const extendCheckin = useCallback((id: string, additionalMinutes: number = 10) => {
+    setCheckins(prev => prev.map(c => {
+      if (c.id === id) {
+        const currentExp = new Date(c.expiresAt).getTime();
+        const base = currentExp > Date.now() ? currentExp : Date.now();
+        const newExpires = new Date(base + additionalMinutes * 60 * 1000).toISOString();
+        logAudit('Check-In Extended', `Extended "${c.purpose}" by ${additionalMinutes} min.`);
+        return {
+          ...c,
+          status: 'ACTIVE' as const,
+          expiresAt: newExpires,
+          graceExpiresAt: undefined,
+          overdueAlertSent: false
+        };
+      }
+      return c;
+    }));
   }, []);
 
   const resolveCheckinSafe = useCallback((id: string) => {
-    setCheckins(prev => prev.map(c => c.id === id ? { ...c, status: 'SAFE' } : c));
-    logAudit('Check-In Safe', `User confirmed safety for check-in: ${id}`);
-  }, []);
+    let resolvedItem: SafetyCheckin | undefined;
+    setCheckins(prev => prev.map(c => {
+      if (c.id === id) {
+        resolvedItem = c;
+        return { ...c, status: 'SAFE' as const, overdueAlertSent: false };
+      }
+      return c;
+    }));
+
+    if (resolvedItem) {
+      logAudit('Check-In Safe', `User confirmed safety for check-in: "${resolvedItem.purpose}"`);
+      // If user toggled "Tell my contacts when I'm safe"
+      if (resolvedItem.notifyWhenSafe) {
+        const safeNotes = simulateSafeCheckinNotification(resolvedItem, contacts, profile.name || 'Ananya');
+        logAudit('Safe Confirmation Dispatched', `SMS sent to ${safeNotes.length} contacts confirming safe arrival.`);
+      }
+    }
+
+    if (activeSOS && (activeSOS.notes?.toLowerCase().includes('check-in') || activeSOS.serviceType?.includes('Check-in'))) {
+      resolveSOS('User confirmed safety after check-in');
+    }
+  }, [contacts, profile.name, activeSOS, resolveSOS]);
+
+  const endCheckinWithoutAlert = useCallback((id: string) => {
+    setCheckins(prev => prev.map(c => c.id === id ? { ...c, status: 'SAFE' as const } : c));
+    logAudit('Check-In Closed', `User ended check-in without alerting.`);
+    if (activeSOS && (activeSOS.notes?.toLowerCase().includes('check-in') || activeSOS.serviceType?.includes('Check-in'))) {
+      resolveSOS('Check-in ended without alerting');
+    }
+  }, [activeSOS, resolveSOS]);
 
   const triggerCheckinHelp = useCallback((id: string) => {
-    setCheckins(prev => prev.map(c => c.id === id ? { ...c, status: 'HELP_REQUESTED' } : c));
-    startSOS(false, 'Help requested from overdue safety check-in countdown.');
+    setCheckins(prev => prev.map(c => c.id === id ? { ...c, status: 'HELP_REQUESTED' as const } : c));
+    startSOS(false, 'Help requested from safety check-in.');
   }, [startSOS]);
+
+  const triggerCheckinOverdueAlertAction = useCallback(async (id: string): Promise<SOSDispatchResult | null> => {
+    const checkin = checkins.find(c => c.id === id);
+    if (!checkin) return null;
+
+    const result = await triggerOverdueCheckinAlert(checkin, contacts, profile.name || 'Ananya');
+    setActiveSOS(result.event);
+    setSosDispatchResult(result);
+    setEmergencyEvents(prev => [result.event, ...prev]);
+
+    setCheckins(prev => prev.map(c => c.id === id ? { ...c, status: 'EXPIRED' as const, overdueAlertSent: true } : c));
+
+    // Create entry in Incidents ("Missed check-in", with time and location)
+    const newIncident: IncidentRecord = {
+      id: generateId('inc_chk'),
+      timestamp: result.event.startedAt,
+      date: result.event.startedAt.split('T')[0],
+      time: new Date(result.event.startedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      category: 'other',
+      severity: 4,
+      location: result.event.location.addressText,
+      description: `Missed check-in alert for "${checkin.purpose}". ${checkin.note ? 'Note: ' + checkin.note : ''} Automatic dispatch sent to ${result.contactNotifications.length} contacts.`,
+      evidenceIds: [],
+      notes: checkin.note || 'Automated incident created when safety check-in countdown expired with no response.',
+      reportedToPolice: false
+    };
+    setIncidents(prev => [newIncident, ...prev]);
+    logAudit('Incident Logged', `Missed check-in auto-saved to Incident Journal`);
+
+    return result;
+  }, [checkins, contacts, profile.name]);
+
+  const cancelCheckinAlert = useCallback((id: string) => {
+    resolveCheckinSafe(id);
+    if (activeSOS) {
+      resolveSOS('User confirmed safety and cancelled overdue alert');
+    }
+  }, [resolveCheckinSafe, activeSOS, resolveSOS]);
+
+  // Background monitor: if app was inactive and checkin expired by >65s, trigger overdue alert
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const active = checkins.find(c => c.status === 'ACTIVE');
+      if (active) {
+        const exp = new Date(active.expiresAt).getTime();
+        if (now - exp > 65000 && !active.overdueAlertSent) {
+          triggerCheckinOverdueAlertAction(active.id);
+        }
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [checkins, triggerCheckinOverdueAlertAction]);
 
   // Incidents
   const addIncident = useCallback((incidentData: Omit<IncidentRecord, 'id' | 'timestamp'>): string => {
@@ -526,8 +620,12 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteContact,
         testContactNotification,
         createCheckin,
+        extendCheckin,
         resolveCheckinSafe,
+        endCheckinWithoutAlert,
         triggerCheckinHelp,
+        triggerCheckinOverdueAlertAction,
+        cancelCheckinAlert,
         addIncident,
         deleteIncident,
         addEvidence,

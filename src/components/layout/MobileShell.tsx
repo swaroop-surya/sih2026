@@ -39,7 +39,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     <div className="min-h-screen flex flex-col justify-start items-center bg-[var(--bg)] text-[var(--text)] transition-colors">
       {/* Centered mobile viewport shell */}
       <div className="w-full max-w-md min-h-screen flex flex-col relative bg-[var(--bg)] border-x border-[var(--line)] text-[var(--text)] transition-colors">
-        {currentPage !== 'onboarding' && <Header />}
+        {currentPage !== 'onboarding' && currentPage !== 'nearby' && <Header />}
 
         {/* Global Active Emergency Banner if SOS is ongoing */}
         {activeSOS && currentPage !== 'emergency' && (
@@ -76,7 +76,15 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         )}
 
         {/* Main scrollable page viewport */}
-        <main className={`flex-1 w-full px-4 py-5 ${currentPage !== 'onboarding' ? 'pb-28' : ''}`}>
+        <main
+          className={`flex-1 w-full ${
+            currentPage === 'nearby'
+              ? 'px-0 py-0 pb-20'
+              : currentPage !== 'onboarding'
+              ? 'px-4 py-5 pb-28'
+              : ''
+          }`}
+        >
           {children}
         </main>
 
