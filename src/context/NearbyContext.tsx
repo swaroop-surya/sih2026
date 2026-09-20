@@ -41,6 +41,8 @@ interface NearbyContextType {
   unreadAlertCount: number;
   latestAlert: NearbyMessage | null;
   alerts24hCount: number;
+  isReportSheetOpen: boolean;
+  setIsReportSheetOpen: (open: boolean) => void;
   postMessage: (params: {
     kind: NearbyKind;
     category?: NearbyAlertCategory | null;
@@ -104,6 +106,9 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setHasAcceptedRules(true);
     localStorage.setItem(RULES_ACCEPTED_KEY, 'true');
   };
+
+  // Report sheet open state (accessible from any page via floating Report button)
+  const [isReportSheetOpen, setIsReportSheetOpen] = useState(false);
 
   // Blocks and confirmations cache for current user
   const [blockedUsers, setBlockedUsers] = useState<string[]>(() => getLocalBlocks());
@@ -707,6 +712,8 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         unreadAlertCount,
         latestAlert,
         alerts24hCount: alerts24h.length,
+        isReportSheetOpen,
+        setIsReportSheetOpen,
         postMessage,
         toggleConfirm,
         toggleFixed,

@@ -7,6 +7,7 @@ import { OfflineIndicator } from '../common/OfflineIndicator';
 import { AlertTriangle, Clock, ArrowRight, Sparkles, X, Play, RotateCcw, ShieldCheck } from 'lucide-react';
 import { demoScenarios } from '../../data/demoScenarios';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useNearby } from '../../context/NearbyContext';
 
 export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -23,6 +24,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     loadDemoScenario,
     resetToDefaultData
   } = useAegis();
+  const { setIsReportSheetOpen } = useNearby();
   const { t } = useTranslation();
 
   const [isDemoSheetOpen, setIsDemoSheetOpen] = useState(false);
@@ -32,8 +34,12 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   const activeCheckin = checkins.find(c => c.status === 'ACTIVE');
-  const showAskAegisFloating = ['home', 'risk-check', 'resources'].includes(currentPage);
-  const showDemoPill = profile.showDemoTools !== false && currentPage !== 'onboarding';
+  const showFloatingActions = currentPage !== 'onboarding' && currentPage !== 'emergency' && currentPage !== 'nearby';
+
+  const handleReportInChat = () => {
+    setCurrentPage('nearby');
+    setIsReportSheetOpen(true);
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-start items-center bg-[var(--bg)] text-[var(--text)] transition-colors">
@@ -88,31 +94,38 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           {children}
         </main>
 
-        {/* Floating "Ask Abhaya" button */}
-        {showAskAegisFloating && (
-          <button
-            id="btn-floating-ask-abhaya"
-            onClick={() => setCurrentPage('ai-assistant')}
-            className="fixed bottom-20 right-4 z-40 h-10 px-3.5 rounded-full bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] shadow-md flex items-center gap-2 hover:bg-[var(--surface-2)] active:scale-95 transition-all cursor-pointer"
-            aria-label="Ask Abhaya AI"
-            title="Ask Abhaya AI"
-          >
-            <Sparkles className="w-4 h-4 text-[var(--primary)] stroke-[2]" />
-            <span className="text-[12px] font-semibold tracking-tight">Ask Abhaya</span>
-          </button>
-        )}
+        {/* Floating Quick Action Controls above Bottom Nav */}
+        {showFloatingActions && (
+          <div className="fixed bottom-20 left-0 right-0 max-w-md mx-auto px-4 pointer-events-none z-40 flex items-center justify-between">
+            {/* Left: Report in chat button (replaces demo) */}
+            <button
+              id="btn-floating-report"
+              onClick={handleReportInChat}
+              className="pointer-events-auto h-10 px-3.5 rounded-full bg-[var(--surface)] text-[var(--text)] border border-amber-500/40 dark:border-amber-400/40 shadow-md hover:shadow-lg text-xs font-bold flex items-center gap-2 hover:bg-[var(--surface-2)] active:scale-95 transition-all cursor-pointer"
+              aria-label="Report in chat"
+              title="Report a safety alert in community chat"
+            >
+              <div className="w-5 h-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-3 h-3 stroke-[2.2]" />
+              </div>
+              <span className="tracking-tight text-[var(--text)] font-semibold">Report</span>
+            </button>
 
-        {/* Small floating "Demo" pill above nav */}
-        {showDemoPill && (
-          <button
-            id="btn-floating-demo-pill"
-            onClick={() => setIsDemoSheetOpen(true)}
-            className="fixed bottom-20 left-4 z-40 h-8 px-3 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] text-xs font-semibold flex items-center gap-1.5 shadow-sm hover:bg-[var(--surface)] active:scale-95 transition cursor-pointer"
-            aria-label="Open Demo Scenarios"
-          >
-            <span className="w-2 h-2 rounded-full bg-[var(--safe)]" />
-            <span>Demo</span>
-          </button>
+            {/* Right: Round AI star logo button (no text) */}
+            {currentPage !== 'ai-assistant' && (
+              <button
+                id="btn-floating-ask-abhaya"
+                onClick={() => setCurrentPage('ai-assistant')}
+                className="pointer-events-auto ml-auto w-11 h-11 rounded-full bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] shadow-md hover:shadow-lg flex items-center justify-center hover:bg-[var(--surface-2)] hover:border-[var(--primary)]/50 active:scale-95 transition-all cursor-pointer group"
+                aria-label="Ask Abhaya AI"
+                title="Ask Abhaya AI"
+              >
+                <div className="w-7 h-7 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/25 flex items-center justify-center group-hover:bg-[var(--primary)]/20 transition-colors">
+                  <Sparkles className="w-4 h-4 text-[var(--primary)] stroke-[2]" />
+                </div>
+              </button>
+            )}
+          </div>
         )}
 
         {/* 5-Second Cancel Countdown Modal */}

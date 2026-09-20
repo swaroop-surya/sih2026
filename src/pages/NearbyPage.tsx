@@ -53,7 +53,9 @@ export const NearbyPage: React.FC = () => {
     setActiveRoom,
     resetToUserArea,
     requestLocation,
-    searchAndSelectArea
+    searchAndSelectArea,
+    isReportSheetOpen,
+    setIsReportSheetOpen
   } = useNearby();
 
   const { communityProfile } = useAuth();
@@ -66,9 +68,17 @@ export const NearbyPage: React.FC = () => {
   const [chatError, setChatError] = useState<string | null>(null);
 
   // Modals & Sheets
-  const [isReportSheetOpen, setIsReportSheetOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'chat' | 'alert' | null>(null);
+
+  // Intercept if opened externally before rules are accepted
+  useEffect(() => {
+    if (isReportSheetOpen && !hasAcceptedRules) {
+      setIsReportSheetOpen(false);
+      setPendingAction('alert');
+      setIsRulesModalOpen(true);
+    }
+  }, [isReportSheetOpen, hasAcceptedRules, setIsReportSheetOpen]);
 
   // Moderation modal
   const [moderationState, setModerationState] = useState<{
