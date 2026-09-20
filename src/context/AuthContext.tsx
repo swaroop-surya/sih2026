@@ -248,8 +248,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? currentTarget.value.trim().toLowerCase()
         : undefined;
 
+      // Generate valid RFC-4122 UUID so all DB schemas accept it seamlessly
+      const mockUserId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : '00000000-0000-4000-8000-' + String(Date.now()).slice(-12).padStart(12, '0');
+
       const mockUser: User = {
-        id: 'user-' + Date.now(),
+        id: mockUserId,
         app_metadata: { provider: currentTarget.type },
         user_metadata: {},
         aud: 'authenticated',

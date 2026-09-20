@@ -17,7 +17,7 @@ import {
   saveLocalBlock,
   notifyNewAreaAlert
 } from '../services/nearbyService';
-import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../services/supabase';
 import { NearbyArea, NearbyMessage, NearbyAlertCategory, NearbyKind } from '../types/nearby';
 
 interface NearbyContextType {
@@ -63,7 +63,7 @@ const RULES_ACCEPTED_KEY = 'abhaya_nearby_rules_accepted';
 const SAMPLE_ACTIVITY_KEY = 'abhaya_show_sample_area_activity';
 
 export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, communityProfile } = useAuth();
+  const { user, communityProfile, isDemoSession } = useAuth();
   const { profile } = useAegis();
 
   // User physical location state
@@ -449,21 +449,18 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Always persist to local storage first so alerts work immediately and are never lost
     saveLocalMessage(newMsg);
 
-    // Attempt remote save to Supabase if configured
-    if (isSupabaseConfigured && supabase) {
+    // Attempt remote save to Supabase if configured and user is authenticated in Supabase
+    if (isSupabaseConfigured && supabase && !isDemoSession && user?.id && isValidUuid(user.id)) {
       try {
         const payload: Record<string, unknown> = {
           area_id: newMsg.area_id,
+          author_id: user.id,
           author_alias: userAlias,
           kind: newMsg.kind,
           category: newMsg.category,
           body: newMsg.body,
           pin_geohash: newMsg.pin_geohash
         };
-        // Only include author_id if it's a valid authenticated user uuid
-        if (user?.id) {
-          payload.author_id = user.id;
-        }
 
         const { data, error } = await supabase
           .from('messages')
@@ -508,7 +505,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         )
       );
 
-      if (isSupabaseConfigured && supabase) {
+      if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId)) {
         try {
           await supabase
             .from('confirmations')
@@ -529,7 +526,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         )
       );
 
-      if (isSupabaseConfigured && supabase) {
+      if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId)) {
         try {
           await supabase
             .from('confirmations')
@@ -559,7 +556,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         )
       );
 
-      if (isSupabaseConfigured && supabase) {
+      if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId)) {
         try {
           await supabase
             .from('confirmations')
@@ -580,7 +577,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         )
       );
 
-      if (isSupabaseConfigured && supabase) {
+      if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId)) {
         try {
           await supabase
             .from('confirmations')
@@ -596,7 +593,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // 6. Moderation: Report Message & Block User
   // -------------------------------------------------------------------------
   const reportMessage = async (messageId: string, reason: string) => {
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId)) {
       try {
         await supabase.from('reports').insert({
           message_id: messageId,
@@ -627,7 +624,7 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Remove their messages from feed immediately
     setMessages((prev) => prev.filter((m) => m.author_id !== authorId));
 
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured && supabase && !isDemoSession && isValidUuid(userId) && isValidUuid(authorId)) {
       try {
         await supabase.from('blocks').insert({
           blocker_id: userId,

@@ -2,6 +2,18 @@
 <html lang="en">
   <head>
     <script>
+      // Synchronous React Refresh Preamble stubs to ensure window.$RefreshReg$ is always defined
+      if (typeof window !== 'undefined') {
+        if (!window.$RefreshReg$) {
+          window.$RefreshReg$ = function () {};
+        }
+        if (!window.$RefreshSig$) {
+          window.$RefreshSig$ = function () {
+            return function (type) { return type; };
+          };
+        }
+      }
+
       // Filter benign Vite HMR reconnection notices and websocket error events in sandboxed preview iframe
       (function () {
         function shouldSuppress(val) {
@@ -25,9 +37,11 @@
           return (
             s.indexOf('[vite]') !== -1 ||
             s.indexOf('vite-hmr') !== -1 ||
+            s.indexOf('[hmr]') !== -1 ||
             s.indexOf('vite/dist/client') !== -1 ||
             s.indexOf('failed to connect to websocket') !== -1 ||
-            s.indexOf('websocket closed without opened') !== -1
+            s.indexOf('websocket closed without opened') !== -1 ||
+            s.indexOf('port 24678') !== -1
           );
         }
 
@@ -111,8 +125,15 @@
                   if (typeof fakeWs.onopen === 'function') {
                     fakeWs.onopen(new Event('open'));
                   }
+                  var msgEvt = new MessageEvent('message', {
+                    data: JSON.stringify({ type: 'connected' }),
+                  });
+                  fakeWs.dispatchEvent(msgEvt);
+                  if (typeof fakeWs.onmessage === 'function') {
+                    fakeWs.onmessage(msgEvt);
+                  }
                 } catch (e) {}
-              }, 0);
+              }, 10);
               return fakeWs;
             }
             return new RealWebSocket(url, protocols);
