@@ -1,6 +1,7 @@
 import { EmergencyEvent, TrustedContact, SafetyCheckin } from '../types';
 import { generateId } from '../lib/utils';
 import { logAudit } from '../lib/storage';
+import { getCachedLocation } from './locationService';
 
 export interface SOSDispatchResult {
   event: EmergencyEvent;
@@ -19,35 +20,47 @@ export async function getCurrentCoordinates(): Promise<{
   accuracyMeters: number;
   addressText: string;
 }> {
+  const cached = getCachedLocation();
+  const fallback = cached || {
+    latitude: 12.9279,
+    longitude: 77.6741,
+    accuracyMeters: 20,
+    addressText: 'Outer Ring Rd, Bellandur, Bengaluru 560103'
+  };
+
   return new Promise((resolve) => {
-    if ('geolocation' in navigator) {
+    if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           resolve({
             latitude: Number(pos.coords.latitude.toFixed(5)),
             longitude: Number(pos.coords.longitude.toFixed(5)),
             accuracyMeters: Math.round(pos.coords.accuracy || 15),
-            addressText: 'Live GPS: Near Bellandur, Bengaluru 560103'
+            addressText: `Live GPS: ${Number(pos.coords.latitude.toFixed(4))}, ${Number(pos.coords.longitude.toFixed(4))} (±${Math.round(pos.coords.accuracy || 15)}m)`
           });
         },
         () => {
-          // Fallback realistic coordinates if permissions not granted in iframe
-          resolve({
-            latitude: 12.9279,
-            longitude: 77.6741,
-            accuracyMeters: 18,
-            addressText: 'Outer Ring Rd, Bellandur, Bengaluru 560103'
-          });
+          // If high accuracy failed or permission denied, try quick coarse location
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              resolve({
+                latitude: Number(pos.coords.latitude.toFixed(5)),
+                longitude: Number(pos.coords.longitude.toFixed(5)),
+                accuracyMeters: Math.round(pos.coords.accuracy || 45),
+                addressText: `Cell/Network GPS: ${Number(pos.coords.latitude.toFixed(4))}, ${Number(pos.coords.longitude.toFixed(4))}`
+              });
+            },
+            () => {
+              // Graceful fallback to user-cached or metropolitan coordinates so SOS never halts
+              resolve(fallback);
+            },
+            { timeout: 3000, enableHighAccuracy: false }
+          );
         },
-        { timeout: 5000, enableHighAccuracy: true }
+        { timeout: 4000, enableHighAccuracy: true }
       );
     } else {
-      resolve({
-        latitude: 12.9279,
-        longitude: 77.6741,
-        accuracyMeters: 20,
-        addressText: 'Outer Ring Rd, Bellandur, Bengaluru 560103'
-      });
+      resolve(fallback);
     }
   });
 }

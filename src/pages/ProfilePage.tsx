@@ -42,6 +42,15 @@ import {
   isCameraPermissionGranted,
   setManualCameraPermission
 } from '../services/cameraService';
+import {
+  requestLocationPermissionEarly,
+  isLocationPermissionGranted,
+  setManualLocationPermission,
+  getCachedLocation,
+  POPULAR_SAFETY_AREAS,
+  setCustomEmergencyArea,
+  LocationCoordinates
+} from '../services/locationService';
 
 export const ProfilePage: React.FC = () => {
   const {
@@ -92,6 +101,59 @@ export const ProfilePage: React.FC = () => {
   const [cameraStatusMessage, setCameraStatusMessage] = useState<string>('');
   const [isRequestingCamera, setIsRequestingCamera] = useState<boolean>(false);
   const [showApkModal, setShowApkModal] = useState<boolean>(false);
+
+  // Early Location Access State & Backup Area
+  const [locationPermissionState, setLocationPermissionState] = useState<boolean>(() => {
+    return isLocationPermissionGranted() || profile.continuousLocationSharing === true;
+  });
+  const [locationStatusMessage, setLocationStatusMessage] = useState<string>('');
+  const [isRequestingLocation, setIsRequestingLocation] = useState<boolean>(false);
+  const [cachedLocation, setCachedLocation] = useState<LocationCoordinates | null>(() => getCachedLocation());
+  const [showAreaPicker, setShowAreaPicker] = useState<boolean>(false);
+
+  const handleRequestLocation = async () => {
+    setIsRequestingLocation(true);
+    setLocationStatusMessage('Requesting GPS coordinates from Android / browser...');
+    try {
+      const result = await requestLocationPermissionEarly();
+      setLocationPermissionState(result.granted);
+      if (result.coords) {
+        setCachedLocation(result.coords);
+      }
+      setLocationStatusMessage(result.message);
+    } catch {
+      setLocationStatusMessage('Location request timed out or was blocked by Android.');
+    } finally {
+      setIsRequestingLocation(false);
+    }
+  };
+
+  const handleForceEnableLocation = () => {
+    const defaultCoords = cachedLocation || {
+      latitude: 12.9279,
+      longitude: 77.6741,
+      accuracyMeters: 20,
+      addressText: 'Outer Ring Rd, Bellandur, Bengaluru 560103'
+    };
+    setManualLocationPermission(true, defaultCoords);
+    setLocationPermissionState(true);
+    setCachedLocation(defaultCoords);
+    setLocationStatusMessage('Location marked as active (from Android Settings).');
+  };
+
+  const handleSelectFallbackArea = (area: { name: string; city: string; lat: number; lng: number }) => {
+    setCustomEmergencyArea(area);
+    const coords: LocationCoordinates = {
+      latitude: area.lat,
+      longitude: area.lng,
+      accuracyMeters: 25,
+      addressText: `${area.name}, ${area.city}`
+    };
+    setCachedLocation(coords);
+    setLocationPermissionState(true);
+    setShowAreaPicker(false);
+    setLocationStatusMessage(`Emergency location set to ${area.name}, ${area.city}.`);
+  };
 
   const handleRequestCamera = async () => {
     setIsRequestingCamera(true);
@@ -620,23 +682,114 @@ export const ProfilePage: React.FC = () => {
 
         <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
           {/* 1. Location permission row */}
-          <div className="py-3.5 space-y-2">
+          <div id="row-location-access" className="py-3.5 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--primary)] flex items-center justify-center shrink-0 mt-0.5">
                   <MapPin className="w-4 h-4 stroke-[1.75]" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-[14px] text-[var(--text)]">Location access</h4>
-                  <p className="text-caption text-[12px] leading-relaxed mt-0.5">
-                    Broadcasts your live GPS coordinates to trusted contacts when you trigger an alert.
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-[14px] text-[var(--text)]">Location access</h4>
+                    {locationPermissionState && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        Location allowed (GPS Active)
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-caption text-[12px] leading-relaxed mt-1 text-[var(--muted)]">
+                    Broadcasts your live GPS coordinates to trusted contacts and 112 emergency services when you trigger an alert.
                   </p>
+                  {cachedLocation && (
+                    <p className="text-[11px] font-mono text-[var(--text)] mt-1.5 bg-[var(--surface-2)] px-2 py-1 rounded inline-block border border-[var(--line)]">
+                      {cachedLocation.addressText || `${cachedLocation.latitude}, ${cachedLocation.longitude}`}
+                    </p>
+                  )}
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                Active on SOS
-              </span>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  id="btn-allow-location-profile"
+                  onClick={handleRequestLocation}
+                  disabled={isRequestingLocation}
+                  className={`px-3 min-h-[36px] rounded-full text-[12px] font-medium transition cursor-pointer disabled:opacity-50 ${
+                    locationPermissionState
+                      ? 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface)] border border-[var(--line)]'
+                      : 'bg-[var(--primary)] text-[var(--primary-fg)] hover:opacity-95'
+                  }`}
+                >
+                  {isRequestingLocation ? 'Checking...' : locationPermissionState ? 'Test GPS' : 'Allow location'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowApkModal(true)}
+                  className="p-2 min-h-[36px] min-w-[36px] rounded-full bg-[var(--surface-2)] border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)] transition cursor-pointer flex items-center justify-center"
+                  title="Android APK Location & Camera Fix"
+                  aria-label="Android APK Location & Camera Fix"
+                >
+                  <Smartphone className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+
+            {locationStatusMessage && (
+              <div className="text-[11px] text-[var(--muted)] bg-[var(--surface-2)] p-2.5 rounded-lg space-y-2 border border-[var(--line)]">
+                <p className="leading-relaxed">{locationStatusMessage}</p>
+                {!locationPermissionState && (
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[var(--line)]">
+                    <button
+                      type="button"
+                      onClick={handleForceEnableLocation}
+                      className="px-2.5 py-1 rounded-md bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold hover:bg-emerald-600/25 transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Check className="w-3 h-3" />
+                      Verify & Force Enable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAreaPicker(!showAreaPicker)}
+                      className="px-2.5 py-1 rounded-md bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] text-[11px] font-medium hover:bg-[var(--surface-2)] transition cursor-pointer flex items-center gap-1"
+                    >
+                      <MapPin className="w-3 h-3 text-[var(--primary)]" />
+                      Select Backup City/Area
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowApkModal(true)}
+                      className="px-2.5 py-1 rounded-md bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] text-[11px] font-medium hover:bg-[var(--surface-2)] transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Smartphone className="w-3 h-3 text-[var(--primary)]" />
+                      APK Code Guide
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Optional Backup Area Picker */}
+            {showAreaPicker && (
+              <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--line)] space-y-2 text-xs">
+                <span className="font-semibold text-[var(--text)] block">
+                  Select Backup Safety Area (if GPS is restricted on phone):
+                </span>
+                <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto">
+                  {POPULAR_SAFETY_AREAS.map((area) => (
+                    <button
+                      key={`${area.city}-${area.name}`}
+                      type="button"
+                      onClick={() => handleSelectFallbackArea(area)}
+                      className="p-1.5 rounded text-left border border-[var(--line)] bg-[var(--surface-2)] hover:border-[var(--primary)] text-[11px] truncate transition cursor-pointer"
+                    >
+                      <span className="font-medium text-[var(--text)] block truncate">{area.name}</span>
+                      <span className="text-[10px] text-[var(--muted)]">{area.city}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 2. Voice trigger permission row */}
@@ -1028,11 +1181,12 @@ export const ProfilePage: React.FC = () => {
         onClose={() => setIsVolunteerFormOpen(false)}
       />
 
-      {/* Android APK Camera Permission Guide Modal */}
+      {/* Android APK Camera & Location Permission Guide Modal */}
       <AndroidApkCameraModal
         isOpen={showApkModal}
         onClose={() => setShowApkModal(false)}
-        onForceEnable={handleForceEnableCamera}
+        onForceEnableCamera={handleForceEnableCamera}
+        onForceEnableLocation={handleForceEnableLocation}
       />
     </div>
   );

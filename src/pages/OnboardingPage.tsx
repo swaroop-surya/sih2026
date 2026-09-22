@@ -23,6 +23,11 @@ import {
   isCameraPermissionGranted,
   setManualCameraPermission
 } from '../services/cameraService';
+import {
+  requestLocationPermissionEarly,
+  isLocationPermissionGranted,
+  setManualLocationPermission
+} from '../services/locationService';
 import { AndroidApkCameraModal } from '../components/common/AndroidApkCameraModal';
 
 const RANDOM_ALIASES_POOL = [
@@ -146,24 +151,27 @@ export const OnboardingPage: React.FC = () => {
     setLanguage(lang);
   };
 
-  const handleRequestLocation = () => {
-    if ('geolocation' in navigator) {
-      setLocationStatusText('Requesting approximate location...');
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setLocationPermissionGranted(true);
-          setLocationStatusText('Area location enabled for safety alerts.');
-        },
-        () => {
-          setLocationPermissionGranted(false);
-          setLocationStatusText('Location access was not enabled. You can enable it anytime in settings.');
-        },
-        { enableHighAccuracy: false, timeout: 8000 }
-      );
-    } else {
+  const handleRequestLocation = async () => {
+    setLocationStatusText('Requesting location access from Android / browser...');
+    try {
+      const res = await requestLocationPermissionEarly();
+      if (res.granted) {
+        setLocationPermissionGranted(true);
+        setLocationStatusText(res.message || 'Area location enabled for safety alerts.');
+      } else {
+        setLocationPermissionGranted(false);
+        setLocationStatusText(res.message);
+      }
+    } catch {
       setLocationPermissionGranted(false);
-      setLocationStatusText('Location services not supported on this browser.');
+      setLocationStatusText('Location access was not enabled or timed out.');
     }
+  };
+
+  const handleForceEnableLocation = () => {
+    setManualLocationPermission(true);
+    setLocationPermissionGranted(true);
+    setLocationStatusText('Location activated. (Granted via Android Phone Settings)');
   };
 
   const handleFinish = async () => {
@@ -408,6 +416,15 @@ export const OnboardingPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setShowApkModal(true)}
+                  className="px-3 min-h-[48px] text-xs font-medium rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] transition-all cursor-pointer flex items-center gap-1"
+                  title="Android APK Location Fix"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>APK Fix</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setLocationPermissionGranted(false);
                     setLocationStatusText('Location will be requested only when you trigger SOS.');
@@ -419,9 +436,28 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               {locationStatusText && (
-                <p className="text-[11px] text-[var(--muted)] text-center mt-2">
-                  {locationStatusText}
-                </p>
+                <div className="mt-2 p-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--line)] text-[11px] text-[var(--muted)] space-y-1.5">
+                  <p className="leading-relaxed">{locationStatusText}</p>
+                  {locationPermissionGranted !== true && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[var(--line)]">
+                      <button
+                        type="button"
+                        onClick={handleForceEnableLocation}
+                        className="px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px] hover:bg-emerald-600/25 cursor-pointer flex items-center gap-1"
+                      >
+                        <Check className="w-3 h-3" />
+                        Verify & Force Enable
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowApkModal(true)}
+                        className="px-2 py-0.5 rounded bg-[var(--surface)] text-[var(--text)] font-medium text-[10px] hover:bg-[var(--surface-2)] cursor-pointer"
+                      >
+                        APK Guide
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -633,11 +669,12 @@ export const OnboardingPage: React.FC = () => {
         )}
       </div>
 
-      {/* Android APK Camera Permission Guide Modal */}
+      {/* Android APK Camera & Location Permission Guide Modal */}
       <AndroidApkCameraModal
         isOpen={showApkModal}
         onClose={() => setShowApkModal(false)}
-        onForceEnable={handleForceEnableCamera}
+        onForceEnableCamera={handleForceEnableCamera}
+        onForceEnableLocation={handleForceEnableLocation}
       />
     </div>
   );

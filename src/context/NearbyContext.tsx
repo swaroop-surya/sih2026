@@ -19,6 +19,7 @@ import {
 } from '../services/nearbyService';
 import { supabase, isSupabaseConfigured, isValidUuid } from '../services/supabase';
 import { NearbyArea, NearbyMessage, NearbyAlertCategory, NearbyKind } from '../types/nearby';
+import { getCachedLocation } from '../services/locationService';
 
 interface NearbyContextType {
   userCoords: { lat: number; lng: number } | null;
@@ -190,8 +191,23 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.warn('Nearby geolocation warning:', err.message);
     if (err.code === err.PERMISSION_DENIED) {
       setLocationPermissionStatus('denied');
+      const cached = getCachedLocation();
+      if (cached) {
+        handleGeoSuccess({
+          coords: {
+            latitude: cached.latitude,
+            longitude: cached.longitude,
+            accuracy: cached.accuracyMeters,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: Date.now(),
+        } as unknown as GeolocationPosition);
+      }
     }
-  }, []);
+  }, [handleGeoSuccess]);
 
   const requestLocation = useCallback(() => {
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
