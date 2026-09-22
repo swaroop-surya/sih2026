@@ -21,11 +21,6 @@ function getAI(): GoogleGenAI | null {
   if (!aiClient && process.env.GEMINI_API_KEY) {
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
     });
   }
   return aiClient;
@@ -41,8 +36,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Helper for timeout-guarded async operations (18s timeout for stability)
-function withTimeout<T>(promise: Promise<T>, ms: number = 18000): Promise<T> {
+// Helper for timeout-guarded async operations (8s timeout for snappy AI responses)
+function withTimeout<T>(promise: Promise<T>, ms: number = 8000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error('AI request timeout')), ms))
@@ -50,12 +45,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number = 18000): Promise<T> {
 }
 
 // Candidate models with preference for high availability & speed
-const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
 
 async function generateWithFallback(
   ai: GoogleGenAI,
   prompt: string,
-  timeoutMs: number = 18000
+  timeoutMs: number = 8000
 ): Promise<string | null> {
   for (const model of CANDIDATE_MODELS) {
     try {

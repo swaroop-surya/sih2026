@@ -14,8 +14,10 @@ import {
   AlertCircle,
   ArrowRight,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Camera
 } from 'lucide-react';
+import { requestCameraPermissionEarly, isCameraPermissionGranted } from '../services/cameraService';
 
 const RANDOM_ALIASES_POOL = [
   'Kolam Sparrow 27',
@@ -55,6 +57,25 @@ export const OnboardingPage: React.FC = () => {
   // 3. Location Explainer
   const [locationPermissionGranted, setLocationPermissionGranted] = useState<boolean | null>(null);
   const [locationStatusText, setLocationStatusText] = useState<string>('');
+
+  // Camera Permission (Early Ahead-of-Time Request)
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(() => isCameraPermissionGranted());
+  const [cameraStatusText, setCameraStatusText] = useState<string>('');
+
+  const handleRequestCamera = async () => {
+    setCameraStatusText('Requesting camera permission...');
+    const granted = await requestCameraPermissionEarly();
+    setCameraPermissionGranted(granted);
+    updateProfile({
+      cameraPermissionGranted: granted,
+      capturePhotosOnSOS: granted ? true : false
+    });
+    if (granted) {
+      setCameraStatusText('Camera access allowed for silent emergency photos.');
+    } else {
+      setCameraStatusText('Camera permission not granted. You can enable it anytime in Profile.');
+    }
+  };
 
   // 4. Privacy & Rules Checkbox
   const [acceptedRules, setAcceptedRules] = useState<boolean>(false);
@@ -387,6 +408,58 @@ export const OnboardingPage: React.FC = () => {
               {locationStatusText && (
                 <p className="text-[11px] text-[var(--muted)] text-center mt-2">
                   {locationStatusText}
+                </p>
+              )}
+            </div>
+
+            {/* Camera Permission row (Requested Early) */}
+            <div className="space-y-2 p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)]">
+              <div className="flex items-center gap-2 mb-1">
+                <Camera className="w-4 h-4 text-[var(--primary)] shrink-0" />
+                <span className="text-xs font-semibold text-[var(--text)]">
+                  {t.cameraAccessTitle || 'Camera access'}
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--muted)] leading-relaxed mb-2">
+                {t.cameraAccessExplainer ||
+                  'Abhaya can quietly take a couple of photos when you trigger SOS, as extra evidence for your trusted circle. Nothing is sent anywhere unless you send an alert.'}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleRequestCamera}
+                  className={`flex-1 min-h-[44px] px-3 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    cameraPermissionGranted === true
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[var(--surface-2)] border border-[var(--line)] text-[var(--text)] hover:bg-[var(--surface)]'
+                  }`}
+                >
+                  {cameraPermissionGranted === true ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>{t.cameraAllowed || 'Camera Allowed'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-4 h-4" />
+                      <span>{t.btnAllowCamera || 'Allow Camera'}</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCameraPermissionGranted(false);
+                    setCameraStatusText('Camera capture disabled. You can enable it in Profile > Privacy and data.');
+                  }}
+                  className="px-4 min-h-[44px] text-xs font-semibold rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] transition-all cursor-pointer"
+                >
+                  {t.btnNotNow}
+                </button>
+              </div>
+              {cameraStatusText && (
+                <p className="text-[11px] text-[var(--muted)] text-center mt-2">
+                  {cameraStatusText}
                 </p>
               )}
             </div>

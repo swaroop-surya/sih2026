@@ -21,6 +21,8 @@ export interface UserProfile {
   continuousLocationSharing: boolean;
   pinProtectedVault: boolean;
   autoDeleteEvidenceDays: number;
+  cameraPermissionGranted?: boolean;
+  capturePhotosOnSOS?: boolean;
 }
 
 export interface TrustedContact {
@@ -79,6 +81,8 @@ export interface EvidenceItem {
   tags?: string[];
   isEncrypted?: boolean;
   dataUrl?: string; // Client preview placeholder or actual blob url
+  kind?: 'sos_photo' | 'audio' | 'image' | 'document' | 'other';
+  alertId?: string;
 }
 
 export interface SafetyCheckin {
@@ -158,6 +162,7 @@ export interface EmergencyEvent {
   serviceType?: string;
   notes?: string;
   resolutionReason?: string;
+  photosCaptured?: number;
 }
 
 export type RiskCategory = string;

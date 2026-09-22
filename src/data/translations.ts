@@ -223,6 +223,18 @@ export interface Translations {
   becomeVolunteer: string;
   volunteersAvailableNearby: string;
   volunteersDisclaimer: string;
+
+  // Camera permission and Silent SOS Photo
+  cameraAccessTitle: string;
+  cameraAccessExplainer: string;
+  capturePhotosOnSOS: string;
+  capturePhotosOnSOSDesc: string;
+  btnAllowCamera: string;
+  cameraAllowed: string;
+  cameraNotEnabled: string;
+  sosPhotoSavedSingle: string;
+  sosPhotoSavedPlural: string;
+  photoCaptureOffHint: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -443,7 +455,17 @@ export const translations: Record<SupportedLanguage, Translations> = {
     volunteersTab: 'Volunteers',
     becomeVolunteer: 'Become a volunteer',
     volunteersAvailableNearby: 'available nearby',
-    volunteersDisclaimer: "Volunteers are community members who've opted in to help. They are not police or emergency responders. For danger, use SOS or call 112."
+    volunteersDisclaimer: "Volunteers are community members who've opted in to help. They are not police or emergency responders. For danger, use SOS or call 112.",
+    cameraAccessTitle: 'Camera access',
+    cameraAccessExplainer: 'Abhaya can quietly take a couple of photos when you trigger SOS, as extra evidence for your trusted circle. Nothing is sent anywhere unless you send an alert.',
+    capturePhotosOnSOS: 'Capture photos on SOS',
+    capturePhotosOnSOSDesc: 'Take silent photos from back and front camera when SOS triggers',
+    btnAllowCamera: 'Allow camera access',
+    cameraAllowed: 'Camera allowed',
+    cameraNotEnabled: 'Camera not enabled',
+    sosPhotoSavedSingle: '1 photo saved to your evidence vault',
+    sosPhotoSavedPlural: '2 photos saved to your evidence vault',
+    photoCaptureOffHint: 'Photo capture is off. You can turn it on in Profile > Privacy and data.'
   },
   hi: {
     appName: 'अभया',
@@ -662,7 +684,17 @@ export const translations: Record<SupportedLanguage, Translations> = {
     volunteersTab: 'स्वयंसेवक',
     becomeVolunteer: 'स्वयंसेवक बनें',
     volunteersAvailableNearby: 'आस-पास उपलब्ध हैं',
-    volunteersDisclaimer: 'स्वयंसेवक समुदाय के सदस्य हैं जिन्होंने मदद के लिए हामी भरी है। वे पुलिस या आपातकालीन कर्मी नहीं हैं। खतरे के लिए SOS या 112 डायल करें।'
+    volunteersDisclaimer: 'स्वयंसेवक समुदाय के सदस्य हैं जिन्होंने मदद के लिए हामी भरी है। वे पुलिस या आपातकालीन कर्मी नहीं हैं। खतरे के लिए SOS या 112 डायल करें।',
+    cameraAccessTitle: 'कैमरा एक्सेस',
+    cameraAccessExplainer: 'जब आप SOS ट्रिगर करती हैं, तो अभया आपके विश्वसनीय संपर्कों के लिए अतिरिक्त सबूत के रूप में चुपचाप कुछ तस्वीरें ले सकता है। जब तक आप अलर्ट नहीं भेजतीं, कुछ भी कहीं नहीं भेजा जाता।',
+    capturePhotosOnSOS: 'SOS पर तस्वीरें लें',
+    capturePhotosOnSOSDesc: 'SOS शुरू होने पर आगे और पीछे के कैमरे से चुपचाप तस्वीरें लें',
+    btnAllowCamera: 'कैमरा अनुमति दें',
+    cameraAllowed: 'कैमरा चालू है',
+    cameraNotEnabled: 'कैमरा बंद है',
+    sosPhotoSavedSingle: '1 तस्वीर आपके सबूत वॉल्ट में सुरक्षित की गई',
+    sosPhotoSavedPlural: '2 तस्वीरें आपके सबूत वॉल्ट में सुरक्षित की गईं',
+    photoCaptureOffHint: 'तस्वीर कैप्चर बंद है। इसे प्रोफ़ाइल > गोपनीयता और डेटा में चालू कर सकती हैं।'
   },
   te: {
     appName: 'అభయ',
@@ -881,7 +913,17 @@ export const translations: Record<SupportedLanguage, Translations> = {
     volunteersTab: 'వాలంటీర్లు',
     becomeVolunteer: 'వాలంటీర్ అవ్వండి',
     volunteersAvailableNearby: 'సమీపంలో అందుబాటులో ఉన్నారు',
-    volunteersDisclaimer: 'వాలంటీర్లు సహాయం చేయడానికి ముందుకు వచ్చిన సంఘ సభ్యులు. వారు పోలీసులు లేదా అత్యవసర స్పందనదారులు కారు. ప్రమాదంలో ఉంటే SOS లేదా 112 కి కాల్ చేయండి.'
+    volunteersDisclaimer: 'వాలంటీర్లు సహాయం చేయడానికి ముందుకు వచ్చిన సంఘ సభ్యులు. వారు పోలీసులు లేదా అత్యవసర స్పందనదారులు కారు. ప్రమాదంలో ఉంటే SOS లేదా 112 కి కాల్ చేయండి.',
+    cameraAccessTitle: 'కెమెరా యాక్సెస్',
+    cameraAccessExplainer: 'మీరు SOS ట్రిగ్గర్ చేసినప్పుడు, మీ విశ్వసనీయ పరిచయాలకు అదనపు ఆధారంగా అభయ నిశ్శబ్దంగా రెండు ఫోటోలు తీయగలదు. మీరు అలర్ట్ పంపేంతవరకు ఏదీ ఎక్కడికీ పంపబడదు.',
+    capturePhotosOnSOS: 'SOS లో ఫోటోలు తీయండి',
+    capturePhotosOnSOSDesc: 'SOS ట్రిగ్గర్ అయినప్పుడు ముందు, వెనుక కెమెరాలతో నిశ్శబ్దంగా ఫోటోలు తీయండి',
+    btnAllowCamera: 'కెమెరా అనుమతించు',
+    cameraAllowed: 'కెమెరా ప్రారంభించబడింది',
+    cameraNotEnabled: 'కెమెరా ప్రారంభించబడలేదు',
+    sosPhotoSavedSingle: '1 ఫోటో మీ సాక్ష్యాల వాల్ట్‌లో భద్రపరచబడింది',
+    sosPhotoSavedPlural: '2 ఫోటోలు మీ సాక్ష్యాల వాల్ట్‌లో భద్రపరచబడ్డాయి',
+    photoCaptureOffHint: 'ఫోటో క్యాప్చర్ ఆఫ్ చేయబడింది. ప్రొఫైల్ > గోప్యత మరియు డేటాలో దీన్ని ఆన్ చేయవచ్చు.'
   },
   ta: {
     appName: 'அபயா',
@@ -1100,6 +1142,16 @@ export const translations: Record<SupportedLanguage, Translations> = {
     volunteersTab: 'தன்னார்வலர்கள்',
     becomeVolunteer: 'தன்னார்வலராக இணையுங்கள்',
     volunteersAvailableNearby: 'அருகில் உள்ளனர்',
-    volunteersDisclaimer: 'தன்னார்வலர்கள் உதவ முன்வந்த சமூக உறுப்பினர்கள். அவர்கள் காவல்துறையோ அல்லது அவசரகால பணியாளர்களோ அல்ல. ஆபத்தில் இருந்தால் SOS அல்லது 112 ஐ அழைக்கவும்.'
+    volunteersDisclaimer: 'தன்னார்வலர்கள் உதவ முன்வந்த சமூக உறுப்பினர்கள். அவர்கள் காவல்துறையோ அல்லது அவசரகால பணியாளர்களோ அல்ல. ஆபத்தில் இருந்தால் SOS அல்லது 112 ஐ அழைக்கவும்.',
+    cameraAccessTitle: 'கேமரா அனுமதி',
+    cameraAccessExplainer: 'நீங்கள் SOS தூண்டும் போது, உங்கள் நம்பகமான தொடர்புகளுக்கான கூடுதல் ஆதாரமாக அபயா அமைதியாக இரண்டு புகைப்படங்களை எடுக்க முடியும். நீங்கள் எச்சரிக்கை அனுப்பாத வரை எதுவும் எங்கும் அனுப்பப்படாது.',
+    capturePhotosOnSOS: 'SOS-ல் புகைப்படங்களை எடு',
+    capturePhotosOnSOSDesc: 'SOS இயங்கும் போது முன் மற்றும் பின் கேமரா மூலம் அமைதியாக புகைப்படங்களை எடுக்கவும்',
+    btnAllowCamera: 'கேமராவை அனுமதி',
+    cameraAllowed: 'கேமரா அனுமதிக்கப்பட்டது',
+    cameraNotEnabled: 'கேமரா இயக்கப்படவில்லை',
+    sosPhotoSavedSingle: '1 புகைப்படம் உங்கள் ஆதார பெட்டகத்தில் சேமிக்கப்பட்டது',
+    sosPhotoSavedPlural: '2 புகைப்படங்கள் உங்கள் ஆதார பெட்டகத்தில் சேமிக்கப்பட்டன',
+    photoCaptureOffHint: 'புகைப்பட பதிவு முடக்கப்பட்டுள்ளது. சுயவிவரம் > தனியுரிமை மற்றும் தரவில் இதை இயக்கலாம்.'
   }
 };

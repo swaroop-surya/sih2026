@@ -9,7 +9,8 @@ import {
   EyeOff,
   ChevronDown,
   ChevronUp,
-  Mic
+  Mic,
+  Camera
 } from 'lucide-react';
 import { connectToEmergencyServices112 } from '../services/emergencyService';
 import { useVoiceTrigger } from '../context/VoiceTriggerContext';
@@ -21,7 +22,10 @@ export const EmergencyPage: React.FC = () => {
     activeSOS,
     sosDispatchResult,
     initiateSOSCountdown,
-    resolveSOS
+    resolveSOS,
+    contacts,
+    profile,
+    setCurrentPage
   } = useAegis();
   const { t } = useTranslation();
   const {
@@ -118,6 +122,43 @@ export const EmergencyPage: React.FC = () => {
               <p className="text-caption text-[12px] mt-1">
                 Started at {new Date(activeSOS.startedAt).toLocaleTimeString('en-IN')} • Live location active
               </p>
+            </div>
+
+            {/* Quiet Checklist of Active Protections */}
+            <div className="p-3.5 rounded-[12px] bg-[var(--surface)] border border-[var(--line)] text-left space-y-2">
+              <div className="flex items-center gap-2 text-[12px] text-[var(--text)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
+                <span>Live location shared with {sosDispatchResult?.contactNotifications?.length || contacts?.length || 0} trusted contacts</span>
+              </div>
+              <div className="flex items-center gap-2 text-[12px] text-[var(--text)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
+                <span>Continuous GPS coordinates broadcast</span>
+              </div>
+              {/* Quiet checklist line for evidence photos: only show if 1 or 2 captured, never 0 or error */}
+              {activeSOS.photosCaptured && activeSOS.photosCaptured > 0 ? (
+                <div className="flex items-center gap-2 text-[12px] text-[var(--text)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
+                  <span className="font-medium text-[var(--text)]">
+                    {activeSOS.photosCaptured === 1
+                      ? (t.sosPhotoSavedSingle || '1 photo saved to your evidence vault')
+                      : (t.sosPhotoSavedPlural || '2 photos saved to your evidence vault')}
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Non-urgent mention if photo capture is off or permission was never requested/granted */}
+              {(!profile.cameraPermissionGranted || profile.capturePhotosOnSOS === false) && (
+                <div className="pt-1.5 text-[11px] text-[var(--muted)] border-t border-[var(--line)] flex items-center justify-between">
+                  <span>{t.photoCaptureOffHint || 'Photo capture is off. Turn it on in Profile.'}</span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage('profile')}
+                    className="text-[var(--primary)] font-medium hover:underline ml-2 shrink-0 cursor-pointer"
+                  >
+                    Profile
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="pt-2">

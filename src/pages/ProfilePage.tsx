@@ -25,12 +25,16 @@ import {
   ShieldCheck,
   Sparkles,
   AlertTriangle,
-  HeartHandshake
+  HeartHandshake,
+  Camera,
+  MapPin,
+  Check
 } from 'lucide-react';
 import { useVolunteers } from '../context/VolunteerContext';
 import { VolunteerSignUpModal } from '../components/volunteers/VolunteerSignUpModal';
 import { VolunteerReconfirmBanner } from '../components/volunteers/VolunteerReconfirmBanner';
 import { DiscreetVoiceModal } from '../components/voice/DiscreetVoiceModal';
+import { requestCameraPermissionEarly, isCameraPermissionGranted } from '../services/cameraService';
 
 export const ProfilePage: React.FC = () => {
   const {
@@ -73,6 +77,35 @@ export const ProfilePage: React.FC = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteCommunityConfirm, setShowDeleteCommunityConfirm] = useState(false);
   const [isDeletingCommunity, setIsDeletingCommunity] = useState(false);
+
+  // Early Camera Access & Master Switch State (requested ahead of time, never in SOS)
+  const [cameraPermissionState, setCameraPermissionState] = useState<boolean>(() => {
+    return isCameraPermissionGranted() || profile.cameraPermissionGranted === true;
+  });
+  const [cameraStatusMessage, setCameraStatusMessage] = useState<string>('');
+  const [isRequestingCamera, setIsRequestingCamera] = useState<boolean>(false);
+
+  const handleRequestCamera = async () => {
+    setIsRequestingCamera(true);
+    setCameraStatusMessage('Requesting camera permission...');
+    try {
+      const granted = await requestCameraPermissionEarly();
+      setCameraPermissionState(granted);
+      updateProfile({
+        cameraPermissionGranted: granted,
+        capturePhotosOnSOS: granted ? true : profile.capturePhotosOnSOS
+      });
+      if (granted) {
+        setCameraStatusMessage('Camera access granted. 2 stills will quietly be secured on SOS.');
+      } else {
+        setCameraStatusMessage('Camera permission not granted. SOS alerts continue without photos.');
+      }
+    } catch {
+      setCameraStatusMessage('Camera request skipped.');
+    } finally {
+      setIsRequestingCamera(false);
+    }
+  };
 
   // Real logged-in account (not a demo placeholder)
   const rawAccount =
@@ -559,6 +592,130 @@ export const ProfilePage: React.FC = () => {
             />
             <div className="w-11 h-6 bg-[var(--surface-2)] border border-[var(--line)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--safe)]" />
           </label>
+        </div>
+      </div>
+
+      {/* Privacy and data: Permissions & Sensors */}
+      <div id="profile-privacy-and-data" className="soft-card p-4 space-y-4 border border-[var(--line)] bg-[var(--surface)]">
+        <div>
+          <h3 className="section-title text-[18px]">Privacy and data</h3>
+          <p className="text-caption text-[12px] mt-0.5">
+            Manage early hardware permissions and what is captured during an emergency.
+          </p>
+        </div>
+
+        <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+          {/* 1. Location permission row */}
+          <div className="py-3.5 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--primary)] flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4 stroke-[1.75]" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-[14px] text-[var(--text)]">Location access</h4>
+                  <p className="text-caption text-[12px] leading-relaxed mt-0.5">
+                    Broadcasts your live GPS coordinates to trusted contacts when you trigger an alert.
+                  </p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                Active on SOS
+              </span>
+            </div>
+          </div>
+
+          {/* 2. Voice trigger permission row */}
+          <div className="py-3.5 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
+                  <Mic className="w-4 h-4 stroke-[1.75]" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-[14px] text-[var(--text)]">Voice trigger</h4>
+                  <p className="text-caption text-[12px] leading-relaxed mt-0.5">
+                    Detects your emergency safe word hands-free entirely on-device without cloud recording.
+                  </p>
+                </div>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${
+                isListening
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                  : 'bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]'
+              }`}>
+                {isListening ? 'Listening' : 'Off'}
+              </span>
+            </div>
+          </div>
+
+          {/* 3. Camera access row */}
+          <div id="row-camera-access" className="py-3.5 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
+                  <Camera className="w-4 h-4 stroke-[1.75]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-[14px] text-[var(--text)]">
+                      {t.cameraAccessTitle || 'Camera access'}
+                    </h4>
+                    {cameraPermissionState && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        {t.cameraAllowed || 'Camera allowed'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-caption text-[12px] leading-relaxed mt-1 text-[var(--muted)]">
+                    {t.cameraAccessExplainer ||
+                      'Abhaya can quietly take a couple of photos when you trigger SOS, as extra evidence for your trusted circle. Nothing is sent anywhere unless you send an alert.'}
+                  </p>
+                </div>
+              </div>
+
+              {!cameraPermissionState && (
+                <button
+                  type="button"
+                  id="btn-allow-camera-early"
+                  onClick={handleRequestCamera}
+                  disabled={isRequestingCamera}
+                  className="px-3 min-h-[36px] rounded-full bg-[var(--primary)] text-[var(--primary-fg)] text-[12px] font-medium hover:opacity-95 transition cursor-pointer shrink-0 disabled:opacity-50"
+                >
+                  {isRequestingCamera ? 'Requesting...' : (t.btnAllowCamera || 'Allow camera')}
+                </button>
+              )}
+            </div>
+
+            {cameraStatusMessage && (
+              <p className="text-[11px] text-[var(--muted)] bg-[var(--surface-2)] p-2 rounded-lg">
+                {cameraStatusMessage}
+              </p>
+            )}
+
+            {/* Master Switch: Capture photos on SOS */}
+            <div className="pt-2 border-t border-[var(--line)] flex items-center justify-between gap-3">
+              <div>
+                <span className="text-[13px] font-medium text-[var(--text)] block">
+                  {t.capturePhotosOnSOS || 'Capture photos on SOS'}
+                </span>
+                <span className="text-caption text-[11px] block">
+                  {t.capturePhotosOnSOSDesc || 'Take silent photos from back and front camera when SOS triggers'}
+                </span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  id="switch-capture-photos-on-sos"
+                  checked={profile.capturePhotosOnSOS !== false}
+                  onChange={(e) => updateProfile({ capturePhotosOnSOS: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-[var(--surface-2)] border border-[var(--line)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--safe)]" />
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 

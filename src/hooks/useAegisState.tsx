@@ -23,6 +23,7 @@ import {
 import { calculateSHA256 } from '../lib/crypto';
 import { generateId } from '../lib/utils';
 import { demoScenarios } from '../data/demoScenarios';
+import { captureSOSPhotos } from '../services/cameraService';
 
 export type AppPage =
   | 'home'
@@ -234,7 +235,68 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setIncidents(prev => [newIncident, ...prev]);
     setCurrentPage('emergency');
-  }, [contacts]);
+
+    // SILENT SOS PHOTO CAPTURE PIPELINE:
+    // Fires concurrently at alert start time (non-blocking, invisible, no shutter sound).
+    // In Demo mode: generates 2 sample stills labeled 'Sample photo'.
+    // Stills are hashed (SHA-256), encrypted in the local evidence vault, and linked to newIncident.
+    const isDemo = activeDemoScenarioId !== null || profile.showDemoTools === true;
+    const isCaptureEnabled = profile.capturePhotosOnSOS !== false;
+
+    (async () => {
+      try {
+        const stills = await captureSOSPhotos({
+          isDemo,
+          masterSwitchEnabled: isCaptureEnabled,
+          alertId: result.event.id,
+          timestamp: result.event.startedAt,
+        });
+
+        if (stills && stills.length > 0) {
+          const newEvidenceItems: EvidenceItem[] = [];
+          for (const s of stills) {
+            const hash = await calculateSHA256(s.blob);
+            const dataUrl = URL.createObjectURL(s.blob);
+            const evItem: EvidenceItem = {
+              id: generateId('ev_sos'),
+              incidentId: newIncident.id,
+              filename: s.fileName,
+              fileType: 'image/jpeg',
+              fileSize: s.blob.size,
+              uploadedAt: new Date().toISOString(),
+              sha256Hash: hash,
+              description: s.description,
+              tags: ['sos_photo', s.facing === 'back' ? 'back_camera' : 'front_camera', result.event.id],
+              isEncrypted: true,
+              dataUrl: dataUrl,
+              kind: 'sos_photo',
+              alertId: result.event.id,
+            };
+            newEvidenceItems.push(evItem);
+          }
+
+          // Store in evidence vault
+          setEvidence(prev => [...newEvidenceItems, ...prev]);
+
+          // Link evidence IDs to auto-created Incident record
+          const addedIds = newEvidenceItems.map(item => item.id);
+          setIncidents(prev => prev.map(inc => inc.id === newIncident.id ? {
+            ...inc,
+            evidenceIds: [...(inc.evidenceIds || []), ...addedIds]
+          } : inc));
+
+          // Update activeSOS and emergencyEvents with photosCaptured count so checklist displays it
+          setActiveSOS(prev => prev && prev.id === result.event.id ? { ...prev, photosCaptured: stills.length } : prev);
+          setEmergencyEvents(prev => prev.map(e => e.id === result.event.id ? { ...e, photosCaptured: stills.length } : e));
+
+          logAudit('SOS Photo Capture', `Captured and vaulted ${stills.length} silent stills (SHA-256 verified) for alert ${result.event.id}`);
+        }
+      } catch (captureErr: any) {
+        // Swallowed silently from user; SOS must never fail
+        logAudit('SOS Photo Capture Notice', `Photo capture step: ${captureErr?.message || 'aborted'}`);
+      }
+    })();
+  }, [contacts, activeDemoScenarioId, profile.showDemoTools, profile.capturePhotosOnSOS]);
 
   const cancelSOSCountdown = useCallback(() => {
     if (countdownTimerRef.current) {

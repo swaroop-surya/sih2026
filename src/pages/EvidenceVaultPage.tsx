@@ -183,11 +183,34 @@ export const EvidenceVaultPage: React.FC = () => {
               <div key={ev.id} className="py-3.5 space-y-2 px-1">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
-                      <File className="w-4 h-4 stroke-[1.75]" />
-                    </div>
+                    {ev.dataUrl ? (
+                      <div className="w-12 h-12 rounded-[10px] overflow-hidden bg-[var(--surface-2)] border border-[var(--line)] shrink-0 mt-0.5 relative">
+                        <img
+                          src={ev.dataUrl}
+                          alt={ev.filename}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                        {ev.kind === 'sos_photo' && (
+                          <span className="absolute bottom-0 inset-x-0 bg-red-600 text-[8px] font-bold text-white text-center uppercase tracking-tighter py-0.5 leading-none">
+                            SOS
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center shrink-0 mt-0.5">
+                        <File className="w-4 h-4 stroke-[1.75]" />
+                      </div>
+                    )}
                     <div className="min-w-0">
-                      <h4 className="font-medium text-[14px] text-[var(--text)] truncate">{ev.filename}</h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-medium text-[14px] text-[var(--text)] truncate">{ev.filename}</h4>
+                        {ev.kind === 'sos_photo' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
+                            SOS Evidence
+                          </span>
+                        )}
+                      </div>
                       <p className="text-caption text-[12px] truncate">{ev.description}</p>
                       <p className="text-caption text-[11px] mt-0.5">
                         {formatBytes(ev.fileSize)} • {formatDate(ev.uploadedAt)}
