@@ -19,6 +19,14 @@ export interface CapturedStill {
   description: string;
 }
 
+export interface CameraPermissionResult {
+  granted: boolean;
+  message: string;
+  errorType?: 'NotAllowedError' | 'SecurityError' | 'NotFoundError' | 'NotSupportedError' | 'WebViewRestricted' | 'InsecureContext' | 'Unknown';
+  isSecureContext: boolean;
+  hasMediaDevices: boolean;
+}
+
 const STORAGE_CAMERA_PERM_KEY = 'abhaya_camera_permission_granted';
 
 /**
@@ -30,26 +38,120 @@ export function isCameraPermissionGranted(): boolean {
 }
 
 /**
+ * Allows manual override for users whose Android APK has native permissions granted
+ * in Android OS Settings.
+ */
+export function setManualCameraPermission(granted: boolean): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_CAMERA_PERM_KEY, granted ? 'true' : 'false');
+}
+
+/**
  * Requests camera permission early from settings/onboarding row.
+ * Includes full Android WebView / Capacitor / APK wrapper compatibility checks.
  * Never called for the first time during emergency trigger.
  */
-export async function requestCameraPermissionEarly(): Promise<boolean> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+export async function requestCameraPermissionEarly(): Promise<CameraPermissionResult> {
+  const isSecure =
+    typeof window !== 'undefined'
+      ? (window.isSecureContext ?? (window.location.protocol === 'https:' || window.location.hostname === 'localhost'))
+      : false;
+
+  const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
+  const getUserMediaFn =
+    nav?.mediaDevices?.getUserMedia?.bind(nav.mediaDevices) ||
+    nav?.getUserMedia?.bind(nav) ||
+    nav?.webkitGetUserMedia?.bind(nav) ||
+    nav?.mozGetUserMedia?.bind(nav);
+
+  if (!getUserMediaFn) {
     localStorage.setItem(STORAGE_CAMERA_PERM_KEY, 'false');
-    return false;
+    return {
+      granted: false,
+      message: 'Camera API (WebRTC) is disabled in this Android WebView. Ensure your APK overrides WebChromeClient.onPermissionRequest.',
+      errorType: 'WebViewRestricted',
+      isSecureContext: isSecure,
+      hasMediaDevices: false,
+    };
   }
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    // Immediately stop tracks so camera indicator turns off right away
-    stream.getTracks().forEach((track) => track.stop());
-    localStorage.setItem(STORAGE_CAMERA_PERM_KEY, 'true');
-    return true;
-  } catch (err) {
-    console.warn('[CameraService] Permission denied or unavailable:', err);
-    localStorage.setItem(STORAGE_CAMERA_PERM_KEY, 'false');
-    return false;
+  // Progressive constraint fallback list
+  const constraintOptions: MediaStreamConstraints[] = [
+    { video: { facingMode: 'environment' }, audio: false },
+    { video: true, audio: false },
+    { video: { facingMode: 'user' }, audio: false },
+    { video: {}, audio: false },
+  ];
+
+  let lastError: any = null;
+
+  for (const constraints of constraintOptions) {
+    try {
+      let streamPromise: Promise<MediaStream>;
+      if (nav?.mediaDevices?.getUserMedia) {
+        streamPromise = nav.mediaDevices.getUserMedia(constraints);
+      } else {
+        streamPromise = new Promise((resolve, reject) => {
+          getUserMediaFn(constraints, resolve, reject);
+        });
+      }
+
+      const stream = await streamPromise;
+      if (stream) {
+        // Immediately stop all tracks to release camera hardware
+        stream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch {
+            // ignore
+          }
+        });
+        localStorage.setItem(STORAGE_CAMERA_PERM_KEY, 'true');
+        return {
+          granted: true,
+          message: 'Camera access allowed successfully.',
+          isSecureContext: isSecure,
+          hasMediaDevices: true,
+        };
+      }
+    } catch (err: any) {
+      lastError = err;
+      const name = err?.name || '';
+      // If user/OS explicitly denied permission, avoid redundant popups
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        break;
+      }
+    }
   }
+
+  const errName = lastError?.name || '';
+  let errorType: CameraPermissionResult['errorType'] = 'Unknown';
+  let userMessage = 'Camera permission could not be acquired.';
+
+  if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+    errorType = 'NotAllowedError';
+    userMessage = 'Permission blocked by Android. Open Phone Settings > Apps > Abhaya > Permissions > Camera > Allow, then tap "Verify & Force Enable".';
+  } else if (errName === 'SecurityError') {
+    errorType = 'SecurityError';
+    userMessage = 'Security restriction: Camera requires HTTPS or a secure origin in Android WebView.';
+  } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+    errorType = 'NotFoundError';
+    userMessage = 'No camera device detected by Android WebView.';
+  } else if (!isSecure) {
+    errorType = 'InsecureContext';
+    userMessage = 'Insecure context: Android WebView requires HTTPS or secure scheme to grant camera.';
+  } else {
+    userMessage = `Camera error (${errName || 'Denied'}). Android WebView requires WebChromeClient.onPermissionRequest.`;
+  }
+
+  localStorage.setItem(STORAGE_CAMERA_PERM_KEY, 'false');
+  return {
+    granted: false,
+    message: userMessage,
+    errorType,
+    isSecureContext: isSecure,
+    hasMediaDevices: !!nav?.mediaDevices,
+  };
 }
 
 /**
@@ -165,28 +267,56 @@ async function captureSingleStill(
   facingMode: 'environment' | 'user',
   timeoutMs: number = 2500
 ): Promise<Blob | null> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+  const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
+  const getUserMediaFn =
+    nav?.mediaDevices?.getUserMedia?.bind(nav.mediaDevices) ||
+    nav?.getUserMedia?.bind(nav) ||
+    nav?.webkitGetUserMedia?.bind(nav);
+
+  if (!getUserMediaFn) {
     return null;
   }
 
   let stream: MediaStream | null = null;
   let video: HTMLVideoElement | null = null;
 
-  try {
-    const streamPromise = navigator.mediaDevices.getUserMedia({
+  const constraintOptions: MediaStreamConstraints[] = [
+    {
       video: {
         facingMode: { ideal: facingMode },
         width: { ideal: 1280 },
         height: { ideal: 720 },
       },
-      audio: false
-    });
+      audio: false,
+    },
+    {
+      video: { facingMode: facingMode },
+      audio: false,
+    },
+    {
+      video: true,
+      audio: false,
+    },
+  ];
 
-    const timeoutPromise = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), timeoutMs)
-    );
+  try {
+    for (const constraints of constraintOptions) {
+      try {
+        const streamPromise: Promise<MediaStream> = nav?.mediaDevices?.getUserMedia
+          ? nav.mediaDevices.getUserMedia(constraints)
+          : new Promise((resolve, reject) => getUserMediaFn(constraints, resolve, reject));
 
-    stream = await Promise.race([streamPromise, timeoutPromise]);
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), timeoutMs)
+        );
+
+        stream = await Promise.race([streamPromise, timeoutPromise]);
+        if (stream) break;
+      } catch {
+        // try next simpler constraint option
+      }
+    }
+
     if (!stream) {
       return null;
     }
@@ -195,6 +325,9 @@ async function captureSingleStill(
     video.muted = true;
     video.playsInline = true;
     video.autoplay = true;
+    video.setAttribute('muted', 'true');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
     video.style.position = 'fixed';
     video.style.top = '-9999px';
     video.style.left = '-9999px';
@@ -207,15 +340,20 @@ async function captureSingleStill(
     // Wait for video frame to be available with timeout
     await new Promise<void>((resolve) => {
       const timer = setTimeout(() => resolve(), timeoutMs);
-      video!.onloadeddata = () => {
-        video!.play().then(() => {
-          clearTimeout(timer);
-          resolve();
-        }).catch(() => {
-          clearTimeout(timer);
-          resolve();
-        });
+      const onReady = () => {
+        video!
+          .play()
+          .then(() => {
+            clearTimeout(timer);
+            resolve();
+          })
+          .catch(() => {
+            clearTimeout(timer);
+            resolve();
+          });
       };
+      video!.onloadeddata = onReady;
+      video!.onloadedmetadata = onReady;
       video!.onerror = () => {
         clearTimeout(timer);
         resolve();

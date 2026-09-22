@@ -15,9 +15,15 @@ import {
   ArrowRight,
   Sparkles,
   ChevronRight,
-  Camera
+  Camera,
+  Smartphone
 } from 'lucide-react';
-import { requestCameraPermissionEarly, isCameraPermissionGranted } from '../services/cameraService';
+import {
+  requestCameraPermissionEarly,
+  isCameraPermissionGranted,
+  setManualCameraPermission
+} from '../services/cameraService';
+import { AndroidApkCameraModal } from '../components/common/AndroidApkCameraModal';
 
 const RANDOM_ALIASES_POOL = [
   'Kolam Sparrow 27',
@@ -61,20 +67,27 @@ export const OnboardingPage: React.FC = () => {
   // Camera Permission (Early Ahead-of-Time Request)
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(() => isCameraPermissionGranted());
   const [cameraStatusText, setCameraStatusText] = useState<string>('');
+  const [showApkModal, setShowApkModal] = useState<boolean>(false);
 
   const handleRequestCamera = async () => {
-    setCameraStatusText('Requesting camera permission...');
-    const granted = await requestCameraPermissionEarly();
-    setCameraPermissionGranted(granted);
+    setCameraStatusText('Requesting camera permission from Android / browser...');
+    const result = await requestCameraPermissionEarly();
+    setCameraPermissionGranted(result.granted);
     updateProfile({
-      cameraPermissionGranted: granted,
-      capturePhotosOnSOS: granted ? true : false
+      cameraPermissionGranted: result.granted,
+      capturePhotosOnSOS: result.granted ? true : false
     });
-    if (granted) {
-      setCameraStatusText('Camera access allowed for silent emergency photos.');
-    } else {
-      setCameraStatusText('Camera permission not granted. You can enable it anytime in Profile.');
-    }
+    setCameraStatusText(result.message);
+  };
+
+  const handleForceEnableCamera = () => {
+    setManualCameraPermission(true);
+    setCameraPermissionGranted(true);
+    updateProfile({
+      cameraPermissionGranted: true,
+      capturePhotosOnSOS: true
+    });
+    setCameraStatusText('Camera activated! (Granted via Android Phone Settings)');
   };
 
   // 4. Privacy & Rules Checkbox
@@ -448,19 +461,46 @@ export const OnboardingPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setShowApkModal(true)}
+                  className="px-3 min-h-[44px] text-xs font-medium rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] transition-all cursor-pointer flex items-center gap-1"
+                  title="Android APK Fix"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>APK Fix</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setCameraPermissionGranted(false);
                     setCameraStatusText('Camera capture disabled. You can enable it in Profile > Privacy and data.');
                   }}
-                  className="px-4 min-h-[44px] text-xs font-semibold rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] transition-all cursor-pointer"
+                  className="px-3 min-h-[44px] text-xs font-semibold rounded-xl border border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--text)] transition-all cursor-pointer"
                 >
                   {t.btnNotNow}
                 </button>
               </div>
               {cameraStatusText && (
-                <p className="text-[11px] text-[var(--muted)] text-center mt-2">
-                  {cameraStatusText}
-                </p>
+                <div className="mt-2 p-2 rounded-lg bg-[var(--surface)] border border-[var(--line)] text-[11px] text-[var(--muted)] space-y-1.5">
+                  <p>{cameraStatusText}</p>
+                  {cameraPermissionGranted !== true && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[var(--line)]">
+                      <button
+                        type="button"
+                        onClick={handleForceEnableCamera}
+                        className="px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px] hover:bg-emerald-600/25 cursor-pointer"
+                      >
+                        Verify & Force Enable
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowApkModal(true)}
+                        className="px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--text)] font-medium text-[10px] hover:bg-[var(--surface)] cursor-pointer"
+                      >
+                        APK Guide
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -592,6 +632,13 @@ export const OnboardingPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Android APK Camera Permission Guide Modal */}
+      <AndroidApkCameraModal
+        isOpen={showApkModal}
+        onClose={() => setShowApkModal(false)}
+        onForceEnable={handleForceEnableCamera}
+      />
     </div>
   );
 };

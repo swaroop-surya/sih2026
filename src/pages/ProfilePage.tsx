@@ -28,13 +28,20 @@ import {
   HeartHandshake,
   Camera,
   MapPin,
-  Check
+  Check,
+  Smartphone,
+  HelpCircle
 } from 'lucide-react';
 import { useVolunteers } from '../context/VolunteerContext';
 import { VolunteerSignUpModal } from '../components/volunteers/VolunteerSignUpModal';
 import { VolunteerReconfirmBanner } from '../components/volunteers/VolunteerReconfirmBanner';
 import { DiscreetVoiceModal } from '../components/voice/DiscreetVoiceModal';
-import { requestCameraPermissionEarly, isCameraPermissionGranted } from '../services/cameraService';
+import { AndroidApkCameraModal } from '../components/common/AndroidApkCameraModal';
+import {
+  requestCameraPermissionEarly,
+  isCameraPermissionGranted,
+  setManualCameraPermission
+} from '../services/cameraService';
 
 export const ProfilePage: React.FC = () => {
   const {
@@ -84,27 +91,34 @@ export const ProfilePage: React.FC = () => {
   });
   const [cameraStatusMessage, setCameraStatusMessage] = useState<string>('');
   const [isRequestingCamera, setIsRequestingCamera] = useState<boolean>(false);
+  const [showApkModal, setShowApkModal] = useState<boolean>(false);
 
   const handleRequestCamera = async () => {
     setIsRequestingCamera(true);
-    setCameraStatusMessage('Requesting camera permission...');
+    setCameraStatusMessage('Requesting camera permission from Android / browser...');
     try {
-      const granted = await requestCameraPermissionEarly();
-      setCameraPermissionState(granted);
+      const result = await requestCameraPermissionEarly();
+      setCameraPermissionState(result.granted);
       updateProfile({
-        cameraPermissionGranted: granted,
-        capturePhotosOnSOS: granted ? true : profile.capturePhotosOnSOS
+        cameraPermissionGranted: result.granted,
+        capturePhotosOnSOS: result.granted ? true : profile.capturePhotosOnSOS
       });
-      if (granted) {
-        setCameraStatusMessage('Camera access granted. 2 stills will quietly be secured on SOS.');
-      } else {
-        setCameraStatusMessage('Camera permission not granted. SOS alerts continue without photos.');
-      }
+      setCameraStatusMessage(result.message);
     } catch {
-      setCameraStatusMessage('Camera request skipped.');
+      setCameraStatusMessage('Camera request skipped or blocked by device.');
     } finally {
       setIsRequestingCamera(false);
     }
+  };
+
+  const handleForceEnableCamera = () => {
+    setManualCameraPermission(true);
+    setCameraPermissionState(true);
+    updateProfile({
+      cameraPermissionGranted: true,
+      capturePhotosOnSOS: true
+    });
+    setCameraStatusMessage('Camera photo capture activated. (Granted via Android Phone Settings)');
   };
 
   // Real logged-in account (not a demo placeholder)
@@ -676,22 +690,53 @@ export const ProfilePage: React.FC = () => {
               </div>
 
               {!cameraPermissionState && (
-                <button
-                  type="button"
-                  id="btn-allow-camera-early"
-                  onClick={handleRequestCamera}
-                  disabled={isRequestingCamera}
-                  className="px-3 min-h-[36px] rounded-full bg-[var(--primary)] text-[var(--primary-fg)] text-[12px] font-medium hover:opacity-95 transition cursor-pointer shrink-0 disabled:opacity-50"
-                >
-                  {isRequestingCamera ? 'Requesting...' : (t.btnAllowCamera || 'Allow camera')}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    id="btn-allow-camera-early"
+                    onClick={handleRequestCamera}
+                    disabled={isRequestingCamera}
+                    className="px-3 min-h-[36px] rounded-full bg-[var(--primary)] text-[var(--primary-fg)] text-[12px] font-medium hover:opacity-95 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isRequestingCamera ? 'Requesting...' : (t.btnAllowCamera || 'Allow camera')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowApkModal(true)}
+                    className="p-2 min-h-[36px] min-w-[36px] rounded-full bg-[var(--surface-2)] border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)] transition cursor-pointer flex items-center justify-center"
+                    title="Android APK Camera Fix"
+                    aria-label="Android APK Camera Fix"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
 
             {cameraStatusMessage && (
-              <p className="text-[11px] text-[var(--muted)] bg-[var(--surface-2)] p-2 rounded-lg">
-                {cameraStatusMessage}
-              </p>
+              <div className="text-[11px] text-[var(--muted)] bg-[var(--surface-2)] p-2.5 rounded-lg space-y-2">
+                <p>{cameraStatusMessage}</p>
+                {!cameraPermissionState && (
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[var(--line)]">
+                    <button
+                      type="button"
+                      onClick={handleForceEnableCamera}
+                      className="px-2.5 py-1 rounded-md bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold hover:bg-emerald-600/25 transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Check className="w-3 h-3" />
+                      Verify & Force Enable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowApkModal(true)}
+                      className="px-2.5 py-1 rounded-md bg-[var(--surface)] text-[var(--text)] border border-[var(--line)] text-[11px] font-medium hover:bg-[var(--surface-2)] transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Smartphone className="w-3 h-3 text-[var(--primary)]" />
+                      APK Code Guide
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Master Switch: Capture photos on SOS */}
@@ -981,6 +1026,13 @@ export const ProfilePage: React.FC = () => {
       <VolunteerSignUpModal
         isOpen={isVolunteerFormOpen}
         onClose={() => setIsVolunteerFormOpen(false)}
+      />
+
+      {/* Android APK Camera Permission Guide Modal */}
+      <AndroidApkCameraModal
+        isOpen={showApkModal}
+        onClose={() => setShowApkModal(false)}
+        onForceEnable={handleForceEnableCamera}
       />
     </div>
   );

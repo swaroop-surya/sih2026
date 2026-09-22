@@ -45,7 +45,13 @@ function withTimeout<T>(promise: Promise<T>, ms: number = 8000): Promise<T> {
 }
 
 // Candidate models with preference for high availability & speed
-const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+// Using modern gemini-3.6-flash, gemini-3.1-flash-lite, and gemini-3.8-flash
+const CANDIDATE_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-flash-latest'
+];
 
 async function generateWithFallback(
   ai: GoogleGenAI,
@@ -66,6 +72,8 @@ async function generateWithFallback(
       }
     } catch (err: any) {
       console.warn(`[AI] Model ${model} unavailable: ${err?.message || err}`);
+      // Short backoff before attempting next fallback model
+      await new Promise(resolve => setTimeout(resolve, 250));
     }
   }
   return null;
