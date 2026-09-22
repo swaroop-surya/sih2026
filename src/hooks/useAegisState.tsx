@@ -3,6 +3,7 @@ import {
   UserProfile,
   TrustedContact,
   IncidentRecord,
+  IncidentPhoto,
   EvidenceItem,
   SafetyCheckin,
   SafePlace,
@@ -212,6 +213,18 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     logAudit('Role Switch', `User switched active view mode to: ${role}`);
   }, []);
 
+  // Helper to convert Blob to permanent base64 data URL for localStorage persistence
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(typeof reader.result === 'string' ? reader.result : '');
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(blob);
+    });
+  };
+
   // SOS Execution
   const startSOS = useCallback(async (isSilent: boolean = false, customMessage?: string) => {
     const result = await triggerEmergencySOS(isSilent, contacts, customMessage);
@@ -227,11 +240,17 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       time: new Date(result.event.startedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       category: 'other',
       severity: 5,
-      location: result.event.location.addressText,
-      description: `Emergency ${isSilent ? 'Silent ' : ''}SOS activated by user. Dispatch notifications sent to ${result?.contactNotifications?.length || 0} trusted contacts.`,
+      location: result.event.location.addressText || 'Indiranagar Metro Vicinity',
+      latitude: result.event.location.latitude,
+      longitude: result.event.location.longitude,
+      accuracy: result.event.location.accuracyMeters,
+      description: `Emergency ${isSilent ? 'Silent ' : ''}SOS activated by user. Dispatch notifications sent to ${result?.contactNotifications?.length || contacts?.length || 0} trusted contacts.`,
       evidenceIds: [],
       notes: customMessage || 'Auto-generated incident record from emergency trigger.',
-      reportedToPolice: false
+      reportedToPolice: false,
+      isSOSTriggered: true,
+      alertId: result.event.id,
+      photos: []
     };
     setIncidents(prev => [newIncident, ...prev]);
     setCurrentPage('emergency');
@@ -254,11 +273,16 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (stills && stills.length > 0) {
           const newEvidenceItems: EvidenceItem[] = [];
+          const capturedIncidentPhotos: IncidentPhoto[] = [];
+
           for (const s of stills) {
             const hash = await calculateSHA256(s.blob);
-            const dataUrl = URL.createObjectURL(s.blob);
+            const base64Url = await blobToBase64(s.blob);
+            const dataUrl = base64Url || URL.createObjectURL(s.blob);
+            const photoId = generateId('ev_sos');
+
             const evItem: EvidenceItem = {
-              id: generateId('ev_sos'),
+              id: photoId,
               incidentId: newIncident.id,
               filename: s.fileName,
               fileType: 'image/jpeg',
@@ -273,23 +297,34 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               alertId: result.event.id,
             };
             newEvidenceItems.push(evItem);
+
+            capturedIncidentPhotos.push({
+              id: photoId,
+              dataUrl: dataUrl,
+              filename: s.fileName,
+              facing: s.facing,
+              description: s.description,
+              sha256Hash: hash,
+            });
           }
 
           // Store in evidence vault
           setEvidence(prev => [...newEvidenceItems, ...prev]);
 
-          // Link evidence IDs to auto-created Incident record
+          // Link evidence IDs and persistent photos directly to the created Incident record
           const addedIds = newEvidenceItems.map(item => item.id);
           setIncidents(prev => prev.map(inc => inc.id === newIncident.id ? {
             ...inc,
-            evidenceIds: [...(inc.evidenceIds || []), ...addedIds]
+            evidenceIds: [...(inc.evidenceIds || []), ...addedIds],
+            photos: [...(inc.photos || []), ...capturedIncidentPhotos],
+            description: `${inc.description} (${capturedIncidentPhotos.length} photos captured and vaulted).`
           } : inc));
 
           // Update activeSOS and emergencyEvents with photosCaptured count so checklist displays it
           setActiveSOS(prev => prev && prev.id === result.event.id ? { ...prev, photosCaptured: stills.length } : prev);
           setEmergencyEvents(prev => prev.map(e => e.id === result.event.id ? { ...e, photosCaptured: stills.length } : e));
 
-          logAudit('SOS Photo Capture', `Captured and vaulted ${stills.length} silent stills (SHA-256 verified) for alert ${result.event.id}`);
+          logAudit('SOS Photo Capture', `Captured and vaulted ${stills.length} silent stills (SHA-256 verified) into incident ${newIncident.id}`);
         }
       } catch (captureErr: any) {
         // Swallowed silently from user; SOS must never fail
@@ -536,10 +571,14 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const hash = await calculateSHA256(file);
     const id = generateId('ev');
     
-    // Create preview data url if image/text
+    // Create persistent base64 data url if image/text for localStorage persistence
     let dataUrl: string | undefined;
     if (file.type.startsWith('image/')) {
-      dataUrl = URL.createObjectURL(file);
+      try {
+        dataUrl = await blobToBase64(file);
+      } catch {
+        dataUrl = URL.createObjectURL(file);
+      }
     }
 
     const newItem: EvidenceItem = {

@@ -49,6 +49,15 @@ export type IncidentCategory =
   | 'workplace_incident'
   | 'other';
 
+export interface IncidentPhoto {
+  id: string;
+  dataUrl: string;
+  filename: string;
+  facing?: 'back' | 'front';
+  description?: string;
+  sha256Hash?: string;
+}
+
 export interface IncidentRecord {
   id: string;
   timestamp: string; // ISO date
@@ -67,6 +76,9 @@ export interface IncidentRecord {
   evidenceIds: string[];
   notes?: string;
   reportedToPolice?: boolean;
+  isSOSTriggered?: boolean;
+  alertId?: string;
+  photos?: IncidentPhoto[];
 }
 
 export interface EvidenceItem {

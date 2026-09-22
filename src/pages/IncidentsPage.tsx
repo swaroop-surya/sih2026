@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAegis } from '../hooks/useAegisState';
-import { IncidentRecord, IncidentCategory } from '../types';
+import { IncidentRecord, IncidentCategory, IncidentPhoto } from '../types';
 import { IncidentMapView } from '../components/incidents/IncidentMapView';
 import { useTranslation } from '../hooks/useTranslation';
 import {
@@ -12,7 +12,9 @@ import {
   X,
   Crosshair,
   Eye,
-  EyeOff
+  EyeOff,
+  Camera,
+  AlertTriangle
 } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 
@@ -33,6 +35,7 @@ export const IncidentsPage: React.FC = () => {
   const [hideDetails, setHideDetails] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const [selectedIncidentDetail, setSelectedIncidentDetail] = useState<IncidentRecord | null>(null);
+  const [viewingPhoto, setViewingPhoto] = useState<IncidentPhoto | null>(null);
 
   // Add Incident Form state
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -66,6 +69,34 @@ export const IncidentsPage: React.FC = () => {
     if (inc.severity < minSeverity) return false;
     return true;
   });
+
+  const getIncidentPhotos = (inc: IncidentRecord): IncidentPhoto[] => {
+    if (inc.photos && inc.photos.length > 0) {
+      return inc.photos;
+    }
+    const linked = safeEvidence.filter(e =>
+      (inc.evidenceIds && inc.evidenceIds.includes(e.id)) ||
+      (e.incidentId && e.incidentId === inc.id) ||
+      (inc.alertId && e.alertId === inc.alertId)
+    );
+    return linked.map(e => ({
+      id: e.id,
+      dataUrl: e.dataUrl || '',
+      filename: e.filename,
+      facing: e.tags?.includes('back_camera') ? ('back' as const) : e.tags?.includes('front_camera') ? ('front' as const) : undefined,
+      description: e.description,
+      sha256Hash: e.sha256Hash
+    })).filter(p => !!p.dataUrl);
+  };
+
+  const isSOSIncident = (inc: IncidentRecord) => {
+    return (
+      inc.isSOSTriggered === true ||
+      inc.id.startsWith('inc_sos') ||
+      (inc.category === 'other' && inc.description.toLowerCase().includes('sos')) ||
+      (inc.notes && inc.notes.toLowerCase().includes('emergency'))
+    );
+  };
 
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
@@ -322,34 +353,73 @@ export const IncidentsPage: React.FC = () => {
               </div>
             ) : (
               <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
-                {filteredIncidents.slice(0, 3).map((inc) => (
-                  <div
-                    key={inc.id}
-                    onClick={() => setSelectedIncidentDetail(inc)}
-                    className="py-3 flex items-center justify-between gap-3 hover:bg-[var(--surface-2)]/50 transition cursor-pointer px-1"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[14px] font-medium text-[var(--text)] truncate block">
-                        {inc.category.replace('_', ' ')} • {inc.location}
-                      </span>
-                      <p className="text-caption text-[12px] mt-0.5">{formatDate(inc.timestamp)}</p>
-                      <p className={`text-[12px] text-[var(--muted)] mt-1 line-clamp-1 ${hideDetails ? 'blur-sm select-none' : ''}`}>
-                        {inc.description}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${
-                        inc.severity <= 2
-                          ? 'bg-[var(--safe)]/15 text-[var(--safe)]'
-                          : inc.severity === 3
-                          ? 'bg-[var(--accent)] text-[#1A1F45]'
-                          : 'bg-[var(--sos)] text-white'
-                      }`}
+                {filteredIncidents.slice(0, 3).map((inc) => {
+                  const isSOS = isSOSIncident(inc);
+                  const photos = getIncidentPhotos(inc);
+                  return (
+                    <div
+                      key={inc.id}
+                      onClick={() => setSelectedIncidentDetail(inc)}
+                      className="py-3 flex flex-col gap-2 hover:bg-[var(--surface-2)]/50 transition cursor-pointer px-1"
                     >
-                      Level {inc.severity}
-                    </span>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {isSOS && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--sos)] text-white inline-flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
+                                SOS Alert
+                              </span>
+                            )}
+                            <span className="text-[14px] font-medium text-[var(--text)] truncate">
+                              {inc.category.replace('_', ' ')} • {inc.location}
+                            </span>
+                          </div>
+                          <p className="text-caption text-[12px] mt-0.5">{formatDate(inc.timestamp)} {inc.time ? `• ${inc.time}` : ''}</p>
+                          <p className={`text-[12px] text-[var(--muted)] mt-1 line-clamp-1 ${hideDetails ? 'blur-sm select-none' : ''}`}>
+                            {inc.description}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${
+                            inc.severity <= 2
+                              ? 'bg-[var(--safe)]/15 text-[var(--safe)]'
+                              : inc.severity === 3
+                              ? 'bg-[var(--accent)] text-[#1A1F45]'
+                              : 'bg-[var(--sos)] text-white'
+                          }`}
+                        >
+                          Level {inc.severity}
+                        </span>
+                      </div>
+
+                      {/* Photo preview strip if photos exist */}
+                      {photos.length > 0 && (
+                        <div className="flex items-center gap-2 pt-1 overflow-x-auto scrollbar-none">
+                          {photos.map((p, idx) => (
+                            <div
+                              key={p.id || idx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingPhoto(p);
+                              }}
+                              className="relative w-12 h-12 rounded-lg overflow-hidden border border-[var(--line)] shrink-0 bg-black/40 group hover:opacity-90 transition"
+                            >
+                              <img src={p.dataUrl} alt={p.filename} className="w-full h-full object-cover" />
+                              <span className="absolute bottom-0 inset-x-0 bg-black/75 text-white text-[8px] text-center font-mono py-0.5">
+                                {p.facing === 'back' ? 'REAR' : 'FRONT'}
+                              </span>
+                            </div>
+                          ))}
+                          <span className="text-[11px] font-medium text-[var(--muted)] flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5 text-[var(--primary)]" />
+                            {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -374,56 +444,91 @@ export const IncidentsPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
-              {filteredIncidents.map((inc) => (
-                <div
-                  key={inc.id}
-                  onClick={() => setSelectedIncidentDetail(inc)}
-                  className="py-3.5 transition hover:bg-[var(--surface-2)]/50 cursor-pointer px-1"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            inc.severity <= 2
-                              ? 'bg-[var(--safe)]'
-                              : inc.severity === 3
-                              ? 'bg-[var(--accent)]'
-                              : 'bg-[var(--sos)]'
+              {filteredIncidents.map((inc) => {
+                const isSOS = isSOSIncident(inc);
+                const photos = getIncidentPhotos(inc);
+                return (
+                  <div
+                    key={inc.id}
+                    onClick={() => setSelectedIncidentDetail(inc)}
+                    className="py-3.5 transition hover:bg-[var(--surface-2)]/50 cursor-pointer px-1"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              inc.severity <= 2
+                                ? 'bg-[var(--safe)]'
+                                : inc.severity === 3
+                                ? 'bg-[var(--accent)]'
+                                : 'bg-[var(--sos)]'
+                            }`}
+                          />
+                          {isSOS && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--sos)] text-white inline-flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
+                              SOS Alert
+                            </span>
+                          )}
+                          <h4 className="text-[14px] font-medium text-[var(--text)] truncate">
+                            {inc.category.replace('_', ' ')} • {inc.location}
+                          </h4>
+                        </div>
+
+                        <p className="text-caption text-[12px] mt-0.5">
+                          {formatDate(inc.timestamp)} {inc.time ? `• ${inc.time}` : ''}
+                        </p>
+
+                        <p
+                          className={`text-[13px] text-[var(--muted)] mt-1.5 line-clamp-2 ${
+                            hideDetails ? 'blur-sm select-none' : ''
                           }`}
-                        />
-                        <h4 className="text-[14px] font-medium text-[var(--text)] truncate">
-                          {inc.category.replace('_', ' ')} • {inc.location}
-                        </h4>
+                        >
+                          {inc.description}
+                        </p>
+
+                        {/* Photo preview strip if photos exist */}
+                        {photos.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2 pt-1 overflow-x-auto scrollbar-none">
+                            {photos.map((p, idx) => (
+                              <div
+                                key={p.id || idx}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingPhoto(p);
+                                }}
+                                className="relative w-14 h-14 rounded-lg overflow-hidden border border-[var(--line)] shrink-0 bg-black/40 group hover:opacity-90 transition"
+                              >
+                                <img src={p.dataUrl} alt={p.filename} className="w-full h-full object-cover" />
+                                <span className="absolute bottom-0 inset-x-0 bg-black/75 text-white text-[8px] text-center font-mono py-0.5">
+                                  {p.facing === 'back' ? 'REAR' : 'FRONT'}
+                                </span>
+                              </div>
+                            ))}
+                            <span className="text-[11px] font-medium text-[var(--text)] flex items-center gap-1.5 bg-[var(--surface-2)] px-2.5 py-1 rounded-full border border-[var(--line)]">
+                              <Camera className="w-3.5 h-3.5 text-[var(--primary)]" />
+                              {photos.length} {photos.length === 1 ? 'photo preserved' : 'photos preserved'}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      <p className="text-caption text-[12px] mt-0.5">
-                        {formatDate(inc.timestamp)} {inc.time ? `• ${inc.time}` : ''}
-                      </p>
-
-                      <p
-                        className={`text-[13px] text-[var(--muted)] mt-1.5 line-clamp-2 ${
-                          hideDetails ? 'blur-sm select-none' : ''
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${
+                          inc.severity <= 2
+                            ? 'bg-[var(--safe)]/15 text-[var(--safe)]'
+                            : inc.severity === 3
+                            ? 'bg-[var(--accent)] text-[#1A1F45]'
+                            : 'bg-[var(--sos)] text-white'
                         }`}
                       >
-                        {inc.description}
-                      </p>
+                        Level {inc.severity}
+                      </span>
                     </div>
-
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${
-                        inc.severity <= 2
-                          ? 'bg-[var(--safe)]/15 text-[var(--safe)]'
-                          : inc.severity === 3
-                          ? 'bg-[var(--accent)] text-[#1A1F45]'
-                          : 'bg-[var(--sos)] text-white'
-                      }`}
-                    >
-                      Level {inc.severity}
-                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -462,11 +567,26 @@ export const IncidentsPage: React.FC = () => {
               </button>
             </div>
 
+            {/* SOS Triggered Notice */}
+            {isSOSIncident(selectedIncidentDetail) && (
+              <div className="p-2.5 rounded-[10px] bg-[var(--sos)]/10 border border-[var(--sos)]/30 text-[12px] text-[var(--sos)] font-medium flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 stroke-[2]" />
+                <span>Emergency SOS Triggered: Automatically recorded & vaulted upon activation.</span>
+              </div>
+            )}
+
             <div className="space-y-3 text-[13px]">
               <div>
                 <span className="font-medium text-[var(--text)] block">Description:</span>
                 <p className="text-caption text-[12px] mt-0.5">{selectedIncidentDetail.description}</p>
               </div>
+
+              {selectedIncidentDetail.notes && (
+                <div>
+                  <span className="font-medium text-[var(--text)] block">Incident Notes & Dispatch:</span>
+                  <p className="text-caption text-[12px] mt-0.5">{selectedIncidentDetail.notes}</p>
+                </div>
+              )}
 
               {selectedIncidentDetail.peopleInvolved && (
                 <div>
@@ -491,6 +611,48 @@ export const IncidentsPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Evidence Photos Section */}
+            {(() => {
+              const detailPhotos = getIncidentPhotos(selectedIncidentDetail);
+              if (detailPhotos.length === 0) return null;
+              return (
+                <div className="space-y-2.5 pt-3 border-t border-[var(--line)]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[13px] text-[var(--text)] flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-[var(--primary)]" />
+                      Preserved Evidence Photos ({detailPhotos.length})
+                    </span>
+                    <span className="text-[11px] text-[var(--safe)] font-medium flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      Encrypted
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {detailPhotos.map((photo, idx) => (
+                      <div
+                        key={photo.id || idx}
+                        onClick={() => setViewingPhoto(photo)}
+                        className="group relative rounded-[10px] overflow-hidden border border-[var(--line)] bg-black/60 cursor-pointer aspect-[4/3]"
+                      >
+                        <img
+                          src={photo.dataUrl}
+                          alt={photo.filename}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between text-[10px] text-white">
+                          <span className="px-1.5 py-0.5 rounded bg-black/70 font-mono text-[9px]">
+                            {photo.facing === 'back' ? 'Rear Lens' : photo.facing === 'front' ? 'Front Lens' : 'Photo'}
+                          </span>
+                          <span className="text-white/90 font-mono text-[9px] bg-black/50 px-1 rounded">View</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="pt-2 flex justify-end gap-2 border-t border-[var(--line)]">
               <button
@@ -656,6 +818,59 @@ export const IncidentsPage: React.FC = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* FULL PHOTO PREVIEW MODAL */}
+      {viewingPhoto && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="soft-card w-full max-w-md p-4 space-y-3 bg-[var(--surface)] border border-[var(--line)] max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
+              <div>
+                <h4 className="font-semibold text-[14px] text-[var(--text)]">
+                  {viewingPhoto.facing === 'back' ? 'Rear Camera Still' : viewingPhoto.facing === 'front' ? 'Front Camera Still' : 'Evidence Still'}
+                </h4>
+                <p className="text-caption text-[11px] font-mono truncate max-w-[240px]">
+                  {viewingPhoto.filename}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingPhoto(null)}
+                className="p-1.5 rounded-full text-[var(--muted)] hover:text-[var(--text)] cursor-pointer"
+                aria-label="Close photo preview"
+              >
+                <X className="w-4 h-4 stroke-[1.75]" />
+              </button>
+            </div>
+
+            <div className="relative rounded-lg overflow-hidden bg-black flex items-center justify-center max-h-[55vh]">
+              <img
+                src={viewingPhoto.dataUrl}
+                alt={viewingPhoto.filename}
+                className="max-h-[55vh] w-auto object-contain rounded"
+              />
+            </div>
+
+            {viewingPhoto.sha256Hash && (
+              <div className="p-2 rounded bg-[var(--surface-2)] text-[11px] font-mono text-[var(--muted)] truncate">
+                <span className="font-semibold text-[var(--text)]">SHA-256: </span>
+                {viewingPhoto.sha256Hash}
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-between items-center border-t border-[var(--line)]">
+              <span className="text-[11px] text-[var(--safe)] flex items-center gap-1 font-medium">
+                <Lock className="w-3 h-3" />
+                Vault Encrypted
+              </span>
+              <button
+                onClick={() => setViewingPhoto(null)}
+                className="soft-btn soft-btn-primary text-[12px] h-8 px-4 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

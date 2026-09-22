@@ -10,7 +10,8 @@ import {
   ChevronDown,
   ChevronUp,
   Mic,
-  Camera
+  Camera,
+  BookOpen
 } from 'lucide-react';
 import { connectToEmergencyServices112 } from '../services/emergencyService';
 import { useVoiceTrigger } from '../context/VoiceTriggerContext';
@@ -134,14 +135,18 @@ export const EmergencyPage: React.FC = () => {
                 <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
                 <span>Continuous GPS coordinates broadcast</span>
               </div>
+              <div className="flex items-center gap-2 text-[12px] text-[var(--text)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
+                <span>Incident record created in private Journal</span>
+              </div>
               {/* Quiet checklist line for evidence photos: only show if 1 or 2 captured, never 0 or error */}
               {activeSOS.photosCaptured && activeSOS.photosCaptured > 0 ? (
                 <div className="flex items-center gap-2 text-[12px] text-[var(--text)]">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[var(--safe)] shrink-0" />
                   <span className="font-medium text-[var(--text)]">
                     {activeSOS.photosCaptured === 1
-                      ? (t.sosPhotoSavedSingle || '1 photo saved to your evidence vault')
-                      : (t.sosPhotoSavedPlural || '2 photos saved to your evidence vault')}
+                      ? (t.sosPhotoSavedSingle || '1 photo saved to incident & evidence vault')
+                      : (t.sosPhotoSavedPlural || `${activeSOS.photosCaptured} photos saved to incident & evidence vault`)}
                   </span>
                 </div>
               ) : null}
@@ -161,7 +166,7 @@ export const EmergencyPage: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <button
                 id="btn-resolve-sos"
                 onClick={() => setShowResolveModal(true)}
@@ -169,6 +174,15 @@ export const EmergencyPage: React.FC = () => {
               >
                 <CheckCircle2 className="w-4 h-4 mr-2 stroke-[1.75]" />
                 I am safe • Resolve alert
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage('incidents')}
+                className="w-full h-9 px-3 rounded-full text-[12px] font-medium text-[var(--text)] bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--line)] transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[var(--primary)] stroke-[1.75]" />
+                View Incident & Captured Photos in Journal
               </button>
             </div>
           </div>
