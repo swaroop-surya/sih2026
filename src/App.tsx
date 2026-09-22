@@ -26,6 +26,8 @@ import { AnalyticsDashboardPage } from './pages/AnalyticsDashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { NearbyPage } from './pages/NearbyPage';
 import { NearbyProvider } from './context/NearbyContext';
+import { VolunteerProvider } from './context/VolunteerContext';
+import { GlobalVolunteerModals } from './components/volunteers/GlobalVolunteerModals';
 
 const AppContent: React.FC = () => {
   const { currentPage, setCurrentPage } = useAegis();
@@ -113,8 +115,11 @@ export default function App() {
         <AegisProvider>
           <VoiceTriggerProvider>
             <NearbyProvider>
-              <AppContent />
-              <DiscreetVoiceGuardModal />
+              <VolunteerProvider>
+                <AppContent />
+                <DiscreetVoiceGuardModal />
+                <GlobalVolunteerModals />
+              </VolunteerProvider>
             </NearbyProvider>
           </VoiceTriggerProvider>
         </AegisProvider>

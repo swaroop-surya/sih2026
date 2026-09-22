@@ -41,6 +41,8 @@ interface NearbyContextType {
   unreadAlertCount: number;
   latestAlert: NearbyMessage | null;
   alerts24hCount: number;
+  activeNearbyTab: 'alerts' | 'chat' | 'volunteers';
+  setActiveNearbyTab: (tab: 'alerts' | 'chat' | 'volunteers') => void;
   isReportSheetOpen: boolean;
   setIsReportSheetOpen: (open: boolean) => void;
   postMessage: (params: {
@@ -85,6 +87,8 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
   const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
   const [locationPermissionStatus, setLocationPermissionStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+
+  const [activeNearbyTab, setActiveNearbyTab] = useState<'alerts' | 'chat' | 'volunteers'>('alerts');
 
   // Sample toggle for evaluator demo mode
   const [showSampleActivity, setShowSampleActivityState] = useState<boolean>(() => {
@@ -712,6 +716,8 @@ export const NearbyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         unreadAlertCount,
         latestAlert,
         alerts24hCount: alerts24h.length,
+        activeNearbyTab,
+        setActiveNearbyTab,
         isReportSheetOpen,
         setIsReportSheetOpen,
         postMessage,

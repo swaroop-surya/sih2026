@@ -14,8 +14,10 @@ import {
   Compass,
   Plus,
   Sparkles,
-  MapPin
+  MapPin,
+  HeartHandshake
 } from 'lucide-react';
+import { useVolunteers } from '../context/VolunteerContext';
 import { formatDate, formatMMSS } from '../lib/utils';
 import { KolamRosette } from '../components/common/KolamRosette';
 
@@ -33,7 +35,8 @@ export const HomePage: React.FC = () => {
   } = useAegis();
   const { t } = useTranslation();
   const { isListening, startListening, stopListening, setIsModalOpen } = useVoiceTrigger();
-  const { activeArea, activeRoomId, alerts24hCount, latestAlert } = useNearby();
+  const { activeArea, activeRoomId, alerts24hCount, latestAlert, setActiveNearbyTab } = useNearby();
+  const { availableCount } = useVolunteers();
 
   // Hold-to-activate 1.5s SOS logic
   const [isHoldingSOS, setIsHoldingSOS] = useState(false);
@@ -209,6 +212,42 @@ export const HomePage: React.FC = () => {
                   Tap to view local area alerts & neighbourhood chat
                 </div>
               )}
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[var(--muted)] group-hover:text-[var(--text)] group-hover:translate-x-0.5 transition shrink-0" />
+        </button>
+      </section>
+
+      {/* 2.6 Volunteers nearby row */}
+      <section id="home-volunteers-row">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveNearbyTab('volunteers');
+            setCurrentPage('nearby');
+          }}
+          className="w-full rounded-[18px] border border-[var(--line)] bg-[var(--surface-2)] hover:bg-[var(--surface)] p-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer shadow-xs group active:scale-[0.99]"
+          aria-label="View volunteers available nearby"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <HeartHandshake className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+                Volunteers nearby
+              </div>
+              <div className="text-sm font-semibold text-[var(--text)] mt-0.5 flex items-center gap-2">
+                <span>
+                  {availableCount > 0 ? `${availableCount} available nearby` : 'Volunteers in your area'}
+                </span>
+                {availableCount > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                )}
+              </div>
+              <div className="text-xs text-[var(--muted)] truncate mt-0.5">
+                Community members who've opted in to walk, call or guide
+              </div>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-[var(--muted)] group-hover:text-[var(--text)] group-hover:translate-x-0.5 transition shrink-0" />

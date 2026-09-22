@@ -24,8 +24,12 @@ import {
   LogOut,
   ShieldCheck,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  HeartHandshake
 } from 'lucide-react';
+import { useVolunteers } from '../context/VolunteerContext';
+import { VolunteerSignUpModal } from '../components/volunteers/VolunteerSignUpModal';
+import { VolunteerReconfirmBanner } from '../components/volunteers/VolunteerReconfirmBanner';
 import { DiscreetVoiceModal } from '../components/voice/DiscreetVoiceModal';
 
 export const ProfilePage: React.FC = () => {
@@ -45,6 +49,13 @@ export const ProfilePage: React.FC = () => {
   const { user, communityProfile, signOut, deleteCommunityData } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const {
+    isMyVolunteerActive,
+    myVolunteerProfile,
+    toggleMyAvailability,
+    isVolunteerFormOpen,
+    setIsVolunteerFormOpen
+  } = useVolunteers();
 
   const {
     isListening,
@@ -178,11 +189,100 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Reconfirmation Banner if volunteer is due */}
+      <VolunteerReconfirmBanner />
+
+      {/* Community Volunteer Entry */}
+      <div id="profile-volunteer-section" className="soft-card p-4 space-y-3.5 border border-[var(--line)] bg-[var(--surface)]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+              <HeartHandshake className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="card-title text-[16px]">
+                  {isMyVolunteerActive ? 'Community Volunteer' : 'Become a volunteer'}
+                </h3>
+                {isMyVolunteerActive && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      myVolunteerProfile?.available
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                        : 'bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]'
+                    }`}
+                  >
+                    {myVolunteerProfile?.available ? 'Available' : 'Away'}
+                  </span>
+                )}
+              </div>
+              <p className="text-caption text-[13px] mt-0.5 leading-relaxed">
+                {isMyVolunteerActive
+                  ? `Registered in ${myVolunteerProfile?.areas?.length || 1} area(s). Neighbours can find you in the Volunteers directory.`
+                  : 'Opt in to walk someone home, stand by during a report, or provide local route guidance in your neighbourhood.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {isMyVolunteerActive ? (
+          <div className="space-y-3 pt-2 border-t border-[var(--line)]">
+            {/* Quick Available / Away toggle */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--surface-2)] text-xs">
+              <div className="space-y-0.5">
+                <span className="font-semibold text-[var(--text)] block">
+                  Current availability
+                </span>
+                <span className="text-[11px] text-[var(--muted)]">
+                  {myVolunteerProfile?.available
+                    ? 'You appear as Available to nearby users'
+                    : 'You appear as Away (not actively accepting calls)'}
+                </span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(myVolunteerProfile?.available)}
+                  onChange={() => toggleMyAvailability()}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-zinc-300 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
+              </label>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsVolunteerFormOpen(true)}
+                className="flex-1 min-h-[44px] px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] hover:bg-[var(--surface)] text-xs font-semibold text-[var(--text)] transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>Edit availability & help types</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[var(--muted)]" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-2 border-t border-[var(--line)] flex items-center justify-between gap-3">
+            <p className="text-[11px] text-[var(--muted)] leading-snug">
+              Self-registered community role. You can turn off or pause anytime.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsVolunteerFormOpen(true)}
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-[var(--primary)] text-white dark:text-[#1A1F45] text-xs font-bold hover:opacity-95 transition cursor-pointer shadow-xs shrink-0 flex items-center gap-1"
+            >
+              <span>Sign up to help</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Account Info Card */}
       <div className="soft-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--text)] font-heading font-semibold text-[15px] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--primary)] text-white dark:text-[#1A1F45] font-heading font-semibold text-[16px] flex items-center justify-center shadow-xs">
               {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
@@ -190,7 +290,7 @@ export const ProfilePage: React.FC = () => {
               <p className="text-caption text-[12px]">Private data on this phone</p>
             </div>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--line)]">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)]">
             {profile.role}
           </span>
         </div>
@@ -670,7 +770,7 @@ export const ProfilePage: React.FC = () => {
                   setShowLogoutConfirm(false);
                   await signOut();
                 }}
-                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--primary)] text-[var(--primary-fg)] text-xs font-semibold hover:opacity-95 cursor-pointer"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white dark:text-[#1A1F45] text-xs font-semibold hover:opacity-95 cursor-pointer"
               >
                 {t.btnLogout || 'Log out'}
               </button>
@@ -719,6 +819,12 @@ export const ProfilePage: React.FC = () => {
 
       {/* Voice Trigger Setup Modal */}
       {isModalOpen && <DiscreetVoiceModal onClose={() => setIsModalOpen(false)} />}
+
+      {/* Volunteer Sign-Up & Settings Modal */}
+      <VolunteerSignUpModal
+        isOpen={isVolunteerFormOpen}
+        onClose={() => setIsVolunteerFormOpen(false)}
+      />
     </div>
   );
 };

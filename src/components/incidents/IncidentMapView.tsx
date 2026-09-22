@@ -3,9 +3,13 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { IncidentRecord } from '../../types';
 import { useNearby } from '../../context/NearbyContext';
+import { useVolunteers } from '../../context/VolunteerContext';
 import { decodePinGeohash } from '../../services/nearbyService';
+import { getVolunteerApproxCoords, formatConfirmationAge } from '../../services/volunteerService';
 import { NearbyMessage } from '../../types/nearby';
+import { Volunteer } from '../../types/volunteer';
 import { getAlertCategoryMeta } from '../../lib/nearbyCategories';
+import { getHelpTypeMeta } from '../../lib/volunteerUtils';
 import {
   MapPin,
   Crosshair,
@@ -16,7 +20,11 @@ import {
   X,
   ExternalLink,
   ThumbsUp,
-  Clock
+  Clock,
+  HeartHandshake,
+  MessageSquare,
+  Phone,
+  Info
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 
@@ -24,29 +32,44 @@ interface IncidentMapViewProps {
   incidents: IncidentRecord[];
   onSelectIncident?: (incident: IncidentRecord) => void;
   onAddNewIncidentAt?: (coords: { lat: number; lng: number }) => void;
+  onSelectVolunteer?: (volunteer: Volunteer) => void;
 }
 
 export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
   incidents,
   onSelectIncident,
-  onAddNewIncidentAt
+  onAddNewIncidentAt,
+  onSelectVolunteer
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const communityLayerRef = useRef<L.LayerGroup | null>(null);
+  const volunteersLayerRef = useRef<L.LayerGroup | null>(null);
   const bufferLayerRef = useRef<L.LayerGroup | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
   const { messages } = useNearby();
+  const {
+    volunteers,
+    openDirectChat,
+    setSelectedVolunteer
+  } = useVolunteers();
 
   const [activeIncidentId, setActiveIncidentId] = useState<string | null>(null);
   const [activeCommunityAlert, setActiveCommunityAlert] = useState<NearbyMessage | null>(null);
+  const [activeVolunteer, setActiveVolunteer] = useState<Volunteer | null>(null);
   const [showCommunityAlerts, setShowCommunityAlerts] = useState<boolean>(true);
+  const [showVolunteers, setShowVolunteers] = useState<boolean>(true);
   const [showBufferZones, setShowBufferZones] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isLegendExpanded, setIsLegendExpanded] = useState<boolean>(false);
+
+  // Available volunteers only (and not hidden)
+  const availableVolunteers = useMemo(() => {
+    return (volunteers || []).filter((v) => v.available && !v.hidden);
+  }, [volunteers]);
 
   // Filter alerts from last 48 hours with a pin geohash
   const communityAlerts = useMemo(() => {
@@ -108,10 +131,12 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
       const bufferLayer = L.layerGroup().addTo(map);
       const markersLayer = L.layerGroup().addTo(map);
       const communityLayer = L.layerGroup().addTo(map);
+      const volunteersLayer = L.layerGroup().addTo(map);
 
       bufferLayerRef.current = bufferLayer;
       markersLayerRef.current = markersLayer;
       communityLayerRef.current = communityLayer;
+      volunteersLayerRef.current = volunteersLayer;
       mapInstanceRef.current = map;
 
       // Handle map click for reporting
@@ -240,12 +265,79 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
         marker.on('click', () => {
           setActiveCommunityAlert(alert);
           setActiveIncidentId(null);
+          setActiveVolunteer(null);
         });
       } catch (e) {
         console.warn('Failed to decode pin geohash for community alert:', alert.id);
       }
     });
   }, [communityAlerts, showCommunityAlerts, activeCommunityAlert]);
+
+  // Update Available Volunteer Markers (emerald pins with heart icon, ~300m privacy area)
+  useEffect(() => {
+    if (!volunteersLayerRef.current || !mapInstanceRef.current) return;
+    const layer = volunteersLayerRef.current;
+    layer.clearLayers();
+
+    if (!showVolunteers || availableVolunteers.length === 0) return;
+
+    availableVolunteers.forEach((vol) => {
+      const coords = getVolunteerApproxCoords(vol);
+      const isSelected = activeVolunteer?.userId === vol.userId;
+
+      // Custom Leaflet DivIcon: Emerald teardrop pin with HeartHandshake / Heart vector inside
+      const volIcon = L.divIcon({
+        className: 'volunteer-pin-icon',
+        iconSize: [32, 40],
+        iconAnchor: [16, 38],
+        popupAnchor: [0, -36],
+        html: `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.15s; ${
+            isSelected ? 'transform: scale(1.2); z-index: 50;' : ''
+          }">
+            <div style="position: absolute; top: -3px; left: -3px; width: 38px; height: 38px; border-radius: 9999px; background-color: rgba(16, 185, 129, 0.35); animation: ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="position: relative; width: 32px; height: 32px; border-radius: 9999px; background-color: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.45); border: 2.5px solid #ffffff;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+            </div>
+            <div style="width: 8px; height: 8px; transform: rotate(45deg); background-color: #059669; margin-top: -4px; border-right: 2.5px solid #ffffff; border-bottom: 2.5px solid #ffffff;"></div>
+          </div>
+        `
+      });
+
+      const marker = L.marker([coords.lat, coords.lng], { icon: volIcon }).addTo(layer);
+
+      marker.bindTooltip(`Volunteer • ${vol.alias} (Available)`, {
+        direction: 'top',
+        offset: [0, -32]
+      });
+
+      marker.on('click', () => {
+        setActiveVolunteer(vol);
+        setActiveIncidentId(null);
+        setActiveCommunityAlert(null);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([coords.lat, coords.lng], Math.max(mapInstanceRef.current.getZoom(), 14));
+        }
+        if (onSelectVolunteer) {
+          onSelectVolunteer(vol);
+        }
+      });
+
+      // Buffer zone circle (indicates ~300m privacy protected area)
+      if (showBufferZones && bufferLayerRef.current) {
+        L.circle([coords.lat, coords.lng], {
+          radius: 300,
+          color: '#10b981',
+          weight: 1.5,
+          dashArray: '3, 4',
+          fillColor: '#10b981',
+          fillOpacity: isSelected ? 0.2 : 0.08
+        }).addTo(bufferLayerRef.current);
+      }
+    });
+  }, [availableVolunteers, showVolunteers, activeVolunteer, showBufferZones, onSelectVolunteer]);
 
   // Handle GPS Locate Me
   const handleLocateMe = () => {
@@ -301,6 +393,13 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
       .filter((i) => i.latitude && i.longitude)
       .map((i) => [i.latitude!, i.longitude!] as [number, number]);
 
+    if (showVolunteers && availableVolunteers.length > 0) {
+      availableVolunteers.forEach((v) => {
+        const coords = getVolunteerApproxCoords(v);
+        pts.push([coords.lat, coords.lng]);
+      });
+    }
+
     if (userLocation) {
       pts.push([userLocation.lat, userLocation.lng]);
     }
@@ -308,6 +407,8 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
     if (pts.length > 0) {
       mapInstanceRef.current.fitBounds(L.latLngBounds(pts), { padding: [35, 35], maxZoom: 15 });
       setActiveIncidentId(null);
+      setActiveCommunityAlert(null);
+      setActiveVolunteer(null);
     }
   };
 
@@ -360,8 +461,32 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
         </button>
       </div>
 
-      {/* Top Left Controls: Community alerts chip & Legend */}
+      {/* Top Left Controls: Volunteers chip, Community alerts chip & Legend */}
       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[70%]">
+        {/* Volunteers toggle chip (default on) */}
+        <button
+          onClick={() => setShowVolunteers(!showVolunteers)}
+          className={`h-8 px-2.5 rounded-full border shadow-md text-[11px] font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
+            showVolunteers
+              ? 'bg-emerald-600 text-white border-emerald-600'
+              : 'bg-[var(--surface)]/95 text-[var(--text)] border-[var(--line)] hover:bg-[var(--surface-2)]'
+          }`}
+          aria-label="Toggle available volunteers"
+          title="Available community volunteers (~300m privacy area)"
+        >
+          <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
+          <span className="whitespace-nowrap">Volunteers</span>
+          {availableVolunteers.length > 0 && (
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                showVolunteers ? 'bg-black/20 text-white' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+              }`}
+            >
+              {availableVolunteers.length}
+            </span>
+          )}
+        </button>
+
         {/* Community alerts toggle chip (default on) */}
         <button
           onClick={() => setShowCommunityAlerts(!showCommunityAlerts)}
@@ -401,7 +526,11 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
           </button>
 
           {isLegendExpanded && (
-            <div className="absolute top-9 left-0 p-3 rounded-[14px] bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--line)] shadow-lg text-xs space-y-2 animate-in fade-in min-w-[200px] z-20">
+            <div className="absolute top-9 left-0 p-3 rounded-[14px] bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--line)] shadow-lg text-xs space-y-2 animate-in fade-in min-w-[210px] z-20">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-600 shrink-0 flex items-center justify-center text-white text-[8px] font-bold">♥</span>
+                <span className="font-medium text-[var(--text)]">Available volunteer (~300m privacy area)</span>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 transform rotate-45 bg-orange-500 shrink-0" />
                 <span className="font-medium text-[var(--text)]">Community alert (~150m diamond)</span>
@@ -494,6 +623,89 @@ export const IncidentMapView: React.FC<IncidentMapViewProps> = ({
             </div>
             <button
               onClick={() => setActiveCommunityAlert(null)}
+              className="p-1 rounded-full text-[var(--muted)] hover:text-[var(--text)] shrink-0"
+              aria-label="Close card"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Volunteer Drawer Card on Map bottom */}
+      {activeVolunteer && (
+        <div className="absolute bottom-2 left-2 right-2 z-10 p-3.5 rounded-[16px] bg-[var(--surface)]/95 backdrop-blur-md border border-emerald-500/30 shadow-lg animate-in slide-in-from-bottom-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  Available Volunteer
+                </span>
+                <span className="text-[11px] font-semibold text-[var(--text)]">
+                  • {activeVolunteer.alias}
+                </span>
+                <span className="text-[10px] text-[var(--muted)]">
+                  ({formatConfirmationAge(activeVolunteer.lastConfirmedAt)})
+                </span>
+              </div>
+
+              {/* Help Types */}
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {activeVolunteer.helpTypes.map((ht) => {
+                  const meta = getHelpTypeMeta(ht);
+                  return (
+                    <span
+                      key={ht}
+                      className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                    >
+                      {meta.label}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {activeVolunteer.note && (
+                <p className="text-xs text-[var(--text)] font-medium mt-1.5 line-clamp-2 leading-snug">
+                  "{activeVolunteer.note}"
+                </p>
+              )}
+
+              <div className="flex items-center justify-between gap-2 mt-2 pt-1 border-t border-[var(--line)]/50">
+                <span className="text-[10px] text-[var(--muted)]">
+                  ~300m approximate area • Opted-in community member
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {activeVolunteer.showPhone && activeVolunteer.phoneDisplay && (
+                    <a
+                      href={`tel:${activeVolunteer.phoneDisplay.replace(/\s+/g, '')}`}
+                      className="h-7 px-2.5 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] text-[11px] font-medium flex items-center gap-1 hover:bg-[var(--surface)] transition"
+                    >
+                      <Phone className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>Call</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedVolunteer(activeVolunteer);
+                    }}
+                    className="h-7 px-2.5 rounded-full bg-[var(--surface-2)] text-[var(--text)] border border-[var(--line)] text-[11px] font-medium flex items-center gap-1 hover:bg-[var(--surface)] transition cursor-pointer"
+                  >
+                    <Info className="w-3 h-3 text-[var(--muted)]" />
+                    <span>Details</span>
+                  </button>
+                  <button
+                    onClick={() => openDirectChat(activeVolunteer)}
+                    className="h-7 px-3 rounded-full bg-emerald-600 text-white text-[11px] font-semibold flex items-center gap-1 hover:bg-emerald-700 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    <MessageSquare className="w-3 h-3" />
+                    <span>Message</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveVolunteer(null)}
               className="p-1 rounded-full text-[var(--muted)] hover:text-[var(--text)] shrink-0"
               aria-label="Close card"
             >

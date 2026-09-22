@@ -12,6 +12,7 @@
     --muted: #5E6383;
     --primary: #2B3480;
     --on-primary: #FFFFFF;
+    --primary-fg: #FFFFFF;
     --accent: #F2A93B;
     --safe: #23806A;
     --on-safe: #FFFFFF;
@@ -30,6 +31,7 @@
     --muted: #A9AED0;
     --primary: #F2A93B;
     --on-primary: #1A1F45;
+    --primary-fg: #1A1F45;
     --accent: #F2A93B;
     --safe: #62C9A9;
     --on-safe: #1A1F45;

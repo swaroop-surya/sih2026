@@ -216,6 +216,13 @@ export interface Translations {
   nearbyMarkFixed: string;
   nearbyReportContent: string;
   nearbyBlockUser: string;
+
+  // Volunteers
+  volunteersNearby: string;
+  volunteersTab: string;
+  becomeVolunteer: string;
+  volunteersAvailableNearby: string;
+  volunteersDisclaimer: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -431,7 +438,12 @@ export const translations: Record<SupportedLanguage, Translations> = {
     nearbyConfirmHelpful: 'Confirm',
     nearbyMarkFixed: 'Mark resolved',
     nearbyReportContent: 'Report',
-    nearbyBlockUser: 'Block user'
+    nearbyBlockUser: 'Block user',
+    volunteersNearby: 'Volunteers nearby',
+    volunteersTab: 'Volunteers',
+    becomeVolunteer: 'Become a volunteer',
+    volunteersAvailableNearby: 'available nearby',
+    volunteersDisclaimer: "Volunteers are community members who've opted in to help. They are not police or emergency responders. For danger, use SOS or call 112."
   },
   hi: {
     appName: 'अभया',
@@ -645,7 +657,12 @@ export const translations: Record<SupportedLanguage, Translations> = {
     nearbyConfirmHelpful: 'पुष्टि करें',
     nearbyMarkFixed: 'हल हो गया',
     nearbyReportContent: 'रिपोर्ट करें',
-    nearbyBlockUser: 'ब्लॉक करें'
+    nearbyBlockUser: 'ब्लॉक करें',
+    volunteersNearby: 'आस-पास के स्वयंसेवक',
+    volunteersTab: 'स्वयंसेवक',
+    becomeVolunteer: 'स्वयंसेवक बनें',
+    volunteersAvailableNearby: 'आस-पास उपलब्ध हैं',
+    volunteersDisclaimer: 'स्वयंसेवक समुदाय के सदस्य हैं जिन्होंने मदद के लिए हामी भरी है। वे पुलिस या आपातकालीन कर्मी नहीं हैं। खतरे के लिए SOS या 112 डायल करें।'
   },
   te: {
     appName: 'అభయ',
@@ -859,7 +876,12 @@ export const translations: Record<SupportedLanguage, Translations> = {
     nearbyConfirmHelpful: 'ధృవీకరించండి',
     nearbyMarkFixed: 'పరిష్కరించబడింది',
     nearbyReportContent: 'రిపోర్ట్ చేయండి',
-    nearbyBlockUser: 'బ్లాక్ చేయండి'
+    nearbyBlockUser: 'బ్లాక్ చేయండి',
+    volunteersNearby: 'సమీపంలోని వాలంటీర్లు',
+    volunteersTab: 'వాలంటీర్లు',
+    becomeVolunteer: 'వాలంటీర్ అవ్వండి',
+    volunteersAvailableNearby: 'సమీపంలో అందుబాటులో ఉన్నారు',
+    volunteersDisclaimer: 'వాలంటీర్లు సహాయం చేయడానికి ముందుకు వచ్చిన సంఘ సభ్యులు. వారు పోలీసులు లేదా అత్యవసర స్పందనదారులు కారు. ప్రమాదంలో ఉంటే SOS లేదా 112 కి కాల్ చేయండి.'
   },
   ta: {
     appName: 'அபயா',
@@ -1073,6 +1095,11 @@ export const translations: Record<SupportedLanguage, Translations> = {
     nearbyConfirmHelpful: 'உறுதி செய்',
     nearbyMarkFixed: 'தீர்க்கப்பட்டது',
     nearbyReportContent: 'புகாரளி',
-    nearbyBlockUser: 'தடை செய்'
+    nearbyBlockUser: 'தடை செய்',
+    volunteersNearby: 'அருகிலுள்ள தன்னார்வலர்கள்',
+    volunteersTab: 'தன்னார்வலர்கள்',
+    becomeVolunteer: 'தன்னார்வலராக இணையுங்கள்',
+    volunteersAvailableNearby: 'அருகில் உள்ளனர்',
+    volunteersDisclaimer: 'தன்னார்வலர்கள் உதவ முன்வந்த சமூக உறுப்பினர்கள். அவர்கள் காவல்துறையோ அல்லது அவசரகால பணியாளர்களோ அல்ல. ஆபத்தில் இருந்தால் SOS அல்லது 112 ஐ அழைக்கவும்.'
   }
 };

@@ -23,8 +23,11 @@ import {
   RotateCcw,
   Sparkles,
   Info,
-  X
+  X,
+  Users
 } from 'lucide-react';
+import { useVolunteers } from '../context/VolunteerContext';
+import { VolunteersListTab } from '../components/volunteers/VolunteersListTab';
 
 export const NearbyPage: React.FC = () => {
   const {
@@ -55,14 +58,20 @@ export const NearbyPage: React.FC = () => {
     requestLocation,
     searchAndSelectArea,
     isReportSheetOpen,
-    setIsReportSheetOpen
+    setIsReportSheetOpen,
+    activeNearbyTab,
+    setActiveNearbyTab
   } = useNearby();
 
+  const {
+    availableCount,
+    volunteers,
+    setSelectedVolunteer
+  } = useVolunteers();
   const { communityProfile } = useAuth();
   const { setCurrentPage, profile } = useAegis();
   const { t } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<'all' | 'alerts' | 'chat'>('all');
   const [chatInput, setChatInput] = useState('');
   const [isPostingChat, setIsPostingChat] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
@@ -110,9 +119,9 @@ export const NearbyPage: React.FC = () => {
 
   // Filter messages based on active tab
   const filteredMessages = messages.filter((m) => {
-    if (activeTab === 'alerts') return m.kind === 'alert';
-    if (activeTab === 'chat') return m.kind === 'chat' || m.kind === 'system';
-    return true; // 'all'
+    if (activeNearbyTab === 'alerts') return m.kind === 'alert';
+    if (activeNearbyTab === 'chat') return m.kind === 'chat' || m.kind === 'system';
+    return true;
   });
 
   const alerts = messages.filter((m) => m.kind === 'alert');
@@ -335,12 +344,16 @@ export const NearbyPage: React.FC = () => {
           </div>
         )}
 
-        {/* 5. Mini Map of Room Rectangle & Alert Pins */}
+        {/* 5. Mini Map of Room Rectangle & Alert Pins & Available Volunteers */}
         {showMap && (
           <NearbyMiniMap
             areaId={activeRoomId}
             userCoords={userCoords}
             alerts={alerts}
+            volunteers={volunteers}
+            onVolunteerClick={(vol) => {
+              setSelectedVolunteer(vol);
+            }}
             className="h-36 sm:h-44 w-full"
           />
         )}
@@ -388,25 +401,14 @@ export const NearbyPage: React.FC = () => {
           </div>
         )}
 
-        {/* 7. Tabs: All | Alerts | Chat */}
+        {/* 7. Tabs: Alerts | Chat | Volunteers */}
         <div className="flex items-center justify-between border-b border-[var(--line)] pt-1">
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setActiveTab('all')}
-              className={`min-h-[44px] px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer ${
-                activeTab === 'all'
-                  ? 'border-[var(--primary)] text-[var(--primary)]'
-                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
-              }`}
-            >
-              All ({messages.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('alerts')}
-              className={`min-h-[44px] px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'alerts'
+              onClick={() => setActiveNearbyTab('alerts')}
+              className={`min-h-[44px] px-3.5 sm:px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+                activeNearbyTab === 'alerts'
                   ? 'border-[var(--primary)] text-[var(--primary)]'
                   : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
               }`}
@@ -420,14 +422,31 @@ export const NearbyPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('chat')}
-              className={`min-h-[44px] px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer ${
-                activeTab === 'chat'
+              onClick={() => setActiveNearbyTab('chat')}
+              className={`min-h-[44px] px-3.5 sm:px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer ${
+                activeNearbyTab === 'chat'
                   ? 'border-[var(--primary)] text-[var(--primary)]'
                   : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
               }`}
             >
               Chat
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveNearbyTab('volunteers')}
+              className={`min-h-[44px] px-3.5 sm:px-4 py-2 text-xs font-bold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+                activeNearbyTab === 'volunteers'
+                  ? 'border-[var(--primary)] text-[var(--primary)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Volunteers</span>
+              {availableCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold">
+                  {availableCount}
+                </span>
+              )}
             </button>
           </div>
 
@@ -439,18 +458,21 @@ export const NearbyPage: React.FC = () => {
               onChange={(e) => setShowSampleActivity(e.target.checked)}
               className="accent-[var(--primary)] rounded-sm"
             />
-            <span className="hidden sm:inline">Show sample area activity</span>
-            <span className="sm:hidden">Sample activity</span>
+            <span className="hidden sm:inline">Sample activity & volunteers</span>
+            <span className="sm:hidden">Sample data</span>
           </label>
         </div>
 
-        {/* 8. Messages Feed */}
-        <div
-          className="flex-1 space-y-3.5 min-h-[220px]"
-          role="region"
-          aria-live="polite"
-          aria-label="Area activity feed"
-        >
+        {/* 8. Content: Volunteers Tab OR Messages Feed */}
+        {activeNearbyTab === 'volunteers' ? (
+          <VolunteersListTab />
+        ) : (
+          <div
+            className="flex-1 space-y-3.5 min-h-[220px]"
+            role="region"
+            aria-live="polite"
+            aria-label="Area activity feed"
+          >
           {isLoadingMessages ? (
             <div className="py-12 flex flex-col items-center justify-center text-[var(--muted)] gap-2">
               <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
@@ -543,10 +565,12 @@ export const NearbyPage: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </main>
 
       {/* 9. Fixed Bottom Composer */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-t border-[var(--line)] px-4 py-3">
+      {activeNearbyTab !== 'volunteers' && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-md border-t border-[var(--line)] px-4 py-3">
         <div className="max-w-3xl mx-auto">
           {isReadOnly ? (
             <div className="p-2.5 rounded-[12px] bg-[var(--surface-2)] text-center text-xs text-[var(--muted)]">
@@ -608,6 +632,7 @@ export const NearbyPage: React.FC = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* 10. Modals & Sheets */}
       <NearbyReportSheet

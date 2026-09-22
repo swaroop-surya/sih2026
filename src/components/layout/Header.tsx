@@ -49,7 +49,7 @@ export const Header: React.FC = () => {
             aria-label="Profile"
             title="Profile"
           >
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--primary)] text-[var(--primary-fg)] font-bold text-xs shadow-xs">
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--primary)] text-white dark:text-[#1A1F45] font-bold text-xs shadow-xs">
               {initialLetter}
             </div>
           </button>
